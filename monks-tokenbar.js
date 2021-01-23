@@ -110,7 +110,8 @@ Hooks.once('init', async function () {
 });
 
 Hooks.on("deleteCombat", function (combat) {
-    new AssignXPApp(combat).render(true);
+    if(game.settings.get("monks-tokenbar", "show-xp-dialog"))
+        new AssignXPApp(combat).render(true);
 
     if (game.combats.combats.length == 0) {
         //set movement to free movement

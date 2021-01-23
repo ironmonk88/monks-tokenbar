@@ -10,6 +10,15 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean,
 	});
+
+	game.settings.register(modulename, "show-xp-dialog", {
+		name: "Show XP Dialog",
+		hint: "Show the XP Dialog automatically after you complete an encounter",
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
 	
 	//this is just a global setting for movement mode
 	game.settings.register(modulename, "movement", {
