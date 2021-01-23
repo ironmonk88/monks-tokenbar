@@ -16,30 +16,38 @@ The player tokens currently in the scene are automatically added.  This is an ea
 Right click on the token in the TokenBar to open a context menu with options to edit both the character and token, aswell as targeting that token.  You can also set individual movement restrictions for that specific token.
 
 ### Limit Movement
-You can the limit the movement of tokens.  Or set the movement mode for individual tokens, in case the combat turn has moved on, and you want to grant the previous token movement so it can clean up it's position while you continue on with the rest of the encounter.
+You can the limit the movement of tokens.  There are three options available, either free movement where tokens can be moved at will, no movement where tokens aren't allowed to be moved, or combat movement, where only the token whose turn is current can move.  You can set the movement individually for each token via the right-click menu.  Doing so is handy if you trust a player to clean up their movement after their turn is done while you move on to the next player.
 
 ### Saving Throw Dialog
 ![monks-tokenbar](/screenshots/SavingThrowDialog.png)
 ![monks-tokenbar](/screenshots/SavingThrowChatMessage.png)
 
-Clicking on the saving throw button will open a dialog to 
-Select tokens, click the button to open the dialog.  Select what type of roll to make.  Optionally enter in a DC to beat, this will only show to the GM but will automatically determine if the roll passed or not.  Clicking the Add button will add any selected tokens not already on the list.
+Clicking on the saving throw button will open a dialog to facilitate a group saving throw.
+Select tokens you wish included and click the button to open the dialog.  Select what type of roll to make.  Optionally enter in a DC to beat, this will only show to the GM but will automatically determine if the roll passed or not.  Clicking the Add button will add any selected tokens not already on the list.
+
+Clicking request will add a chat message and prompt players to roll the saving throw requested.  Results will be show depending on the Roll Mode.
 
 ### Contested Roll Dialog
 ![monks-tokenbar](/screenshots/ContestedRoll.png)
 ![monks-tokenbar](/screenshots/ContestedRollChatMessage.png)
 
-If a token is selected and another is set as a target it will automatically fill the two slots.  Otherwise the next token clicked will fill the next avaialble slot.  Individually select what roll the token will make.  
-After both partied have rolled it will show which one won the contested roll.
+Clicking on the contested roll button will open a dialog to facilitate a contested roll.
+If a token is selected and another is set as a target it will automatically fill the two slots.  Otherwise the next token clicked will fill the next avaialble slot.  Individually select what roll each token will make.  
+Clicking request will add a chat message and prompt players to roll the contested roll requested.  After both partied have rolled it will show which one won the contested roll.
 
-For the previous two dialogs, the following is a guide to what the Roll Mode will accomplish.  Public Roll will show everyone who's involved and their roll.  Private GM Roll will show the player everyone else involved but will only reveal their own roll/success.  Blind Roll will only show the player that they're involved and will not show the result of the roll.  Blind mode won't show the players at all.
+Guide to Roll Mode: 
+Public Roll will show everyone who's involved and their roll.  
+Private GM Roll will show the player everyone else involved but will only reveal their own roll/success.  
+Blind Roll will only show the player that they're involved and will not show the result of the roll.  
+Blind mode won't show the players at all.  The GM will have to roll the dice themselves.
 
 ### Assign XP Dialog
 ![monks-tokenbar](/screenshots/AssignXP.png)
 ![monks-tokenbar](/screenshots/AssignXPChatMessage.png)
 
-Open a dialog to assign XP
-Automatically fill with the current player characters assocuiated with the current scene.  Add experience at the top and it will divide between the players evenly.  Once an encounter has finished, the dialog will automatically popup with the calculated XP for the encounter, divided evenly between the participants of the encounter.
+Clicking on the assign XP button will open a dialog to facilitate assigning XP.
+Automatically fill with the current player characters associated with the current scene.  Add experience at the top and it will divide between the players evenly.
+Additionally once an encounter has finished, the dialog will automatically popup with the calculated XP for the encounter, divided evenly between the participants of the encounter.
 
 ## Bug Reporting
 I'm sure there are lots of issues with it.
