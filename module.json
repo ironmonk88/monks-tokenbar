@@ -2,7 +2,7 @@
 	"name": "monks-tokenbar",
 	"title": "Monk's TokenBar",
 	"description": "Add a bar with all the current player tokens.",
-	"version": "1.0.5",
+	"version": "1.0.1",
 	"author": "IronMonk",
 	"socket": true,
 	"languages": [
