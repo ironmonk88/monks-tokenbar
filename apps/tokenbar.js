@@ -203,7 +203,9 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.TargetToken",
                 icon: '<i class="fas fa-bullseye"></i>',
                 callback: li => {
-                    error('Target token');
+                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    const targeted = !entry.token.isTargeted;
+                    entry.token.setTarget(targeted, { releaseOthers: false });
                 }
             },
             {

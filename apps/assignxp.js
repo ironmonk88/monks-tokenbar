@@ -194,7 +194,6 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let actor = game.actors.get(actorId);
 
             let assign = !actorData.assigned && (game.user.isGM || actor.owner);
-            $('.dice-total', item).toggleClass('assigned', !assign);
             $('.add-xp', item).toggle(assign).click($.proxy(AssignXP.onAssignXP, this, actorId, message));
         }
     }

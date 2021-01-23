@@ -270,10 +270,6 @@
     margin-top: 3px;
 }
 
-.monks-tokenbar-message.assignxp li.item .dice-roll .dice-total.assigned {
-    flex: 0 0 40px;
-}
-
 .monks-tokenbar-message li.item .dice-roll .dice-total .dice-result {
     flex: 1;
     order: 0;
