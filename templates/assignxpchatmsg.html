@@ -1,0 +1,49 @@
+<div class="monks-tokenbar-message assignxp dnd5e chat-card item-card">
+    <header class="card-header flexrow">
+        <h3 class="item-name">Experience</h3>
+        <div class="item-controls flexrow" style="text-align:right;">
+            <h3>XP: {{xp}}</h3>
+        </div>
+    </header>
+    <div class="message-content" style="margin:5px 0px;">
+        <div class="card-content"></div>
+	    <div class="form-group dnd5e sheet actor">
+            <ol class="items-list inventory-list">
+                <li class="items-header flexrow">
+                    <h3 class="item-name flexrow">Actors</h3>
+                    <div class="item-controls flexrow">
+                        <a class="item-control assign-all gm-only" title="Assign All" data-control="assignAll">
+                            <i class="fas fa-plus-circle"></i> Add All
+                        </a>
+                    </div>
+                </li>
+
+                <ol class="item-list">
+                    {{#each actors}}
+                    <li class="item flexrow " data-item-id="{{this.id}}">
+                        <div class="dice-roll flexcol">
+                            <div class="item-row flexrow">
+                                <div class="item-name flexrow">
+                                    <div class="item-image" style="background-image: url('{{this.icon}}')"></div>
+                                    <h4>
+                                        {{this.name}}
+                                    </h4>
+                                </div>
+                                <a class="item-control add-xp" title="Add Experience" data-control="addXP" style="display:none;">
+                                    <i class="fas fa-plus"></i> Add
+                                </a>
+                                <div class="dice-total xp-result flexrow">
+                                    {{this.xp}}
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ol>
+            </ol>
+        </div>
+    </div>
+    <footer class="card-footer gm-only">
+        <span class="xp-reason"></span>
+    </footer>
+</div>

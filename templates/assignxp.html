@@ -1,0 +1,42 @@
+<div class="dialog-content">
+    <form style="height:100%;">
+        <div class="form-group">
+            <label>Experience</label>
+            <input type="text" id="assign-xp-value" style="text-align:right;" value="{{xp}}" />
+        </div>
+        <div class="form-group dnd5e sheet">
+            <ol class="items-list inventory-list">
+                <li class="items-header flexrow">
+                    <h3 class="item-name flexrow">Actors</h3>
+                    <div class="item-controls flexrow" style="justify-content: center;">
+                        XP
+                    </div>
+                    <div class="item-controls flexrow">
+                    </div>
+                </li>
+
+                <ol class="item-list">
+                    {{#each actors}}
+                    <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.actor.id}}" draggable="true">
+                        <div class="item-name flexrow rollable">
+                            <div class="item-image" style="background-image: url('{{this.actor.data.img}}')"><i class="fas fa-ban"></i></div>
+                            <h4>
+                                {{this.actor.data.name}}
+                            </h4>
+                        </div>
+                        <div style="flex:0 0 60px;">
+                            <input type="text" class="charxp" value="{{this.xp}}" />
+                        </div>
+                        <div class="item-controls flexrow">
+                            <a class="item-control item-delete" title="Remove Actor"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ol>
+            </ol>
+        </div>
+    </form>
+</div>
+<div class="dialog-buttons">
+    <button class="dialog-buttons assign" data-button="assign">Assign</button>
+</div>

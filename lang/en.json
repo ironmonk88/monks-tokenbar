@@ -1,0 +1,17 @@
+{
+	"MonksTokenBar.EditCharacter": "Edit Character",
+	"MonksTokenBar.EditToken": "Edit Token",
+	"MonksTokenBar.TargetToken": "Target Token",
+
+	"MonksTokenBar.easy": "Easy",
+	"MonksTokenBar.average": "Average",
+	"MonksTokenBar.challenging": "Challenging",
+	"MonksTokenBar.hard": "Hard",
+	"MonksTokenBar.epic": "Epic",
+
+	"MonksTokenBar.FreeMovement": "Free Movement",
+	"MonksTokenBar.NoMovement": "No Movement",
+	"MonksTokenBar.CombatTurn": "Combat Turn",
+
+	"MonksTokenBar.MovementChanged": "Movement changed to "
+}

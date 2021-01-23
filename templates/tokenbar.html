@@ -1,0 +1,38 @@
+<div id="tokenbar" class="flexrow">
+    <div id="tokenbar-controls" class="bar-controls flexrow">
+        <div class="flexcol">
+            <div class="token-movement" data-movement="free" title="Free Movement">
+                <i class="fas fa-running"></i>
+            </div>
+            <div class="token-movement" data-movement="none" title="No Movement">
+                <i class="fas fa-street-view"></i>
+            </div>
+            <div class="token-movement" data-movement="combat" title="Combat Turn">
+                <i class="fas fa-fist-raised"></i>
+            </div>
+        </div>
+        <div class="flexcol">
+            <a class="request-roll" title="Roll saving throw">
+                <i class="fas fa-tools"></i>
+            </a>
+            <a class="contested-roll" title="Contested Roll">
+                <i class="fas fa-people-arrows"></i>
+            </a>
+            <a class="assign-xp" title="Assign XP">
+                <i class="fas fa-book-medical"></i>
+            </a>
+        </div>
+    </div>
+    <nav id="token-action-bar" class="flexrow {{barClass}}">
+        <ol class="flexrow token-list">{{#each tokens}}
+            <li class="token {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}}>
+                <div class="token-ac flexrow"><i class="fas fa-shield-alt"></i><span>{{this.ac}}</span></div>
+                <div class="token-pp flexrow"><i class="fas fa-eye"></i><span>{{this.pp}}</span></div>
+                <div class="movement-icon" movement="{{this.movement}}"><i class="fas"></i></div>
+                {{#if this.icon}}
+                <img class="token-icon" src="{{this.icon}}" />
+                {{/if}}
+            </li>
+            {{/each}}</ol>
+    </nav>
+</div>

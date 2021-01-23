@@ -1,0 +1,106 @@
+<div class="dialog-content">
+    <form style="height:100%;">
+        <div class="flexcol">
+            <div class="form-group">
+                <label>Roll Mode</label>
+                <select id="contestedroll-rollmode">
+                    <option value="roll" selected="">Public Roll</option>
+                    <option value="gmroll">Private GM Roll</option>
+                    <option value="blindroll">Blind GM Roll</option>
+                    <option value="selfroll">Self Roll</option>
+                </select>
+            </div>
+            <div class="form-group dnd5e sheet">
+                <ol class="items-list inventory-list">
+                    <li class="items-header flexrow">
+                        <h3 class="item-name flexrow">Actors</h3>
+
+                        <div class="item-controls flexrow">
+                            <a class="item-control item-add" title="Add Actor" data-type="token">
+                                <i class="fas fa-plus"></i> Add
+                            </a>
+                        </div>
+                    </li>
+
+                    <ol class="item-list">
+                        <li class="item flexrow " data-item-id="{{token.id}}" draggable="true">
+                            <div class="item-name flexrow rollable">
+                                <div class="item-image" style="background-image: url('{{token.data.img}}')"></div>
+                                <h4>
+                                    {{token.name}}
+                                </h4>
+                            </div>
+                            <select class="contested-roll" data-type="token">
+                                <optgroup label="Ability">
+                                    {{#each abilities as |name key|}}
+                                    <option attr="ability" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                                <optgroup label="Saving Throw">
+                                    {{#each abilities as |name key|}}
+                                    <option attr="saving" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                                <optgroup label="Skill">
+                                    {{#each skills as |name key|}}
+                                    <option attr="skill" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                            </select>
+                            <div class="item-controls flexrow">
+                                <a class="item-control item-delete" title="Delete Item" data-type="token"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </li>
+                    </ol>
+                </ol>
+            </div>
+            <div class="form-group dnd5e sheet">
+                <ol class="items-list inventory-list">
+                    <li class="items-header flexrow">
+                        <h3 class="item-name flexrow">Vs</h3>
+
+                        <div class="item-controls flexrow">
+                            <a class="item-control item-add" title="Add Actor" data-type="countertoken">
+                                <i class="fas fa-plus"></i> Add
+                            </a>
+                        </div>
+                    </li>
+
+                    <ol class="item-list">
+                        <li class="item flexrow " data-item-id="{{countertoken.id}}" draggable="true">
+                            <div class="item-name flexrow rollable">
+                                <div class="item-image" style="background-image: url('{{countertoken.data.img}}')"></div>
+                                <h4>
+                                    {{countertoken.name}}
+                                </h4>
+                            </div>
+                            <select class="contested-roll" data-type="countertoken">
+                                <optgroup label="Ability">
+                                    {{#each abilities as |name key|}}
+                                    <option attr="ability" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                                <optgroup label="Saving Throw">
+                                    {{#each abilities as |name key|}}
+                                    <option attr="saving" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                                <optgroup label="Skill">
+                                    {{#each skills as |name key|}}
+                                    <option attr="skill" value="{{key}}">{{name}}</option>
+                                    {{/each}}
+                                </optgroup>
+                            </select>
+                            <div class="item-controls flexrow">
+                                <a class="item-control item-delete" title="Delete Item" data-type="countertoken"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </li>
+                    </ol>
+                </ol>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="dialog-buttons">
+    <button class="dialog-buttons request" data-button="request">Request</button>
+</div>

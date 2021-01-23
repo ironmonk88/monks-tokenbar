@@ -1,0 +1,47 @@
+<div class="monks-tokenbar-message contested-roll dnd5e chat-card item-card">
+    <header class="card-header flexrow">
+        <h3 class="item-name">Contested Roll</h3>
+    </header>
+    <div class="message-content" style="margin:5px 0px;">
+        <div class="card-content"></div>
+	    <div class="form-group dnd5e sheet actor">
+            <ol class="items-list inventory-list">
+                <li class="items-header flexrow">
+                    <h3 class="item-name flexrow">Actors</h3>
+
+                    <div class="item-controls flexrow">
+                        <a class="item-control roll-all gm-only" title="Roll All" data-control="rollAll">
+                            <i class="fas fa-users"></i>
+                        </a>
+                    </div>
+                </li>
+
+                <ol class="item-list">
+                    {{#each actors}}
+                    <li class="item flexrow " data-item-id="{{this.id}}" style="display:none;">
+                        <div class="dice-roll flexcol">
+                            <div class="item-row flexrow">
+                                <div class="item-name flexrow">
+                                    <div class="item-image" style="background-image: url('{{this.icon}}')"></div>
+                                    <h4>
+                                        <div>{{this.name}}</div>
+                                        <div class="attribute-name">{{this.attrname}}</div>
+                                    </h4>
+                                </div>
+
+                                <div class="roll-controls flexrow">
+                                    <a class="item-control item-roll" title="Roll" style="display:none;"></a>
+                                </div>
+                            </div>
+                            <div class="dice-tooltip" style="display:none;"></div>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ol>
+            </ol>
+        </div>
+    </div>
+    <footer class="card-footer gm-only">
+        <span class="message-mode">{{modename}}</span></span>
+    </footer>
+</div>
