@@ -1,4 +1,7 @@
-## 1.0.3
+## Version 1.0.4
+Fixing an issue with tokens that don't have passive perception for some reason
+
+## Version 1.0.3
 
 Bug fixes.
 The movement restriction wasn't working.
