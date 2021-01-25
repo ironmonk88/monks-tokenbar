@@ -2,7 +2,7 @@
 	"name": "monks-tokenbar",
 	"title": "Monk's TokenBar",
 	"description": "Add a bar with all the current player tokens.",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"author": "IronMonk",
 	"socket": true,
 	"languages": [
@@ -22,7 +22,7 @@
 	"styles": [ "css/tokenbar.css" ],
 	"packs": [],
 	"url": "https://github.com/ironmonk88/monks-tokenbar",
-	"download": "https://github.com/ironmonk88/monks-tokenbar/archive/1.0.4.zip",
+	"download": "https://github.com/ironmonk88/monks-tokenbar/archive/1.0.5.zip",
 	"manifest": "https://raw.githubusercontent.com/ironmonk88/monks-tokenbar/master/module.json",
 	"minimumCoreVersion": "0.7.0",
 	"compatibleCoreVersion": "0.7.9"
