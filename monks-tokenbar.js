@@ -160,7 +160,7 @@ Hooks.once('init', async function () {
 });
 
 Hooks.on("deleteCombat", function (combat) {
-    if (game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e")
+    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e")
         new AssignXPApp(combat).render(true);
 
     if (game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
