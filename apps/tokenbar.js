@@ -94,7 +94,7 @@ export class TokenBar extends Application {
                 }
                 //perceptionTitle = "Perception DC";
             } else if (game.world.system === "dnd5e") {
-                perception = actor.data.data?.skills?.prc?.passive || 10;
+                perception = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
             } else {
                 perception = '';
             }
@@ -176,15 +176,8 @@ export class TokenBar extends Application {
         this._contextMenu(html);
     }
 
-    /* -------------------------------------------- */
-
-    /**
-    * Create a Context Menu attached to each Macro button
-    * @param html
-    * @private
-    */
     _contextMenu(html) {
-        new ContextMenu(html, ".token", [
+        let context = new ContextMenu(html, ".token", [
             {
                 name: "MonksTokenBar.EditCharacter",
                 icon: '<i class="fas fa-edit"></i>',
@@ -212,7 +205,7 @@ export class TokenBar extends Application {
             },
             {
                 name: "MonksTokenBar.FreeMovement",
-                icon: '<i class="fas fa-running"></i>',
+                icon: '<i class="fas fa-running" data-movement="free"></i>',
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     this.changeTokenMovement(entry, 'free');
@@ -220,7 +213,7 @@ export class TokenBar extends Application {
             },
             {
                 name: "MonksTokenBar.NoMovement",
-                icon: '<i class="fas fa-street-view"></i>',
+                icon: '<i class="fas fa-street-view" data-movement="none"></i>',
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     this.changeTokenMovement(entry, 'none');
@@ -228,13 +221,28 @@ export class TokenBar extends Application {
             },
             {
                 name: "MonksTokenBar.CombatTurn",
-                icon: '<i class="fas fa-fist-raised"></i>',
+                icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     this.changeTokenMovement(entry, 'combat');
                 }
             }
         ]);
+
+        let oldRender = context.render;
+        context.render = function (target) {
+            let result = oldRender.call(this, target);
+
+            //Highlight the current movement if different from the global
+            const entry = MonksTokenBar?.tokenbar.tokens.find(t => t.id === target[0].dataset.tokenId);
+            let movement = entry?.token.getFlag("monks-tokenbar", "movement");
+            let html = $("#context-menu");
+            if (movement != undefined) {
+                $('i[data-movement="' + movement + '"]', html).parent().addClass('selected');
+            }
+
+            return result;
+        };
     }
 
     async _onRequestRoll(event) {
@@ -268,22 +276,26 @@ export class TokenBar extends Application {
 
         await game.settings.set("monks-tokenbar", "movement", movement);
         //clear all the tokens individual movement settings
-        $(this.tokens).each(function () {
-            this.token.setFlag("monks-tokenbar", "movement", null);
-            this.token.unsetFlag("monks-tokenbar", "notified");
-        });
+        for (let i = 0; i < this.tokens.length; i++) {
+            await this.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
+            this.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
+        };
         this.render(true);
 
         this.displayNotification(movement);
     }
 
     async changeTokenMovement(entry, movement) {
-        let tMovement = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null)
-        await entry.token.setFlag("monks-tokenbar", "movement", tMovement);
-        entry.token.unsetFlag("monks-tokenbar", "notified");
-        this.render(true);
+        let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
+        let oldMove = entry.token.getFlag("monks-tokenbar", "movement");
+        if (newMove != oldMove) {
+            await entry.token.setFlag("monks-tokenbar", "movement", newMove);
+            entry.token.unsetFlag("monks-tokenbar", "notified");
+            this.render(true);
 
-        this.displayNotification(tMovement, entry.token);
+            let dispMove = entry.token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || "free";
+            this.displayNotification(dispMove, entry.token);
+        }
     }
 
     displayNotification(movement, token) {
