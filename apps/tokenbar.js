@@ -69,7 +69,7 @@ export class TokenBar extends Application {
     */
     getCurrentTokens() {
         let tokens = canvas.tokens.placeables.filter(t => {
-            return t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc'
+            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc' && t.actor?.data.data.skills != undefined;
         }).map(t => {
             let actor = t.actor;
 
@@ -93,8 +93,10 @@ export class TokenBar extends Application {
                     perception = perception + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
                 }
                 //perceptionTitle = "Perception DC";
-            } else {
+            } else if (game.world.system === "dnd5e") {
                 perception = actor.data.data.skills.prc.passive;
+            } else {
+                perception = '';
             }
 
             t.unsetFlag("monks-tokenbar", "notified");
