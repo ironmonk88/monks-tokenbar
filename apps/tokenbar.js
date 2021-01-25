@@ -389,5 +389,9 @@ Hooks.on('renderTokenBar', (app, html) => {
             $('.token[data-token-id="' + this.id + '"] .movement-icon', html).attr('movement', tMovement);
         }
     });
+
+    if (game.world.system !== "dnd5e") {
+        $('.dialog-col', html).hide();
+    }
 });
 
