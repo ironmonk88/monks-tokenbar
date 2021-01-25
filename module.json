@@ -1,7 +1,7 @@
 {
 	"name": "monks-tokenbar",
 	"title": "Monk's TokenBar",
-	"description": "Add a bar with all the current player tokens.",
+	"description": "Add a bar with all the current player tokens.  Limit movement, roll saving throws, assign XP.",
 	"version": "1.0.5",
 	"author": "IronMonk",
 	"socket": true,
