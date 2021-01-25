@@ -1,7 +1,7 @@
 ## Version 1.0.6
 Fixed issue with movement notification showing even though no movement change has happened.
 
-
+Fixed the bug where a player could still move their token with arrow keys even though movement was locked
 
 ## Version 1.0.5
 Fixed issue with the global movement status only clearing out the first token's specific movement.  Looks like I wasn't waiting for the setFlag function to complete before moving on to the next one.
