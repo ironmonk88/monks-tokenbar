@@ -31,53 +31,8 @@ export class MonksTokenBar {
 
         let oldTokenCanDrag = Token.prototype._canDrag;
         Token.prototype._canDrag = function (user, event) {
-            let blockCombat = function (tokenId) {
-                //combat movement is only acceptable if the token is the current token.
-                //or the previous token
-                //let allowPrevMove = game.settings.get("combatdetails", "allow-previous-move");
-                let curCombat = game.combats.active;
-
-                if (curCombat && curCombat.started) {
-                    let entry = curCombat.combatant;
-                    // prev combatant
-                    /*
-                    let prevturn = (curCombat.turn || 0) - 1;
-                    if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
-                    let preventry = curCombat.turns[prevturn];
-
-                    //find the next one that hasn't been defeated
-                    while (preventry.defeated && preventry != curCombat.turn) {
-                        prevturn--;
-                        if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
-                        preventry = curCombat.turns[prevturn];
-                    }*/
-
-                    return !(entry.tokenId == tokenId); // || preventry.tokenId == tokenId);
-                }
-
-                return true;
-            }
-
-            let movement = this.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || "free";
-
-            if (!game.user.isGM) {
-                if (movement == "none" ||
-                    (movement == "combat" && blockCombat(this.id))) {
-                    //prevent the token from moving
-                    if (!this.getFlag("monks-tokenbar", "notified") || false) {
-                        ui.notifications.warn(movement == "combat" ? "Movement is set to combat turn, it's currently not your turn" : "Movement is currently locked");
-                        this.setFlag("monks-tokenbar", "notified", true);
-                        setTimeout(function (token) {
-                            log('unsetting notified', token);
-                            token.unsetFlag("monks-tokenbar", "notified");
-                        }, 30000, this);
-                    }
-                    return false;
-                }
-            }
-
-            return oldTokenCanDrag.call(this, user, event);
-        }
+            return (MonksTokenBar.allowMovement(this) ? oldTokenCanDrag.call(this, user, event) : false);
+        };
     }
 
     static ready() {
@@ -150,6 +105,54 @@ export class MonksTokenBar {
             MonksTokenBar.tokenbar.render(true);
         }
     }
+
+    static allowMovement(token) {
+        let blockCombat = function (tokenId) {
+            //combat movement is only acceptable if the token is the current token.
+            //or the previous token
+            //let allowPrevMove = game.settings.get("combatdetails", "allow-previous-move");
+            let curCombat = game.combats.active;
+
+            if (curCombat && curCombat.started) {
+                let entry = curCombat.combatant;
+                // prev combatant
+                /*
+                let prevturn = (curCombat.turn || 0) - 1;
+                if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
+                let preventry = curCombat.turns[prevturn];
+
+                //find the next one that hasn't been defeated
+                while (preventry.defeated && preventry != curCombat.turn) {
+                    prevturn--;
+                    if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
+                    preventry = curCombat.turns[prevturn];
+                }*/
+
+                return !(entry.tokenId == tokenId); // || preventry.tokenId == tokenId);
+            }
+
+            return true;
+        }
+
+        if (!game.user.isGM && token != undefined) {
+            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || "free";
+            if (movement == "none" ||
+                (movement == "combat" && blockCombat(token.id))) {
+                //prevent the token from moving
+                if (!token.getFlag("monks-tokenbar", "notified") || false) {
+                    ui.notifications.warn(movement == "combat" ? "Movement is set to combat turn, it's currently not your turn" : "Movement is currently locked");
+                    token.setFlag("monks-tokenbar", "notified", true);
+                    setTimeout(function (token) {
+                        log('unsetting notified', token);
+                        token.unsetFlag("monks-tokenbar", "notified");
+                    }, 30000, token);
+                }
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 Hooks.once('init', async function () {
@@ -178,6 +181,17 @@ Hooks.on("updateCombat", function (data, delta) {
 });
 
 Hooks.on("ready", MonksTokenBar.ready);
+
+Hooks.on('preUpdateToken', (scene, data, update, options, userId) => {
+    if ((update.x != undefined || update.y != undefined) && !game.user.isGM) {
+        let token = canvas.tokens.get(data._id);
+        let allow = MonksTokenBar.allowMovement(token);
+        if (!allow) {
+            delete update.x;
+            delete update.y;
+        }
+    }
+});
 
 Hooks.on('canvasReady', () => {
     MonksTokenBar.refresh();
