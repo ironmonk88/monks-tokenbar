@@ -3,7 +3,7 @@
 	"title": "Monk's TokenBar",
 	"description": "Add a bar with all the current player tokens.  Limit movement, roll saving throws, assign XP.",
 	"version": "1.0.6",
-	"author": "IronMonk",
+	"author": "IronMonk, ironmonk88#4075",
 	"socket": true,
 	"languages": [
 		{
