@@ -1,5 +1,7 @@
 ## Version 1.0.7
-TokneBar will respect DnD5e request to disable XP tracking and will hide the XP button on the bar and not open the XP dialog if the checkbox is checked.
+TokenBar will respect DnD5e request to disable XP tracking and will hide the XP button on the bar and not open the XP dialog if the checkbox is checked.
+
+Fixed issue with a mass roll not updating properly.
 
 ## Version 1.0.6
 Fixed issue with movement notification showing even though no movement change has happened.
