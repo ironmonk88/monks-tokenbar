@@ -5,6 +5,8 @@ Fixed issue with a mass roll not updating properly.
 
 Added the option to show the tokens resource bars.
 
+Cleaned up the code a bit so that macros can call it easier.
+
 ## Version 1.0.6
 Fixed issue with movement notification showing even though no movement change has happened.
 
