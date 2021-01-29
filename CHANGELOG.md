@@ -3,6 +3,8 @@ TokenBar will respect DnD5e request to disable XP tracking and will hide the XP 
 
 Fixed issue with a mass roll not updating properly.
 
+Added the option to show the tokens resource bars.
+
 ## Version 1.0.6
 Fixed issue with movement notification showing even though no movement change has happened.
 
