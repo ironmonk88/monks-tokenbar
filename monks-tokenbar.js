@@ -16,6 +16,12 @@ export let i18n = key => {
     return game.i18n.localize(key);
 };
 
+export const MTB_MOVEMENT_TYPE = {
+    FREE: 'free',
+    NONE: 'none',
+    COMBAT: 'combat'
+}
+
 export class MonksTokenBar {
     static tracker = false;
     static tokenbar = null;
@@ -23,7 +29,7 @@ export class MonksTokenBar {
     static init() {
 	    log("initializing");
         // element statics
-        CONFIG.debug.hooks = true;
+        //CONFIG.debug.hooks = true;
 
         MonksTokenBar.SOCKET = "module.monks-tokenbar";
 
@@ -135,12 +141,12 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || "free";
-            if (movement == "none" ||
-                (movement == "combat" && blockCombat(token.id))) {
+            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            if (movement == MTB_MOVEMENT_TYPE.NONE ||
+                (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token.id))) {
                 //prevent the token from moving
                 if (!token.getFlag("monks-tokenbar", "notified") || false) {
-                    ui.notifications.warn(movement == "combat" ? "Movement is set to combat turn, it's currently not your turn" : "Movement is currently locked");
+                    ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? "Movement is set to combat turn, it's currently not your turn" : "Movement is currently locked");
                     token.setFlag("monks-tokenbar", "notified", true);
                     setTimeout(function (token) {
                         log('unsetting notified', token);
@@ -163,12 +169,12 @@ Hooks.once('init', async function () {
 });
 
 Hooks.on("deleteCombat", function (combat) {
-    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e")
+    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking'))
         new AssignXPApp(combat).render(true);
 
     if (game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
         //set movement to free movement
-        MonksTokenBar.tokenbar.changeGlobalMovement("free");
+        MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.FREE);
     }
 });
 

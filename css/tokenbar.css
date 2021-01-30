@@ -136,6 +136,31 @@
     border: 1px solid red;
 }
 
+#tokenbar .resource {
+    position: absolute;
+    width: calc(100% + 4px);
+    height: 10px;
+    top: 100%;
+    margin-top: -8px;
+    left: 0px;
+    border: 2px solid rgba(0, 0, 0, 0.9);
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.5);
+    margin-left: -2px;
+}
+
+#tokenbar .resource[resource="2"] {
+    top: 36px;
+    margin-top:0px;
+}
+
+#tokenbar .resource .bar {
+    border: 1px solid solid rgba(0, 0, 0, 0.8);
+    border-radius: 2px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
 #tokenbar .token .tooltip {
     display: block;
     min-width: 148px;

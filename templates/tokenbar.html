@@ -32,6 +32,12 @@
                 {{#if this.icon}}
                 <img class="token-icon" src="{{this.icon}}" />
                 {{/if}}
+                {{#if this.resource1}}
+                <div class="resource" resource="1"><div class="bar" style="width:{{this.resource1.pct}}%;background-color:{{this.resource1.color}}"></div></div>
+                {{/if}}
+                {{#if this.resource2}}
+                <div class="resource" resource="2"><div class="bar" style="width:{{this.resource2.pct}}%;background-color:{{this.resource2.color}}"></div></div>
+                {{/if}}
             </li>
             {{/each}}</ol>
     </nav>

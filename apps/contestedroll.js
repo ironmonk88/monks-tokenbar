@@ -4,7 +4,7 @@ export class ContestedRollApp extends Application {
     constructor(options) {
         super(options);
         this.token = canvas.tokens.controlled[0];
-        this.countertoken = game.user.targets.values()?.next()?.value;
+        this.countertoken = game.user.targets.values()?.next()?.value || (canvas.tokens.controlled.length > 1 ? canvas.tokens.controlled[1] : null);
     }
 
     static get defaultOptions() {
@@ -194,18 +194,18 @@ export class ContestedRoll {
             let actors = duplicate(message.getFlag('monks-tokenbar', 'actors'));
             let msgactor = actors.find(a => { return a.id == actorid; });
             log('finishing roll', msgactor);
-            msgactor.rolling = false;
+            msgactor.reveal = true;
             message.setFlag('monks-tokenbar', 'actors', actors);
         }
     }
 
-    static async updateContestedRoll(actorid, message, roll, rolling = false) {
+    static async updateContestedRoll(actorid, message, roll, reveal = true) {
         let actors = duplicate(message.getFlag('monks-tokenbar', 'actors'));
         let msgactor = actors.find(a => { return a.id == actorid; });
         log('updating contested roll', msgactor, roll);
 
         msgactor.roll = roll.toJSON();
-        msgactor.rolling = msgactor.rolling || rolling;//!fastForward;
+        msgactor.reveal = msgactor.reveal || reveal;//!fastForward;
         msgactor.total = roll.total;
 
         let tooltip = await roll.getTooltip();
@@ -234,22 +234,6 @@ export class ContestedRoll {
         } else {
             actors[0].passed = 'waiting';
             actors[1].passed = 'waiting';
-        }
-    }
-
-    static async onRollAll(message) {
-        if (game.user.isGM) {
-            let actors = message.getFlag('monks-tokenbar', 'actors');
-            for (let i = 0; i < actors.length; i++) {
-                let msgactor = actors[i];
-                if (msgactor.roll == undefined) {
-                    let actor = game.actors.get(msgactor.id);
-                    if (actor != undefined) {
-                        //roll the dice, using standard details from actor
-                        await ContestedRoll.onRollAbility(msgactor.id, message, true);
-                    }
-                }
-            };
         }
     }
 
@@ -296,10 +280,8 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         let mode = message.getFlag('monks-tokenbar', 'mode');
 
-        $('.roll-all', html).click($.proxy(ContestedRoll.onRollAll, ContestedRoll, message));
-
         let actors = message.getFlag('monks-tokenbar', 'actors');
-        let actorRolling = (actors[0].rolling || actors[1].rolling);
+        let revealAll = (actors[0].reveal && actors[1].reveal);
 
         let items = $('.item', html);
         for (let i = 0; i < items.length; i++) {
@@ -320,9 +302,9 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 let roll = Roll.fromData(actorData.roll);
                 let showroll = game.user.isGM || mode == 'roll' || (mode == 'gmroll' && actor.owner);
                 $('.dice-result', item).toggle(showroll || (mode == 'blindroll' && actor.owner));
-                if (actorData.rolling || (mode == 'blindroll' && !game.user.isGM))
-                    $('.dice-result', item).html(actorData.rolling ? '...' : '-');
-                if (actorData.rolling && game.user.isGM)
+                if (!actorData.reveal || (mode == 'blindroll' && !game.user.isGM))
+                    $('.dice-result', item).html(!actorData.reveal ? '...' : '-');
+                if (!actorData.reveal && game.user.isGM)
                     $('.dice-result', item).on('click', $.proxy(ContestedRoll.finishRolling, ContestedRoll, actorId, message));
                 //if (showroll && !actorData.rolling && $('.dice-tooltip', item).is(':empty')) {
                 //    let tooltip = await roll.getTooltip();
@@ -331,12 +313,12 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 if(game.user.isGM)
                     $('.roll-result', item).click($.proxy(ContestedRoll.setRollSuccess, this, actorId, message, true));
 
-                $('.roll-result', item).toggleClass('result-passed selected', actorData.passed == 'won' && !actorRolling)
+                $('.roll-result', item).toggleClass('result-passed selected', actorData.passed == 'won' && revealAll)
                 $('.roll-result i', item)
-                    .toggleClass('fa-check', actorData.passed == 'won' && !actorRolling && (game.user.isGM || mode != 'blindroll'))
+                    .toggleClass('fa-check', actorData.passed == 'won' && revealAll && (game.user.isGM || mode != 'blindroll'))
                     //.toggleClass('fa-check', actorData.passed == 'failed')
                     .toggleClass('fa-minus', actorData.passed == 'tied' && !actorRolling && (game.user.isGM || mode != 'blindroll'))
-                    .toggleClass('fa-ellipsis-h', (actorData.passed == 'waiting' || actorRolling) && actorData.roll != undefined && (game.user.isGM || mode != 'blindroll'));
+                    .toggleClass('fa-ellipsis-h', (actorData.passed == 'waiting' || !revealAll) && actorData.roll != undefined && (game.user.isGM || mode != 'blindroll'));
             }
 
             //if there hasn't been a roll, then show the button if this is the GM or if this token is controlled by the current user

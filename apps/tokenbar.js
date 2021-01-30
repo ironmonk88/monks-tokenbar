@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, error, i18n } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
 import { SavingThrowApp } from "../apps/savingthrow.js";
 import { ContestedRollApp } from "../apps/contestedroll.js";
 import { AssignXPApp } from "../apps/assignxp.js";
@@ -59,58 +59,81 @@ export class TokenBar extends Application {
         return this;
     }
 
-	/* -------------------------------------------- */
+    mapToken(token) {
+        let actor = token.actor;
 
-    /**
-    * Get the Array of Macro (or null) values that should be displayed on a numbered page of the bar
-    * @param {number} page
-    * @returns {Token[]}
-    * @private
-    */
+        let ac = 10
+        if (game.world.system === "pf1") {
+            ac = actor.data.data.attributes.ac.normal.total
+        } else {
+            ac = (isNaN(parseInt(actor.data.data.attributes.ac.value)) || parseInt(actor.data.data.attributes.ac.value) === 0) ? 10 : parseInt(actor.data.data.attributes.ac.value);
+        }
+
+        //let perceptionTitle = "Passive Perception";
+        let perception = 10;
+        if (game.world.system === "pf1") {
+            perception = actor.data.data.skills.per.mod
+            //perceptionTitle = "Perception Mod";
+        } else if (game.world.system === "pf2e") {
+            if (actor.data.type === "npc" || actor.data.type === "familiar") {
+                perception = perception + actor.data.data.attributes.perception.value;
+            } else {
+                const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
+                perception = perception + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
+            }
+            //perceptionTitle = "Perception DC";
+        } else if (game.world.system === "dnd5e") {
+            perception = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
+        } else {
+            perception = '';
+        }
+
+        token.unsetFlag("monks-tokenbar", "notified");
+
+        let resources = [null, null];
+        if (game.settings.get("monks-tokenbar", "show-resource-bars")) {
+            ["bar1", "bar2"].forEach((b, i) => {
+                const attr = token.getBarAttribute(b);
+
+                if (attr != undefined && attr.type == "bar") {
+                    const val = Number(attr.value);
+                    const pct = Math.clamped(val, 0, attr.max) / attr.max;
+
+                    if (val != undefined) {
+                        let color = (i === 0) ? [(1 - (pct / 2)), pct, 0] : [(0.5 * pct), (0.7 * pct), 0.5 + (pct / 2)];
+                        resources[i] = { pct: (pct * 100), color: 'rgba(' + parseInt(color[0] * 255) + ',' + parseInt(color[1] * 255) + ',' + parseInt(color[2] * 255) + ', 0.7)' };
+                    }
+                }
+            });
+        }
+
+        return {
+            id: token.id,
+            token: token,
+            icon: token.data.img,
+            ac: ac,
+            pp: perception,
+            resource1: resources[0],
+            resource2: resources[1]
+        }
+    }
+
     getCurrentTokens() {
+        log('Get current Tokens');
         let tokens = canvas.tokens.placeables.filter(t => {
             return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
         }).map(t => {
-            let actor = t.actor;
-
-            let ac = 10
-            if (game.world.system === "pf1") {
-                ac = actor.data.data.attributes.ac.normal.total
-            } else {
-                ac = (isNaN(parseInt(actor.data.data.attributes.ac.value)) || parseInt(actor.data.data.attributes.ac.value) === 0) ? 10 : parseInt(actor.data.data.attributes.ac.value);
-            }
-
-            //let perceptionTitle = "Passive Perception";
-            let perception = 10;
-            if (game.world.system === "pf1") {
-                perception = actor.data.data.skills.per.mod
-                //perceptionTitle = "Perception Mod";
-            } else if (game.world.system === "pf2e") {
-                if (actor.data.type === "npc" || actor.data.type === "familiar") {
-                    perception = perception + actor.data.data.attributes.perception.value;
-                } else {
-                    const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
-                    perception = perception + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
-                }
-                //perceptionTitle = "Perception DC";
-            } else if (game.world.system === "dnd5e") {
-                perception = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
-            } else {
-                perception = '';
-            }
-
-            t.unsetFlag("monks-tokenbar", "notified");
-
-            return {
-                id: t.id,
-                token: t,
-                icon: t.data.img,
-                ac: ac,
-                pp: perception
-            }
+            return this.mapToken(t);
         });
 
         this.tokens = tokens;
+    }
+
+    updateToken(token) {
+        log('Update token', token);
+        let idx = this.tokens.map(function (e) { return e.id; }).indexOf(token.id);
+        if(idx != -1)
+            this.tokens[idx] = this.mapToken(token);
     }
 
 	/* -------------------------------------------- */
@@ -207,24 +230,21 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.FreeMovement",
                 icon: '<i class="fas fa-running" data-movement="free"></i>',
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    this.changeTokenMovement(entry, 'free');
+                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.FREE);
                 }
             },
             {
                 name: "MonksTokenBar.NoMovement",
                 icon: '<i class="fas fa-street-view" data-movement="none"></i>',
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    this.changeTokenMovement(entry, 'none');
+                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.NONE);
                 }
             },
             {
                 name: "MonksTokenBar.CombatTurn",
                 icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    this.changeTokenMovement(entry, 'combat');
+                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.COMBAT);
                 }
             }
         ]);
@@ -243,6 +263,10 @@ export class TokenBar extends Application {
 
             return result;
         };
+    }
+
+    getEntry(id) {
+        return this.tokens.find(t => t.id === id);
     }
 
     async _onRequestRoll(event) {
@@ -271,7 +295,7 @@ export class TokenBar extends Application {
     }
 
     async changeGlobalMovement(movement) {
-        if (movement == 'combat' && (game.combat == undefined || !game.combat.started))
+        if (movement == MTB_MOVEMENT_TYPE.COMBAT && (game.combat == undefined || !game.combat.started))
             return;
 
         await game.settings.set("monks-tokenbar", "movement", movement);
@@ -286,6 +310,12 @@ export class TokenBar extends Application {
     }
 
     async changeTokenMovement(entry, movement) {
+        if (typeof entry == 'string')
+            entry = this.getEntry(entry);
+
+        if (movement != undefined && MTB_MOVEMENT_TYPE[movement] == undefined)
+            return;
+
         let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
         let oldMove = entry.token.getFlag("monks-tokenbar", "movement");
         if (newMove != oldMove) {
@@ -293,14 +323,14 @@ export class TokenBar extends Application {
             entry.token.unsetFlag("monks-tokenbar", "notified");
             this.render(true);
 
-            let dispMove = entry.token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || "free";
+            let dispMove = entry.token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             this.displayNotification(dispMove, entry.token);
         }
     }
 
     displayNotification(movement, token) {
         if (game.settings.get("monks-tokenbar", "notify-on-change")) {
-            let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == "free" ? i18n("MonksTokenBar.FreeMovement") : (movement == "none" ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
+            let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == MTB_MOVEMENT_TYPE.FREE ? i18n("MonksTokenBar.FreeMovement") : (movement == MTB_MOVEMENT_TYPE.NONE ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
             ui.notifications.warn(msg);
             log('display notification');
             game.socket.emit(
@@ -404,8 +434,38 @@ Hooks.on('renderTokenBar', (app, html) => {
         }
     });
 
-    if (game.world.system !== "dnd5e") {
+    if (game.world.system == "dnd5e") {
+        $('.assign-xp', html).css({ visibility: (game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidden' : 'visible') });
+    } else {
         $('.dialog-col', html).hide();
+    }
+
+
+});
+
+Hooks.on('updateToken', (scene, token, data) => {
+    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-resource-bars") && MonksTokenBar.tokenbar != undefined) {
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token._id);
+        if (tkn != undefined && (data.bar1 != undefined || data.bar2 != undefined)) {
+            MonksTokenBar.tokenbar.updateToken(tkn.token);
+            MonksTokenBar.tokenbar.render();
+        }
+    }
+});
+
+Hooks.on('updateActor', (actor, data) => {
+    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-resource-bars") && MonksTokenBar.tokenbar != undefined) {
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
+        if (tkn != undefined) {
+            if (data?.attributes?.ac != undefined
+                || data?.skills?.prc != undefined
+                || getProperty(data.data, tkn.token.data.bar1.attribute) != undefined
+                || getProperty(data.data, tkn.token.data.bar2.attribute) != undefined)
+            {
+                MonksTokenBar.tokenbar.updateToken(tkn.token);
+                MonksTokenBar.tokenbar.render();
+            }
+        }
     }
 });
 

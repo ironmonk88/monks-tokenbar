@@ -11,12 +11,23 @@ export const registerSettings = function () {
 		type: Boolean,
 	});
 
-	game.settings.register(modulename, "show-xp-dialog", {
-		name: "Show XP Dialog",
-		hint: "Show the XP Dialog automatically after you complete an encounter",
+	if (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')) {
+		game.settings.register(modulename, "show-xp-dialog", {
+			name: "Show XP Dialog",
+			hint: "Show the XP Dialog automatically after you complete an encounter",
+			scope: "world",
+			config: true,
+			default: true,
+			type: Boolean,
+		});
+	}
+
+	game.settings.register(modulename, "show-resource-bars", {
+		name: "Show Resource Bars",
+		hint: "Show the Token resource bars",
 		scope: "world",
 		config: true,
-		default: true,
+		default: false,
 		type: Boolean,
 	});
 	
