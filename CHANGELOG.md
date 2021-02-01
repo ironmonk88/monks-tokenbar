@@ -1,3 +1,10 @@
+## Version 1.0.8
+Fixed issues with the players not able to roll.
+
+Upgraded some of the code behind the scenes to make it all a little more stream lined.
+
+Upgraded the contested roll scripts to use code upgraded for the saving throws.
+
 ## Version 1.0.7
 TokenBar will respect DnD5e request to disable XP tracking and will hide the XP button on the bar and not open the XP dialog if the checkbox is checked.
 
