@@ -1,6 +1,8 @@
 ## Version 1.0.9
 Fixed issue with multiple tokens being added or removed from scene.
 
+You can now reposition the token bar.
+
 ## Version 1.0.8
 Fixed issues with the players not able to roll.
 
