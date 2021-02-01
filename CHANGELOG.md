@@ -1,3 +1,6 @@
+## Version 1.0.9
+Fixed issue with multiple tokens being added or removed from scene.
+
 ## Version 1.0.8
 Fixed issues with the players not able to roll.
 
