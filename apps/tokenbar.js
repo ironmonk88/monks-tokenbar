@@ -107,10 +107,14 @@ export class TokenBar extends Application {
             });
         }
 
+        let img = token.data.img;
+        if (game.settings.get("monks-tokenbar", "token-pictures") == "actor" && token.actor != undefined)
+            img = token.actor.data.img;
+
         return {
             id: token.id,
             token: token,
-            icon: token.data.img,
+            icon: img,
             ac: ac,
             pp: perception,
             resource1: resources[0],
@@ -272,7 +276,7 @@ export class TokenBar extends Application {
     async _onRequestRoll(event) {
         event.preventDefault();
 
-        new SavingThrowApp().render(true);
+        this.savingthrow = new SavingThrowApp().render(true);
     }
 
     async _onContestedRoll(event) {
@@ -437,7 +441,7 @@ Hooks.on('renderTokenBar', (app, html) => {
     if (game.world.system == "dnd5e") {
         $('.assign-xp', html).css({ visibility: (game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidden' : 'visible') });
     } else {
-        $('.dialog-col', html).hide();
+        //$('.dialog-col', html).hide();
     }
 
 

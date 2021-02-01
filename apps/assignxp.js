@@ -19,6 +19,7 @@ export class AssignXPApp extends Application {
                         xp: 0
                     });
             });
+            this.reason = 'Combat Experience';
         } else {
             this.actors = canvas.tokens.placeables.filter(t => {
                 return t.actor?.hasPlayerOwner && t.actor?.data.type == 'character'
@@ -48,7 +49,8 @@ export class AssignXPApp extends Application {
     getData(options) {
         return {
             actors: this.actors,
-            xp:this.xp
+            xp: this.xp,
+            reason: this.reason
         };
     }
 
@@ -94,6 +96,7 @@ export class AssignXPApp extends Application {
         if (chatactors.length > 0) {
             let requestdata = {
                 xp: this.xp,
+                reason: $('#assign-xp-reason', this.element).val(), 
                 actors: chatactors
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/assignxpchatmsg.html", requestdata);
@@ -175,7 +178,7 @@ export class AssignXP {
 }
 
 Hooks.on("renderChatMessage", (message, html, data) => {
-    const assignCard = html.find(".monks-tokenbar-message.assignxp");
+    const assignCard = html.find(".monks-tokenbar.assignxp");
     if (assignCard.length !== 0) {
         if (!game.user.isGM)
             html.find(".gm-only").remove();

@@ -13,5 +13,9 @@
 	"MonksTokenBar.NoMovement": "No Movement",
 	"MonksTokenBar.CombatTurn": "Combat Turn",
 
-	"MonksTokenBar.MovementChanged": "Movement changed to "
+	"MonksTokenBar.MovementChanged": "Movement changed to ",
+
+	"MonksTokenBar.RequestRoll": "Request Roll",
+	"MonksTokenBar.ContestedRoll": "Contested Roll",
+	"MonksTokenBar.AssignXP": "Assign XP"
 }

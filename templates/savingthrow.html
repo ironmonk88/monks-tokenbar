@@ -1,70 +1,77 @@
-<div class="dialog-content">
-    <form style="height:100%;">
-        <div class="form-group">
-            <label>Roll</label>
-            <select id="monks-tokenbar-roll">
-                <optgroup label="Ability">
-                    {{#each abilities as |name key|}}
-                    <option attr="ability" value="{{key}}">{{name}}</option>
+<div class="monks-tokenbar flexcol">
+    <div class="dialog-content">
+        <form style="height:100%;">
+            <div class="form-group">
+                <label>Roll</label>
+                <select id="savingthrow-request">
+                    {{#each options}}
+                    {{#if this.groups}}
+                    <optgroup label="{{this.text}}">
+                        {{#each this.groups as |name key|}}
+                        <option value="{{../id}}:{{key}}">{{name}}</option>
+                        {{/each}}
+                    </optgroup>
+                    {{else}}
+                    <option value="{{this.id}}">{{this.text}}</option>
+                    {{/if}}
                     {{/each}}
-                </optgroup>
-                <optgroup label="Saving Throw">
-                    {{#each abilities as |name key|}}
-                    <option attr="saving" value="{{key}}">{{name}}</option>
-                    {{/each}}
-                </optgroup>
-                <optgroup label="Skill">
-                    {{#each skills as |name key|}}
-                    <option attr="skill" value="{{key}}">{{name}}</option>
-                    {{/each}}
-                </optgroup>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>DC</label>
-            <input type="text" id="monks-tokenbar-savingdc" placeholder="Leave blank to not calculate" />
-        </div>
-        <div class="form-group">
-            <label>Roll Mode</label>
-            <select id="monks-tokenbar-rollmode">
-                <option value="roll" selected="">Public Roll</option>
-                <option value="gmroll">Private GM Roll</option>
-                <option value="blindroll">Blind GM Roll</option>
-                <option value="selfroll">Self Roll</option>
-            </select>
-        </div>
-        <div class="form-group dnd5e sheet">
-            <ol class="items-list inventory-list">
-                <li class="items-header flexrow">
-                    <h3 class="item-name flexrow">Actors</h3>
-
-                    <div class="item-controls flexrow">
-                        <a class="item-control item-create" title="Add Actor" data-type="actor">
-                            <i class="fas fa-plus"></i> Add
-                        </a>
-                    </div>
-                </li>
-
-                <ol class="item-list">
-                    {{#each tokens}}
-                    <li class="item flexrow " data-item-id="{{this.id}}" draggable="true">
-                        <div class="item-name flexrow rollable">
-                            <div class="item-image" style="background-image: url('{{this.data.img}}')"></div>
-                            <h4>
-                                {{this.name}}
-                            </h4>
-                        </div>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>DC</label>
+                <input type="text" id="monks-tokenbar-savingdc" placeholder="Leave blank to not calculate" />
+            </div>
+            <div class="form-group">
+                <label>Roll Mode</label>
+                <select id="savingthrow-rollmode">
+                    <option value="roll" selected="">Public Roll</option>
+                    <option value="gmroll">Private GM Roll</option>
+                    <option value="blindroll">Blind GM Roll</option>
+                    <option value="selfroll">Self Roll</option>
+                </select>
+            </div>
+            <div class="form-group sheet">
+                <ol class="items-list inventory-list">
+                    <li class="items-header flexrow">
+                        <h3 class="item-name flexrow">Actors</h3>
 
                         <div class="item-controls flexrow">
-                            <a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>
+                            <a class="item-control" title="Add Players" data-type="player">
+                                <i class="fas fa-child"></i> Players
+                            </a>
+                            <a class="item-control" title="Add Currently Visible Monsters" data-type="monster">
+                                <i class="fas fa-bolt"></i> Monsters
+                            </a>
+                            <a class="item-control" title="Add Actor" data-type="actor" class="{{#if select}}selected{{/if}}">
+                                <i class="fas fa-plus"></i> Add
+                            </a>
+                            <a class="item-control" title="Clear All" data-type="clear">
+                                <i class="fas fa-trash-alt"></i> Clear
+                            </a>
                         </div>
                     </li>
-                    {{/each}}
+
+                    <ol class="item-list">
+                        {{#each tokens}}
+                        <li class="item flexrow " data-item-id="{{this.id}}" draggable="true">
+                            <div class="item-name flexrow rollable">
+                                <div class="item-image" style="background-image: url('{{this.data.img}}')"></div>
+                                <h4>
+                                    {{this.name}}
+                                </h4>
+                            </div>
+
+                            <div class="item-controls flexrow">
+                                <a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </li>
+                        {{/each}}
+                    </ol>
                 </ol>
-            </ol>
-        </div>
-    </form>
-</div>
-<div class="dialog-buttons">
-    <button class="dialog-buttons request" data-button="request">Request</button>
+            </div>
+        </form>
+    </div>
+    <div class="dialog-buttons">
+        <button class="dialog-buttons request" data-button="request">Request</button>
+    </div>
 </div>

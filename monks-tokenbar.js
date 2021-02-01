@@ -42,19 +42,41 @@ export class MonksTokenBar {
     }
 
     static ready() {
+        MonksTokenBar.requestoptions = [];
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
         if (game.system.id == "pf2e") {
-            MonksTokenBar.abilities = CONFIG.PF2E.abilities;
-            MonksTokenBar.skills = CONFIG.PF2E.skills;
-            MonksTokenBar.saves = CONFIG.PF2E.saves;
+            MonksTokenBar.requestoptions.push({
+                id: "ability", text: "Ability", groups: CONFIG.PF2E.abilities
+            });
+            MonksTokenBar.requestoptions.push({
+                id: "saving", text: "Saving Throw", groups: CONFIG.PF2E.saves
+            });
+            MonksTokenBar.requestoptions.push({
+                id: "skill", text: "Skill", groups: CONFIG.PF2E.skills
+            });
         } else if (game.system.id == "D35E") {
-            MonksTokenBar.abilities = CONFIG.D35E.abilities;
-            MonksTokenBar.skills = CONFIG.D35E.skills;
-            MonksTokenBar.saves = CONFIG.D35E.savingThrows;
+            MonksTokenBar.requestoptions.push({
+                id: "ability", text: "Ability", groups: CONFIG.PF2E.abilities
+            });
+            MonksTokenBar.requestoptions.push({
+                id: "saving", text: "Saving Throw", groups: CONFIG.PF2E.savingThrows
+            });
+            MonksTokenBar.requestoptions.push({
+                id: "skill", text: "Skill", groups: CONFIG.PF2E.skills
+            });
         } else {
-            MonksTokenBar.abilities = CONFIG.DND5E.abilities;
-            MonksTokenBar.skills = CONFIG.DND5E.skills;
-            MonksTokenBar.saves = CONFIG.DND5E.abilities;
+            MonksTokenBar.requestoptions.push({
+                id:"ability", text:"Ability", groups:CONFIG.DND5E.abilities
+            });
+            MonksTokenBar.requestoptions.push({
+                id:"saving", text:"Saving Throw", groups:CONFIG.DND5E.abilities
+            });
+            MonksTokenBar.requestoptions.push({
+                id:"skill", text:"Skill", groups:CONFIG.DND5E.skills
+            });
+            MonksTokenBar.requestoptions.push({
+                id:"death", text:"Death Saving Throw"
+            });
         }
 
         if (game.user.isGM) {
@@ -68,16 +90,20 @@ export class MonksTokenBar {
         switch (data.msgtype) {
             case 'rollability': {
                 let message = game.messages.get(data.msgid);
-                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : false;
+                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                for (let response of data.response) {
+                    let r = Roll.fromData(response.roll);
+                    response.roll = r;
+                }
                 if(data.type == 'savingthrow')
-                    SavingThrow.updateSavingRoll(data.actorid, message, Roll.fromData(data.roll), !revealDice);
+                    SavingThrow.updateMessage(data.response, message, revealDice);
                 else if (data.type == 'contestedroll')
-                    ContestedRoll.updateContestedRoll(data.actorid, message, Roll.fromData(data.roll), !revealDice);
+                    ContestedRoll.updateContestedRoll(data.response, message, revealDice);
             } break;
             case 'finishroll': {
                 let message = game.messages.get(data.msgid);
                 if (data.type == 'savingthrow')
-                    SavingThrow.finishRolling(data.actorid, message);
+                    SavingThrow.finishRolling(data.response, message);
                 else if (data.type == 'contestedroll')
                     ContestedRoll.finishRolling(data.actorid, message);
             } break;

@@ -209,13 +209,147 @@
     content: "\f6de";
 }
 
-#requestsavingthrow .dialog-buttons,
-#assignexperience .dialog-buttons {
+/*-----------------------------Dialog Styles-------------------------------------*/
+
+.monks-tokenbar .dialog-buttons {
     flex: 0 0 32px;
 }
 
-#requestsavingthrow .items-list.inventory-list{
-    max-height:225px;
+.monks-tokenbar .sheet select {
+    flex: 1;
+    font-size: 12px;
+    height: 22px;
+    background: transparent;
+    border: 1px solid #7a7971;
+    color: #191813;
+}
+
+.monks-tokenbar .sheet input[type="text"],
+.monks-tokenbar .sheet input[type="number"] {
+    background: none;
+    border: 1px solid transparent;
+    text-align: center;
+    height: calc(100% - 2px);
+    color: #191813;
+}
+
+.monks-tokenbar .item.disabled input,
+.monks-tokenbar .item.disabled select {
+    display: none;
+}
+
+.monks-tokenbar .sheet .items-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    color: #7a7971;
+}
+
+.monks-tokenbar .sheet .items-list .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.monks-tokenbar .sheet .items-list .item-name {
+    flex: 2;
+    margin: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-align: left;
+    align-items: center;
+}
+
+.monks-tokenbar .sheet .items-list .item-name h3,
+.monks-tokenbar .sheet .items-list .item-name h4 {
+    margin: 0;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+
+.monks-tokenbar .sheet .items-list .item-controls {
+    flex: 0 0 60px;
+    justify-content: flex-end;
+}
+
+.monks-tokenbar .sheet.actor .items-list .item-controls {
+    flex: 0 0 90px;
+    justify-content: flex-end;
+}
+
+#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls {
+    flex: 0 0 250px;
+}
+
+#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls a{
+    flex-grow: 0;
+    white-space: nowrap;
+    margin: 0px 4px;
+}
+
+.monks-tokenbar .sheet .items-list .item-controls a {
+    font-size: 12px;
+    text-align: center;
+    flex: 1;
+}
+
+.monks-tokenbar .sheet .items-list .item-controls a.selected {
+    text-shadow: 0 0 8px red;
+}
+
+.monks-tokenbar .sheet .items-list .item {
+    align-items: center;
+    padding: 0 2px;
+    border-bottom: 1px solid #c9c7b8;
+}
+
+.monks-tokenbar .sheet .items-list .item:last-child {
+    border-bottom: none;
+}
+
+.monks-tokenbar .sheet .items-list .item .item-name {
+    color: #191813;
+}
+
+.monks-tokenbar .sheet .items-list .item .item-name .item-image {
+    flex: 0 0 30px;
+    height: 30px;
+    background-size: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    margin-right: 5px;
+}
+
+.monks-tokenbar .sheet .items-list .items-header {
+    height: 28px;
+    margin: 2px 0;
+    padding: 0;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    border: 2px groove #eeede0;
+    font-weight: bold;
+}
+
+.monks-tokenbar .sheet .items-list .items-header > * {
+    font-size: 12px;
+    text-align: center;
+}
+
+.monks-tokenbar .sheet .items-list .items-header h3 {
+    padding-left: 5px;
+    font-family: "Modesto Condensed", "Palatino Linotype", serif;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: left;
+    font-size: 16px;
+}
+
+#requestsavingthrow .items-list.inventory-list {
+    max-height: 225px;
 }
 
 #assignexperience .item .item-image {
@@ -225,55 +359,92 @@
     line-height: 30px;
 }
 
-#assignexperience .item.disabled .item-image {
+.monks-tokenbar .item.disabled .item-image {
     filter: grayscale(100%);
-    color:#808080;
+    color: #808080;
 }
 
-#assignexperience .item .charxp{
-    text-align:center;
-}
-
-#assignexperience .item.disabled .charxp{
-    display:none;
-}
-
-.monks-tokenbar-message.dnd5e.chat-card .card-header h3 {
-    flex: 2;
-}
-
-.monks-tokenbar-message .dnd5e.sheet.actor .inventory-list .item-controls {
-    flex: 0 0 60px;
-    justify-content: flex-end;
-}
-
-.monks-tokenbar-message.assignxp .dnd5e.sheet.actor .inventory-list .item-controls {
+/*
+.monks-tokenbar.assignxp .sheet.actor .inventory-list .item-controls {
     flex: 0 0 70px;
+}*/
+
+
+
+
+
+/*---------------------------------------Chat card styles-------------------------------*/
+.monks-tokenbar.chat-card {
+    font-style: normal;
+    font-size: 12px;
 }
 
-.monks-tokenbar-message .dnd5e.sheet.actor .inventory-list .roll-controls {
-    flex: 0 0 90px;
-    justify-content: flex-end;
+.monks-tokenbar.chat-card .card-header {
+    padding: 3px 0;
+    border-top: 2px groove #FFF;
+    border-bottom: 2px groove #FFF;
 }
 
-.monks-tokenbar-message.contested-roll .dnd5e.sheet.actor .inventory-list .roll-controls {
-    flex: 0 0 60px;
+.monks-tokenbar.chat-card .card-header h3 {
+    flex: 2;
+    margin: 0;
+    line-height: 36px;
+    font-family: "Modesto Condensed", "Palatino Linotype", serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #4b4a44;
 }
 
-.monks-tokenbar-message .item-row {
+.monks-tokenbar.chat-card .card-header h3:hover {
+    color: #111;
+    text-shadow: 0 0 10px red;
 }
 
-.monks-tokenbar-message .dnd5e.sheet .items-list li.item .item-name .item-image {
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+.monks-tokenbar.chat-card .card-footer {
+    padding: 3px 0 0;
+    border-top: 2px groove #FFF;
 }
 
-.monks-tokenbar-message .dnd5e.sheet .items-list li.item .item-name .attribute-name {
+.monks-tokenbar.chat-card .card-footer span {
+    border-right: 2px groove #FFF;
+    padding: 0 3px 0 0;
     font-size: 10px;
 }
 
-.monks-tokenbar-message li.item .item-roll {
+.monks-tokenbar.chat-card .card-footer span:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+.monks-tokenbar.chat-card .sheet .items-list {
+    padding: 0 5px;
+}
+
+.monks-tokenbar.chat-card .sheet .items-list .item-controls a {
+    flex: 0 0 30px;
+}
+
+.monks-tokenbar.assignxp.chat-card .sheet .items-list .item-controls a {
+    flex: 1;
+}
+
+.monks-tokenbar .sheet.actor .inventory-list .roll-controls {
+    justify-content: flex-end;
+}
+
+.monks-tokenbar .sheet.actor .items-list .item .item-name {
+    cursor: pointer;
+}
+
+.monks-tokenbar.contested-roll .sheet.actor .items-list .roll-controls {
+    flex: 0 0 60px;
+}
+
+.monks-tokenbar .sheet .items-list li.item .item-name .attribute-name {
+    font-size: 10px;
+}
+
+.monks-tokenbar li.item .item-roll {
     display: block;
     width: 30px;
     height: 48px;
@@ -284,72 +455,74 @@
     transform: rotate(180deg);
 }
 
-.monks-tokenbar-message li.item .item-roll:hover {
+.monks-tokenbar li.item .item-roll:hover {
     background-image: url(../../../icons/svg/d20-highlight.svg);
     transform: none;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total {
+.monks-tokenbar li.item .dice-roll .dice-total {
     flex: 1;
     height: 24px;
     margin-top: 3px;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total .dice-result {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result {
     flex: 1;
     order: 0;
 }
 
-.monks-tokenbar-message.assignxp li.item .dice-roll .dice-total a {
+.monks-tokenbar.assignxp li.item .dice-roll .dice-total a {
     font-size: 12px;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total a {
+.monks-tokenbar li.item .dice-roll .dice-total a {
     flex: 0 0 20px;
     font-size: 14px;
     color: #aaa;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total.xp-result {
+.monks-tokenbar li.item .dice-roll .dice-total.xp-result {
     flex: 0 1 auto;
     padding: 0px 8px;
 }
-.monks-tokenbar-message li.item .dice-roll a.add-xp {
+.monks-tokenbar li.item .dice-roll a.add-xp {
     flex: 0 0 50px;
     text-align: center;
     line-height: 30px;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total a.recommended {
+.monks-tokenbar li.item .dice-roll .dice-total a.recommended {
     text-shadow: 0 0 8px orange;
     color: #888;
 }
-.monks-tokenbar-message li.item .dice-roll .dice-total a.recommended:hover {
+.monks-tokenbar li.item .dice-roll .dice-total a.recommended:hover {
     text-shadow: 0 0 8px red;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total a.result-passed.selected {
+.monks-tokenbar li.item .dice-roll .dice-total a.result-passed.selected,
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.success{
     color: #468847;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total a.result-failed.selected {
+.monks-tokenbar li.item .dice-roll .dice-total a.result-failed.selected,
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.fail {
     color: #b94a48;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total .dice-text {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-text {
     flex: 1;
     font-size: 12px;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total .dice-text.passed {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-text.passed {
     color: #468847;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total .dice-text.failed {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-text.failed {
     color: #b94a48;
 }
 
-.monks-tokenbar-message li.item .dice-roll .dice-total .dice-text:empty {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-text:empty {
     display: none;
 }
 

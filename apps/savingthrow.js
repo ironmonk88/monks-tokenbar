@@ -4,6 +4,12 @@ export class SavingThrowApp extends Application {
     constructor(options) {
         super(options);
         this.tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
+        if (this.tokens.length == 0) {   //if none have been selected then default to the party
+            this.tokens = canvas.tokens.placeables.filter(t => {
+                return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+            })
+        }
+        this.rollmode = 'roll';
     }
 
     static get defaultOptions() {
@@ -18,24 +24,49 @@ export class SavingThrowApp extends Application {
     }
 
     getData(options) {
+
         return {
             tokens: this.tokens,
-            abilities: MonksTokenBar.abilities,
-            skills: MonksTokenBar.skills,
-            saves: MonksTokenBar.saves
+            select: this.select,
+            request: this.request,
+            rollmode: this.rollmode,
+            options: MonksTokenBar.requestoptions
         };
     }
 
-    addToken() {
-        canvas.tokens.controlled.forEach(token => {
-            if (this.tokens.find(t => t.id === token.id) == undefined) {
-                if (token.actor == undefined)
-                    ui.notifications.warn('token has no actor to use for additional attributes');
-                else
-                    this.tokens.push(token);
-            }
-        });
+    addToken(token) {
+        if (this.tokens.find(t => t.id === token.id) == undefined) {
+            if (token.actor == undefined)
+                ui.notifications.warn('token has no actor to use for additional attributes');
+            else
+                this.tokens.push(token);
+        }
         this.render(true);
+    }
+    changeTokens(e) {
+        let type = e.target.dataset.type;
+        switch (type) {
+            case 'player':
+                this.tokens = canvas.tokens.placeables.filter(t => {
+                    return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+                });
+                this.render(true);
+                break;
+            case 'monster':
+                this.tokens = canvas.tokens.placeables.filter(t => {
+                    return t.actor != undefined && t.visible && !t.actor?.hasPlayerOwner;
+                });
+                this.render(true);
+                break;
+            case 'actor': //toggle the select actor button
+                this.select = !this.select;
+                $(e.target).toggleClass('selected', this.select);
+                break;
+            case 'clear':
+                this.tokens = [];
+                this.render(true);
+                break;
+        }
     }
 
     removeToken(id) {
@@ -46,7 +77,7 @@ export class SavingThrowApp extends Application {
         this.render(true);
     }
 
-    async request() {
+    async requestRoll() {
         if (this.tokens.length > 0) {
             let actors = this.tokens.map(t => {
                 return {
@@ -56,15 +87,18 @@ export class SavingThrowApp extends Application {
                     name: t.name
                 };
             });
-            let rolltype = $('#monks-tokenbar-roll option:selected', this.element).attr('attr');
-            let mode = $('#monks-tokenbar-rollmode', this.element).val();
-            let modename = (mode == 'roll' ? 'Public Roll' : (mode == 'gmroll' ? 'Private GM Roll' : (mode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
+            let parts = $('#savingthrow-request', this.element).val().split(':');
+            let requesttype = (parts.length > 1 ? parts[0] : '');
+            let request = (parts.length > 1 ? parts[1] : parts[0]);
+            let rollmode = $('#savingthrow-rollmode', this.element).val();
+            let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
+
             let requestdata = {
-                dc: $('#monks-tokenbar-savingdc', this.element).val(),
-                name: $('#monks-tokenbar-roll option:selected', this.element).html() + " " + (rolltype == 'ability' ? "Ability Check" : (rolltype == 'saving' ? "Saving Throw" : "Check")),
-                rolltype: rolltype,
-                roll: $('#monks-tokenbar-roll', this.element).val(),
-                mode: mode,
+                dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
+                name: $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? "Ability Check" : (requesttype == 'saving' ? "Saving Throw" : "Check")),
+                requesttype: requesttype,
+                request: request,
+                rollmode: rollmode,
                 modename: modename,
                 actors: actors
             };
@@ -78,9 +112,9 @@ export class SavingThrowApp extends Application {
                 user: game.user._id,
                 content: html
             };
-            if (requestdata.mode == 'selfroll')
+            if (requestdata.rollmode == 'selfroll')
                 chatData.whisper = [game.user._id];
-            else if (requestdata.mode == 'blindroll') {
+            else if (requestdata.rollmode == 'blindroll') {
                 chatData.whisper = [game.user._id];
                 for (let i = 0; i < this.tokens.length; i++) {
                     let token = this.tokens[i];
@@ -106,39 +140,70 @@ export class SavingThrowApp extends Application {
         super.activateListeners(html);
         var that = this;
 
-        $('.item-create', html).click($.proxy(this.addToken, this));
+        $('.items-header .item-controls', html).click($.proxy(this.changeTokens, this));
 
         $('.item-list .item', html).each(function (elem) {
             $('.item-delete', this).click($.proxy(that.removeToken, that, this.dataset.itemId));
         });
 
-        $('.dialog-buttons.request', html).click($.proxy(this.request, this));
+        $('.dialog-buttons.request', html).click($.proxy(this.requestRoll, this));
+
+        $('#savingthrow-request', html).change($.proxy(function (e) {
+            this.request = $(e.currentTarget).val();
+        }, this));
+        $('#savingthrow-rollmode', html).change($.proxy(function (e) {
+            this.rollmode = $(e.currentTarget).val();
+        }, this));
     };
 }
 
 export class SavingThrow {
     static msgcontent = {};
 
-    static _rollAbility(actorid, requestroll, rolltype, mode, fastForward) {
+    static _rollAbility(actorid, request, requesttype, rollmode, fastForward) {
         let actor = game.actors.get(actorid);
 
         if (actor != undefined) {
             let rollfn = null;
-            if (rolltype == 'ability')
+            let rollParams = [request, { fastForward: fastForward, chatMessage: false }];
+            if (requesttype == 'ability')
                 rollfn = actor.rollAbilityTest;
-            else if (rolltype == 'saving')
+            else if (requesttype == 'saving') {
                 rollfn = actor.rollAbilitySave;
-            else if (rolltype == 'skill')
-                rollfn = actor.rollSkill;
+            }
+            else if (requesttype == 'skill') {
+                if (game.system.id == 'dnd5e')
+                    rollfn = actor.rollSkill;
+                else if (game.system.id == 'pf2e') {
+                    var _a, _b;
+                    if (null === (_a = actor.data.data.skills[requestroll]) || void 0 === _a ? void 0 : _a.roll) {
+                        //const opts = actor.getRollOptions(["all", "skill-check", null !== (_b = actor_1.SKILL_DICTIONARY[requestroll]) && void 0 !== _b ? _b : requestroll]);
+                        rollfn = actor.data.data.skills[requestroll].roll;//(ev, opts)
+                        rollParams = [null, null, { fastForward: fastForward, chatMessage: false }];
+                    } else {
+                        rollfn = actor.rollSkill; //(ev, requestroll);
+                        rollParams = [null, request, { fastForward: fastForward, chatMessage: false }];
+                    }
+                }
+            } else {
+                if (request == 'death')
+                    rollfn = SavingThrow.rollDeathSave;
+            }
+
+
+
+			
+
+
 
             if (rollfn != undefined) {
-                return rollfn.call(actor, requestroll, { fastForward: fastForward, chatMessage: false }).then((roll) => {
+                return rollfn.apply(actor, rollParams).then((roll) => {
                     log("Roll", roll, actor);
                     if (roll != undefined) {
                         let finishroll;
                         if (game.dice3d != undefined) {// && !fastForward) {
-                            let whisper = (mode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                            if (mode == 'gmroll' && !game.user.isGM)
+                            let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                            if (rollmode == 'gmroll' && !game.user.isGM)
                                 whisper.push(game.user._id);
                             const sound = MonksTokenBar.getDiceSound();
                             if (sound != undefined)
@@ -149,33 +214,24 @@ export class SavingThrow {
                                 //SavingThrow.finishRolling(actorid, message);
                             }, 3000);
 
-                            finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (mode == 'blindroll' && !game.user.isGM)).then(() => {
+                            finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                                 return { id: actorid, reveal: true };
                             });
                         }
 
-                        if (!game.user.isGM) {
-                            game.socket.emit(
-                                MonksTokenBar.SOCKET,
-                                {
-                                    msgtype: 'rollability',
-                                    type: 'savingthrow',
-                                    senderId: game.user._id,
-                                    actorid: actorid,
-                                    msgid: message.id,
-                                    roll: roll
-                                },
-                                (resp) => { }
-                            );
-                        } else {
-                            //SavingThrow.updateSavingRoll(actorid, message, roll, revealDice);
-                            return {id: actorid, roll: roll, finish: finishroll};
-                        }
+                        return {id: actorid, roll: roll, finish: finishroll};
                     }
 
                 });
-            }
+            } else
+                ui.notifications.warn(actor.name + ": Could not find function to roll");
         }
+    }
+
+    static async rollDeathSave() {
+        let r = new Roll("1d20");
+        r.evaluate();
+        return r;
     }
 
     static async onRollAbility(ids, message, fastForward = false, e) {
@@ -185,9 +241,9 @@ export class SavingThrow {
 
         let flags = message.data.flags['monks-tokenbar'];
 
-        let requestroll = message.getFlag('monks-tokenbar', 'roll');
-        let rolltype = message.getFlag('monks-tokenbar', 'rolltype');
-        let mode = message.getFlag('monks-tokenbar', 'mode');
+        let request = message.getFlag('monks-tokenbar', 'request');
+        let requesttype = message.getFlag('monks-tokenbar', 'requesttype');
+        let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
 
         let promises = [];
         for (let id of ids) {
@@ -196,15 +252,37 @@ export class SavingThrow {
                 let actor = game.actors.get(msgactor.id);
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    promises.push(SavingThrow._rollAbility(msgactor.id, requestroll, rolltype, mode, fastForward));
+                    promises.push(SavingThrow._rollAbility(msgactor.id, request, requesttype, rollmode, fastForward));
                 }
             }
         };
 
         Promise.all(promises).then(response => {
             log('roll all finished', response);
-            const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-            SavingThrow.updateMessage(response, message, revealDice);
+            if (!game.user.isGM) {
+                let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
+                game.socket.emit(
+                    MonksTokenBar.SOCKET,
+                    {
+                        msgtype: 'rollability',
+                        type: 'savingthrow',
+                        senderId: game.user._id,
+                        msgid: message.id,
+                        response: responses
+                    },
+                    (resp) => { }
+                );
+
+                let promises = response.filter(r => r.finish != undefined).map(r => { return r.finish; });
+                if (promises.length) {
+                    Promise.all(promises).then(response => {
+                        SavingThrow.finishRolling(response, message);
+                    });
+                }
+            } else {
+                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                SavingThrow.updateMessage(response, message, revealDice);
+            }
         });
         
     }
@@ -220,27 +298,28 @@ export class SavingThrow {
         let promises = [];
 
         for (let update of updates) {
-            let actorid = update.id;
-            let msgactor = duplicate(message.getFlag('monks-tokenbar', 'actor' + actorid));
-            log('updating actor', msgactor, update.roll);
+            if (update != undefined) {
+                let actorid = update.id;
+                let msgactor = duplicate(message.getFlag('monks-tokenbar', 'actor' + actorid));
+                log('updating actor', msgactor, update.roll);
 
-            msgactor.roll = update.roll.toJSON();
-            msgactor.reveal = reveal;
-            msgactor.total = update.roll.total;
+                msgactor.roll = update.roll.toJSON();
+                msgactor.reveal = reveal;
+                msgactor.total = update.roll.total;
 
-            let tooltip = await update.roll.getTooltip();
+                let tooltip = await update.roll.getTooltip();
 
-            if (dc != '')
-                msgactor.passed = (msgactor.total >= dc);
+                if (dc != '')
+                    msgactor.passed = (msgactor.total >= dc);
 
-            
-            if ($('.item[data-item-id="' + actorid + '"] .item-row .dice-tooltip', content).length == 0)
-                $(tooltip).insertAfter($('.item[data-item-id="' + actorid + '"] .item-row', content));
-            $('.item[data-item-id="' + actorid + '"] .item-row .item-roll', content).remove();
-            if ($('.item[data-item-id="' + actorid + '"] .item-row .roll-controls .dice-total', content).length == 0) {
-                $('.item[data-item-id="' + actorid + '"] .item-row .roll-controls', content).append(
-                    `<div class="dice-total flexrow" style="display:none;">
-                <div class= "dice-result">${msgactor.total}</div >
+
+                if ($('.item[data-item-id="' + actorid + '"] .item-row .dice-tooltip', content).length == 0)
+                    $(tooltip).hide().insertAfter($('.item[data-item-id="' + actorid + '"] .item-row', content));
+                $('.item[data-item-id="' + actorid + '"] .item-row .item-roll', content).remove();
+                if ($('.item[data-item-id="' + actorid + '"] .item-row .roll-controls .dice-total', content).length == 0) {
+                    $('.item[data-item-id="' + actorid + '"] .item-row .roll-controls', content).append(
+                        `<div class="dice-total flexrow" style="display:none;">
+                <div class="dice-result">${msgactor.total}</div >
                 <a class="item-control result-passed gm-only" title="Roll Passed" data-control="rollPassed">
                     <i class="fas fa-check"></i>
                 </a>
@@ -249,21 +328,23 @@ export class SavingThrow {
                 </a>
                 <div class="dice-text player-only"></div>
             </div >`);
-            }
-            flags["actor" + actorid] = msgactor;
-            //await message.setFlag('monks-tokenbar', 'actor' + actorid, msgactor);
+                }
+                flags["actor" + actorid] = msgactor;
+                //await message.setFlag('monks-tokenbar', 'actor' + actorid, msgactor);
 
-            if (update.finish != undefined)
-                promises.push(update.finish);
+                if (update.finish != undefined)
+                    promises.push(update.finish);
+            }
         }
 
         message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } });
 
-        if (promises.length)
+        if (promises.length) {
             Promise.all(promises).then(response => {
                 log('rolls revealed', response);
-                SavingThrow.finishRolling(response, message)
+                SavingThrow.finishRolling(response, message);
             });
+        }
     }
 
     static async finishRolling(updates, message) {
@@ -276,7 +357,7 @@ export class SavingThrow {
                     msgtype: 'finishroll',
                     type: 'savingthrow',
                     senderId: game.user._id,
-                    actorid: updates[0].id,
+                    response: updates,
                     msgid: message.id
                 }
             );
@@ -336,7 +417,7 @@ export class SavingThrow {
         await message.setFlag('monks-tokenbar', 'actor' + actorid, msgactor); //message.setFlag('monks-tokenbar', 'actors', actors);
     }*/
 
-    static async onRollAll(mode, message) {
+    static async onRollAll(tokentype, message) {
         if (game.user.isGM) {
             let flags = message.data.flags['monks-tokenbar'];
             let actors = Object.keys(flags)
@@ -346,7 +427,7 @@ export class SavingThrow {
             let ids = actors.filter(a => {
                 if (a.roll != undefined) return false;
                 let actor = game.actors.get(a.id);
-                return (actor != undefined && (mode == 'all' || actor.data.type != 'character'));
+                return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
             }).map(a => a.id);
 
             SavingThrow.onRollAbility(ids, message, true);
@@ -396,8 +477,30 @@ Hooks.on("diceSoNiceRollComplete", (messageid) => {
     }
 })*/
 
+Hooks.on("controlToken", (token, select) => {
+    if (game.user.isGM && MonksTokenBar.tokenbar.savingthrow != undefined && MonksTokenBar.tokenbar.savingthrow.select && select) {
+        MonksTokenBar.tokenbar.savingthrow.addToken(token);
+    }
+});
+
+Hooks.on("renderSavingThrowApp", (app, html) => {
+    if (app.request == undefined) {
+        //if all the tokens are players, then default to perception
+        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        //if all the tokens have zero hp, then default to death saving throw
+        let allZeroHP = app.tokens.filter(t => t.actor?.data.data.attributes.hp.value == 0).length;
+        $('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? 'skill:prc' : ''));
+    } else
+        $('#savingthrow-request', html).val(app.request);
+
+    $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
+    $('#savingthrow-rollmode', html).val(app.rollmode);
+
+    $('.item-control[data-type="monster"]', html).hide();
+});
+
 Hooks.on("renderChatMessage", (message, html, data) => {
-    const svgCard = html.find(".monks-tokenbar-message.savingthrow");
+    const svgCard = html.find(".monks-tokenbar.savingthrow");
     if (svgCard.length !== 0) {
         log('Rendering chat message');
         if (!game.user.isGM)
@@ -406,7 +509,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             html.find(".player-only").remove();
 
         let dc = message.getFlag('monks-tokenbar', 'dc');
-        let mode = message.getFlag('monks-tokenbar', 'mode');
+        let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
 
         $('.roll-all', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'all', message));
         $('.roll-npc', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'npc', message));
@@ -422,18 +525,23 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let msgactor = message.getFlag('monks-tokenbar', 'actor' + actorId);//actors.find(a => { return a.id == actorId; });
             let actor = game.actors.get(actorId);
 
-            $(item).toggle(game.user.isGM || mode == 'roll' || mode == 'gmroll' || (mode == 'blindroll' && actor.owner));
+            $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
 
             if (game.user.isGM || actor.owner)
                 $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgactor.tokenid))
-            $('.item-roll', item).toggle(msgactor.roll == undefined && (game.user.isGM || (actor.owner && mode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, actorId, message, false));
-            $('.dice-total', item).toggle(msgactor.roll != undefined && (game.user.isGM || mode == 'roll' || (actor.owner && mode != 'selfroll')));
+            $('.item-roll', item).toggle(msgactor.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, actorId, message, false));
+            $('.dice-total', item).toggle(msgactor.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
             if (msgactor.roll != undefined) {
                 let roll = Roll.fromData(msgactor.roll);
-                let showroll = game.user.isGM || mode == 'roll' || (mode == 'gmroll' && actor.owner);
-                $('.dice-result', item).toggle(showroll || (mode == 'blindroll' && actor.owner));
-                if (!msgactor.reveal || (mode == 'blindroll' && !game.user.isGM))
+                let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
+                $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.owner));
+                if (!msgactor.reveal || (rollmode == 'blindroll' && !game.user.isGM)) {
                     $('.dice-result', item).html(!msgactor.reveal ? '...' : '-');
+                } else {
+                    $('.dice-result', item)
+                        .toggleClass('success', roll.dice[0].total >= roll.dice[0].options.critical)
+                        .toggleClass('fail', roll.dice[0].total <= roll.dice[0].options.fumble);
+                }
                 if (!msgactor.reveal && game.user.isGM)
                     $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, actorId, message));
                 //if (showroll && msgactor.reveal && $('.dice-tooltip', item).is(':empty')) {
@@ -462,7 +570,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         if (count > 0)
             $('.group-dc', html).html(parseInt(groupdc / count));
 
-        //let modename = (mode == 'roll' ? 'Public Roll' : (mode == 'gmroll' ? 'Private GM Roll' : (mode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
+        //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
         //$('.message-mode', html).html(modename);
 
         //let content = duplicate(message.data.content);
