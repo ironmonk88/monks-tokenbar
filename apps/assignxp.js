@@ -1,4 +1,4 @@
-import { MonksTokenBar, log } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class AssignXPApp extends Application {
     constructor(combat, options) {
@@ -19,7 +19,7 @@ export class AssignXPApp extends Application {
                         xp: 0
                     });
             });
-            this.reason = 'Combat Experience';
+            this.reason = i18n("MonksTokenBar.CombatExperience");
         } else {
             this.actors = canvas.tokens.placeables.filter(t => {
                 return t.actor?.hasPlayerOwner && t.actor?.data.type == 'character'
@@ -38,7 +38,7 @@ export class AssignXPApp extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "assignexperience",
-            title: "Assign XP",
+            title: i18n("MonksTokenBar.AssignXP"),
             template: "./modules/monks-tokenbar/templates/assignxp.html",
             width: 400,
             height: 400,
@@ -111,7 +111,7 @@ export class AssignXPApp extends Application {
             ChatMessage.create(chatData, {});
             this.close();
         } else
-            ui.notifications.warn("Cannot send request if no actors selected");
+            ui.notifications.warn(i18n("MonksTokenBar.RequestNoneActorSelected"));
     }
 
     activateListeners(html) {

@@ -46,36 +46,36 @@ export class MonksTokenBar {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
         if (game.system.id == "pf2e") {
             MonksTokenBar.requestoptions.push({
-                id: "ability", text: "Ability", groups: CONFIG.PF2E.abilities
+                id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
             });
             MonksTokenBar.requestoptions.push({
-                id: "saving", text: "Saving Throw", groups: CONFIG.PF2E.saves
+                id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.saves
             });
             MonksTokenBar.requestoptions.push({
-                id: "skill", text: "Skill", groups: CONFIG.PF2E.skills
+                id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
             });
         } else if (game.system.id == "D35E") {
             MonksTokenBar.requestoptions.push({
-                id: "ability", text: "Ability", groups: CONFIG.PF2E.abilities
+                id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
             });
             MonksTokenBar.requestoptions.push({
-                id: "saving", text: "Saving Throw", groups: CONFIG.PF2E.savingThrows
+                id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.savingThrows
             });
             MonksTokenBar.requestoptions.push({
-                id: "skill", text: "Skill", groups: CONFIG.PF2E.skills
+                id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
             });
         } else {
             MonksTokenBar.requestoptions.push({
-                id:"ability", text:"Ability", groups:CONFIG.DND5E.abilities
+                id:"ability", text: i18n("MonksTokenBar.Ability"), groups:CONFIG.DND5E.abilities
             });
             MonksTokenBar.requestoptions.push({
-                id:"saving", text:"Saving Throw", groups:CONFIG.DND5E.abilities
+                id:"saving", text: i18n("MonksTokenBar.SavingThrow"), groups:CONFIG.DND5E.abilities
             });
             MonksTokenBar.requestoptions.push({
-                id:"skill", text:"Skill", groups:CONFIG.DND5E.skills
+                id:"skill", text: i18n("MonksTokenBar.Skill"), groups:CONFIG.DND5E.skills
             });
             MonksTokenBar.requestoptions.push({
-                id:"death", text:"Death Saving Throw"
+                id:"death", text: i18n("MonksTokenBar.DeathSavingThrow")
             });
         }
 
@@ -172,7 +172,7 @@ export class MonksTokenBar {
                 (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token.id))) {
                 //prevent the token from moving
                 if (!token.getFlag("monks-tokenbar", "notified") || false) {
-                    ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? "Movement is set to combat turn, it's currently not your turn" : "Movement is currently locked");
+                    ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? i18n("MonksTokenBar.CombatTurnMovementLimited") : i18n("MonksTokenBar.NormalMovementLimited"));
                     token.setFlag("monks-tokenbar", "notified", true);
                     setTimeout(function (token) {
                         log('unsetting notified', token);

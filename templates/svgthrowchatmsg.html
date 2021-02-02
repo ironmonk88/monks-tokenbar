@@ -2,7 +2,7 @@
     <header class="card-header flexrow">
         <h3 class="item-name">{{name}}</h3>
         <div class="item-controls flexrow" style="text-align:right;">
-            {{#if dc}}<h3 class="gm-only">DC: {{dc}}</h3>{{/if}}
+            {{#if dc}}<h3 class="gm-only">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>{{/if}}
         </div>
     </header>
     <div class="message-content" style="margin:5px 0px;">
@@ -10,13 +10,13 @@
 	    <div class="form-group sheet actor">
             <ol class="items-list inventory-list">
                 <li class="items-header flexrow">
-                    <h3 class="item-name flexrow">Actors</h3>
+                    <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
                     <div class="item-controls flexrow">
-                        <a class="item-control roll-all gm-only" title="Roll All" data-control="all">
+                        <a class="item-control roll-all gm-only" title="{{localize 'MonksTokenBar.RollAll'}}" data-control="all">
                             <i class="fas fa-users"></i>
                         </a>
-                        <a class="item-control roll-npc gm-only" title="Roll NPCs" data-control="npc">
+                        <a class="item-control roll-npc gm-only" title="{{localize 'MonksTokenBar.RollNPC'}}" data-control="npc">
                             <i class="fas fa-users-cog"></i>
                         </a>
                     </div>
@@ -35,7 +35,7 @@
                                 </div>
 
                                 <div class="roll-controls flexrow">
-                                    <a class="item-control item-roll" title="Roll" style="display:none;"></a>
+                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;"></a>
                                 </div>
                             </div>
                         </div>
@@ -46,6 +46,6 @@
         </div>
     </div>
     <footer class="card-footer gm-only">
-        <span class="message-mode">{{modename}}</span><span> Group DC: <span class="group-dc"></span></span>
+        <span class="message-mode">{{modename}}</span><span> {{localize 'MonksTokenBar.GroupDC'}}: <span class="group-dc"></span></span>
     </footer>
 </div>
