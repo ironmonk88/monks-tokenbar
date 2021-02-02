@@ -1,8 +1,8 @@
 <div class="monks-tokenbar assignxp chat-card item-card">
     <header class="card-header flexrow">
-        <h3 class="item-name">Experience</h3>
+        <h3 class="item-name">{{localize 'MonksTokenBar.Experience'}}</h3>
         <div class="item-controls flexrow" style="text-align:right;">
-            <h3>XP: {{xp}}</h3>
+            <h3>{{localize 'MonksTokenBar.XP'}}: {{xp}}</h3>
         </div>
     </header>
     <div class="message-content" style="margin:5px 0px;">
@@ -10,10 +10,10 @@
 	    <div class="form-group sheet actor">
             <ol class="items-list inventory-list">
                 <li class="items-header flexrow">
-                    <h3 class="item-name flexrow">Actors</h3>
+                    <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
                     <div class="item-controls flexrow">
-                        <a class="item-control assign-all gm-only" title="Assign All" data-control="assignAll">
-                            <i class="fas fa-plus-circle"></i> Add All
+                        <a class="item-control assign-all gm-only" title="{{localize 'MonksTokenBar.AssignAll'}}" data-control="assignAll">
+                            <i class="fas fa-plus-circle"></i>{{localize 'MonksTokenBar.XPAddAll'}}
                         </a>
                     </div>
                 </li>
@@ -29,8 +29,8 @@
                                         {{this.name}}
                                     </h4>
                                 </div>
-                                <a class="item-control add-xp" title="Add Experience" data-control="addXP" style="display:none;">
-                                    <i class="fas fa-plus"></i> Add
+                                <a class="item-control add-xp" title="{{localize 'MonksTokenBar.AddExperience'}}" data-control="addXP" style="display:none;">
+                                    <i class="fas fa-plus"></i>{{localize 'MonksTokenBar.XPAdd'}}
                                 </a>
                                 <div class="dice-total xp-result flexrow">
                                     {{this.xp}}
@@ -44,6 +44,6 @@
         </div>
     </div>
     <footer class="card-footer">
-        <span> Reason: <span class="xp-reason">{{reason}}</span></span>
+        <span> {{localize 'MonksTokenBar.Reason'}}: <span class="xp-reason">{{reason}}</span></span>
     </footer>
 </div>
