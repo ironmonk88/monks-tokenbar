@@ -19,6 +19,22 @@
 	"MonksTokenBar.ContestedRoll": "Contested Roll",
 	"MonksTokenBar.AssignXP": "Assign XP",
 
+	"MonksTokenBar.Ability": "Ability",
+	"MonksTokenBar.AbilityCheck": "Ability Check",
+	"MonksTokenBar.SavingThrow": "Saving Throw",
+	"MonksTokenBar.Skill": "Skill",
+	"MonksTokenBar.DeathSavingThrow": "Death Saving Throw",
+	"MonksTokenBar.Check": "Check",
+	"MonksTokenBar.CombatExperience": "Combat Experience",
+
+	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
+	"MonksTokenBar.NormalMovementLimited": "Movement is currently locked",
+	"MonksTokenBar.RequestNoneActorSelected": "Cannot send request if no actors selected",
+	"MonksTokenBar.RequestNoneTokenSelected": "Cannot send request if no tokens selected",
+	"MonksTokenBar.RequestActorMissing": "Cannot send request if either actor is missing",
+	"MonksTokenBar.TokenNoActorAttrs": "token has no actor to use for additional attributes",
+	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
+
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
 	"MonksTokenBar.notify-on-change.hint": "Send a notification to all players when the GM changes the allowable movement",
 	"MonksTokenBar.show-xp-dialog.name": "Show XP Dialog",
@@ -27,6 +43,8 @@
 	"MonksTokenBar.show-resource-bars.hint": "Show the Token resource bars",
 	"MonksTokenBar.token-pictures.name": "Token Pictures",
 	"MonksTokenBar.token-pictures.hint": "Choose to use the token image or the actors portrait image on the tokenbar",
+	"MonksTokenBar.token-pictures.token": "Token Image",
+	"MonksTokenBar.token-pictures.actor": "Actor Portrait",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

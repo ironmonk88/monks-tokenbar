@@ -1,4 +1,4 @@
-import { MonksTokenBar, log } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class ContestedRollApp extends Application {
     constructor(options) {
@@ -11,7 +11,7 @@ export class ContestedRollApp extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "contestedroll",
-            title: "Contested Roll",
+            title: i18n("MonksTokenBar.ContestedRoll"),
             template: "./modules/monks-tokenbar/templates/contestedroll.html",
             width: 400,
             height: 250,
@@ -42,7 +42,7 @@ export class ContestedRollApp extends Application {
                 let parts = $('.contested-request[data-type="item' + index + '"]', this.element).val().split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
-                let requestname = $('.contested-request[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? "Ability Check" : (requesttype == 'saving' ? "Saving Throw" : "Check"));
+                let requestname = $('.contested-request[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.actor.id,
                     tokenid: item.token.id,
@@ -56,7 +56,7 @@ export class ContestedRollApp extends Application {
             });
 
             let rollmode = $('#contestedroll-rollmode', this.element).val();
-            let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
+            let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             let requestdata = {
                 rollmode: rollmode,
                 modename: modename,
@@ -89,7 +89,7 @@ export class ContestedRollApp extends Application {
             ChatMessage.create(chatData, {});
             this.close();
         } else
-            ui.notifications.warn("Cannot send request if either actor is missing");
+            ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
     }
 
     activateListeners(html) {

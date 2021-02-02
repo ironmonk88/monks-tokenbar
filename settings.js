@@ -3,8 +3,8 @@ export const registerSettings = function () {
 	let modulename = "monks-tokenbar";
 
 	let imageoptions = {
-		'token': 'Token Image',
-		'actor': 'Actor Portrait',
+		'token': game.i18n.localize("MonksTokenBar.token-pictures.token"),
+		'actor': game.i18n.localize("MonksTokenBar.token-pictures.actor"),
 	};
 	
 	game.settings.register(modulename, "notify-on-change", {

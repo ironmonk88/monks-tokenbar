@@ -1,4 +1,4 @@
-import { MonksTokenBar, log } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class SavingThrowApp extends Application {
     constructor(options) {
@@ -15,7 +15,7 @@ export class SavingThrowApp extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "requestsavingthrow",
-            title: "Request Roll",
+            title: i18n("MonksTokenBar.RequestRoll"),
             template: "./modules/monks-tokenbar/templates/savingthrow.html",
             width: 400,
             height: 400,
@@ -37,7 +37,7 @@ export class SavingThrowApp extends Application {
     addToken(token) {
         if (this.tokens.find(t => t.id === token.id) == undefined) {
             if (token.actor == undefined)
-                ui.notifications.warn('token has no actor to use for additional attributes');
+                ui.notifications.warn(i18n("MonksTokenBar.TokenNoActorAttrs"));
             else
                 this.tokens.push(token);
         }
@@ -91,11 +91,11 @@ export class SavingThrowApp extends Application {
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
             let rollmode = $('#savingthrow-rollmode', this.element).val();
-            let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
+            let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
             let requestdata = {
                 dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
-                name: $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? "Ability Check" : (requesttype == 'saving' ? "Saving Throw" : "Check")),
+                name: $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check"))),
                 requesttype: requesttype,
                 request: request,
                 rollmode: rollmode,
@@ -133,7 +133,7 @@ export class SavingThrowApp extends Application {
             ChatMessage.create(chatData, {});
             this.close();
         } else
-            ui.notifications.warn("Cannot send request if no tokens selected");
+            ui.notifications.warn(i18n("MonksTokenBar.RequestNoneTokenSelected"));
     }
 
     activateListeners(html) {
@@ -224,7 +224,7 @@ export class SavingThrow {
 
                 });
             } else
-                ui.notifications.warn(actor.name + ": Could not find function to roll");
+                ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
         }
     }
 
