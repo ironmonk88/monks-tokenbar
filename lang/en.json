@@ -26,6 +26,11 @@
 	"MonksTokenBar.DeathSavingThrow": "Death Saving Throw",
 	"MonksTokenBar.Check": "Check",
 	"MonksTokenBar.CombatExperience": "Combat Experience",
+	"MonksTokenBar.RollResult": "Roll Result",
+	"MonksTokenBar.RollPassed": "Roll Passed",
+	"MonksTokenBar.RollFailed": "Roll Failed",
+	"MonksTokenBar.Passed": "Passed",
+	"MonksTokenBar.Failed": "Failed",
 
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
 	"MonksTokenBar.NormalMovementLimited": "Movement is currently locked",
