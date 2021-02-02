@@ -1,0 +1,21 @@
+{
+	"MonksTokenBar.EditCharacter": "编辑角色",
+	"MonksTokenBar.EditToken": "编辑指示物",
+	"MonksTokenBar.TargetToken": "选标指示物",
+
+	"MonksTokenBar.easy": "简单",
+	"MonksTokenBar.average": "平均",
+	"MonksTokenBar.challenging": "挑战",
+	"MonksTokenBar.hard": "困难",
+	"MonksTokenBar.epic": "史诗",
+
+	"MonksTokenBar.FreeMovement": "自由移动",
+	"MonksTokenBar.NoMovement": "禁止移动",
+	"MonksTokenBar.CombatTurn": "战斗回合",
+
+	"MonksTokenBar.MovementChanged": "移动方式更改为 ",
+
+	"MonksTokenBar.RequestRoll": "请求掷骰",
+	"MonksTokenBar.ContestedRoll": "对抗掷骰",
+	"MonksTokenBar.AssignXP": "分配 XP"
+}
