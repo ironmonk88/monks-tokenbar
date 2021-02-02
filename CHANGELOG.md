@@ -3,6 +3,12 @@ Fixed issue with multiple tokens being added or removed from scene.
 
 You can now reposition the token bar.
 
+Chinese translations
+
+Fixed an issue where multiple tokens associated with a single actor only rolling once.
+
+Remember the last roll mode and reuse it the next time opening the saving throw.
+
 ## Version 1.0.8
 Fixed issues with the players not able to roll.
 
