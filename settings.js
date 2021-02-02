@@ -8,8 +8,8 @@ export const registerSettings = function () {
 	};
 	
 	game.settings.register(modulename, "notify-on-change", {
-		name: "Notify on Movement Change",
-		hint: "Send a notification to all players when the GM changes the allowable movement",
+		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
+		hint: game.i18n.localize("MonksTokenBar.notify-on-change.hint"),
 		scope: "world",
 		config: true,
 		default: true,
@@ -18,8 +18,8 @@ export const registerSettings = function () {
 
 	if (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')) {
 		game.settings.register(modulename, "show-xp-dialog", {
-			name: "Show XP Dialog",
-			hint: "Show the XP Dialog automatically after you complete an encounter",
+			name: game.i18n.localize("MonksTokenBar.show-xp-dialog.name"),
+			hint: game.i18n.localize("MonksTokenBar.show-xp-dialog.hint"),
 			scope: "world",
 			config: true,
 			default: true,
@@ -28,16 +28,16 @@ export const registerSettings = function () {
 	}
 
 	game.settings.register(modulename, "show-resource-bars", {
-		name: "Show Resource Bars",
-		hint: "Show the Token resource bars",
+		name: game.i18n.localize("MonksTokenBar.show-resource-bars.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-resource-bars.hint"),
 		scope: "world",
 		config: true,
 		default: false,
 		type: Boolean,
 	});
 	game.settings.register(modulename, "token-pictures", {
-		name: "Token Pictures",
-		hint: "Choose to use the token image or the actors portrait image on the tokenbar",
+		name: game.i18n.localize("MonksTokenBar.token-pictures.name"),
+		hint: game.i18n.localize("MonksTokenBar.token-pictures.hint"),
 		scope: "world",
 		config: true,
 		default: "token",
