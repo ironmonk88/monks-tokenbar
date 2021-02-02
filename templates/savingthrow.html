@@ -2,7 +2,7 @@
     <div class="dialog-content">
         <form style="height:100%;">
             <div class="form-group">
-                <label>Roll</label>
+                <label>{{localize 'MonksTokenBar.Roll'}}</label>
                 <select id="savingthrow-request">
                     {{#each options}}
                     {{#if this.groups}}
@@ -18,35 +18,35 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>DC</label>
-                <input type="text" id="monks-tokenbar-savingdc" placeholder="Leave blank to not calculate" />
+                <label>{{localize 'MonksTokenBar.SavingDC'}}</label>
+                <input type="text" id="monks-tokenbar-savingdc" placeholder="{{localize 'MonksTokenBar.SavingDCPlaceholder'}}" />
             </div>
             <div class="form-group">
-                <label>Roll Mode</label>
+                <label>{{localize 'MonksTokenBar.RollMode'}}</label>
                 <select id="savingthrow-rollmode">
-                    <option value="roll" selected="">Public Roll</option>
-                    <option value="gmroll">Private GM Roll</option>
-                    <option value="blindroll">Blind GM Roll</option>
-                    <option value="selfroll">Self Roll</option>
+                    <option value="roll" selected="">{{localize 'MonksTokenBar.PublicRoll'}}</option>
+                    <option value="gmroll">{{localize 'MonksTokenBar.PrivateGMRoll'}}</option>
+                    <option value="blindroll">{{localize 'MonksTokenBar.BlindGMRoll'}}</option>
+                    <option value="selfroll">{{localize 'MonksTokenBar.SelfRoll'}}</option>
                 </select>
             </div>
             <div class="form-group sheet">
                 <ol class="items-list inventory-list">
                     <li class="items-header flexrow">
-                        <h3 class="item-name flexrow">Actors</h3>
+                        <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
                         <div class="item-controls flexrow">
-                            <a class="item-control" title="Add Players" data-type="player">
-                                <i class="fas fa-child"></i> Players
+                            <a class="item-control" title="{{localize 'MonksTokenBar.AddPlayers'}}" data-type="player">
+                                <i class="fas fa-child"></i>{{localize 'MonksTokenBar.Players'}}
                             </a>
-                            <a class="item-control" title="Add Currently Visible Monsters" data-type="monster">
-                                <i class="fas fa-bolt"></i> Monsters
+                            <a class="item-control" title="{{localize 'MonksTokenBar.AddMonsters'}}" data-type="monster">
+                                <i class="fas fa-bolt"></i>{{localize 'MonksTokenBar.Monsters'}}
                             </a>
-                            <a class="item-control" title="Add Actor" data-type="actor" class="{{#if select}}selected{{/if}}">
-                                <i class="fas fa-plus"></i> Add
+                            <a class="item-control" title="{{localize 'MonksTokenBar.AddActor'}}" data-type="actor" class="{{#if select}}selected{{/if}}">
+                                <i class="fas fa-plus"></i>{{localize 'MonksTokenBar.XPAdd'}}
                             </a>
-                            <a class="item-control" title="Clear All" data-type="clear">
-                                <i class="fas fa-trash-alt"></i> Clear
+                            <a class="item-control" title="{{localize 'MonksTokenBar.ClearAll'}}" data-type="clear">
+                                <i class="fas fa-trash-alt"></i>{{localize 'MonksTokenBar.Clear'}}
                             </a>
                         </div>
                     </li>
@@ -62,7 +62,7 @@
                             </div>
 
                             <div class="item-controls flexrow">
-                                <a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>
+                                <a class="item-control item-delete" title="{{localize 'MonksTokenBar.DeleteItem'}}"><i class="fas fa-trash"></i></a>
                             </div>
                         </li>
                         {{/each}}
@@ -72,6 +72,6 @@
         </form>
     </div>
     <div class="dialog-buttons">
-        <button class="dialog-buttons request" data-button="request">Request</button>
+        <button class="dialog-buttons request" data-button="request">{{localize 'MonksTokenBar.Request'}}</button>
     </div>
 </div>
