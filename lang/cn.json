@@ -26,6 +26,11 @@
 	"MonksTokenBar.DeathSavingThrow": "死亡豁免",
 	"MonksTokenBar.Check": "检定",
 	"MonksTokenBar.CombatExperience": "战斗经验",
+	"MonksTokenBar.RollResult": "掷骰结果",
+	"MonksTokenBar.RollPassed": "掷骰通过",
+	"MonksTokenBar.RollFailed": "掷骰失败",
+	"MonksTokenBar.Passed": "通过",
+	"MonksTokenBar.Failed": "失败",
 
 	"MonksTokenBar.CombatTurnMovementLimited": "移动方式已设为战斗回合，当前并非你的回合",
 	"MonksTokenBar.NormalMovementLimited": "移动已被锁定",

@@ -320,10 +320,10 @@ export class SavingThrow {
                     $('.item[data-item-id="' + actorid + '"] .item-row .roll-controls', content).append(
                         `<div class="dice-total flexrow" style="display:none;">
                 <div class="dice-result">${msgactor.total}</div >
-                <a class="item-control result-passed gm-only" title="Roll Passed" data-control="rollPassed">
+                <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
                     <i class="fas fa-check"></i>
                 </a>
-                <a class="item-control result-failed gm-only" title="Roll Failed" data-control="rollFailed">
+                <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
                     <i class="fas fa-times"></i>
                 </a>
                 <div class="dice-text player-only"></div>
@@ -551,7 +551,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgactor.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, actorId, message, true));
                 $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgactor.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, actorId, message, false));
 
-                $('.dice-text', item).toggle(showroll && msgactor.passed != undefined).toggleClass('passed', msgactor.passed === true).toggleClass('failed', msgactor.passed === false).html(msgactor.passed === true ? 'Passed' : msgactor.passed === false ? 'Failed' : '');
+                $('.dice-text', item).toggle(showroll && msgactor.passed != undefined).toggleClass('passed', msgactor.passed === true).toggleClass('failed', msgactor.passed === false).html(msgactor.passed === true ? i18n("MonksTokenBar.Passed") : msgactor.passed === false ? i18n("MonksTokenBar.Failed") : '');
 
                 count++;
                 groupdc += roll.total;

@@ -211,7 +211,7 @@ export class ContestedRoll {
         $('.item[data-item-id="' + actorid + '"] .item-row .roll-controls', content).append(
             `<div class="dice-total flexrow" style="display:none;">
                 <div class= "dice-result">${msgactor.total}</div >
-                <a class="item-control roll-result" title="Roll Result" data-control="rollResult">
+                <a class="item-control roll-result" title="${i18n("MonksTokenBar.RollResult")}" data-control="rollResult">
                     <i class="fas"></i>
                 </a>
             </div >`);
