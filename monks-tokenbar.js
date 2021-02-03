@@ -133,8 +133,13 @@ export class MonksTokenBar {
 
     static refresh() {
         if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
-            MonksTokenBar.tokenbar.getCurrentTokens();
-            MonksTokenBar.tokenbar.render(true);
+            if (MonksTokenBar.refreshTimer == null) {
+                MonksTokenBar.refreshTimer = setTimeout(function () {
+                    MonksTokenBar.tokenbar.getCurrentTokens();
+                    MonksTokenBar.tokenbar.render(true);
+                    MonksTokenBar.refreshTimer = null;
+                }, 100);
+            }
         }
     }
 

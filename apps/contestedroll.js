@@ -5,7 +5,7 @@ export class ContestedRollApp extends Application {
         super(options);
         this.item0 = { token: (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null), request: 'ability:str' };
         this.item1 = { token: (game.user.targets.values()?.next()?.value || (canvas.tokens.controlled.length > 1 ? canvas.tokens.controlled[1] : null)), request: 'ability:str' };
-        this.rollmode = 'roll';
+        this.rollmode = (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
     }
 
     static get defaultOptions() {
@@ -56,6 +56,7 @@ export class ContestedRollApp extends Application {
             });
 
             let rollmode = $('#contestedroll-rollmode', this.element).val();
+            game.user.setFlag("monks-tokenbar", "lastmodeCR", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             let requestdata = {
                 rollmode: rollmode,

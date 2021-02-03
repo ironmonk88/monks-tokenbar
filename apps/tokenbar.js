@@ -51,10 +51,12 @@ export class TokenBar extends Application {
     }
 
     setPos() {
-        let pos = $('#hotbar').position();
+        let hbpos = $('#hotbar').position();
         let width = $('#hotbar').width();
-        this.setPosition(pos.left + width + 4);
-        $(this.element).css({ left: pos.left + width + 4 });
+        let pos = (game.user.getFlag("monks-tokenbar", "position") || { left: hbpos.left + width + 4 });
+
+        this.setPosition(pos.left, pos.top);
+        $(this.element).css(pos);
 
         return this;
     }
@@ -198,6 +200,69 @@ export class TokenBar extends Application {
         html.find(".assign-xp").click(this._onAssignXP.bind(this));
         html.find(".token-movement").click(this._onChangeMovement.bind(this));
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
+
+        html.find('#tokenbar-move-handle').mousedown(ev => {
+            ev.preventDefault();
+            ev = ev || window.event;
+            let isRightMB = false;
+            if ("which" in ev) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+                isRightMB = ev.which == 3;
+            } else if ("button" in ev) { // IE, Opera 
+                isRightMB = ev.button == 2;
+            }
+
+            if (!isRightMB) {
+                dragElement(document.getElementById("tokenbar"));
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+                function dragElement(elmnt) {
+                    elmnt.onmousedown = dragMouseDown;
+                    function dragMouseDown(e) {
+                        e = e || window.event;
+                        e.preventDefault();
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+
+                        document.onmouseup = closeDragElement;
+                        document.onmousemove = elementDrag;
+                    }
+
+                    function elementDrag(e) {
+                        e = e || window.event;
+                        e.preventDefault();
+                        // calculate the new cursor position:
+                        pos1 = pos3 - e.clientX;
+                        pos2 = pos4 - e.clientY;
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                        // set the element's new position:
+                        elmnt.style.bottom = null
+                        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                        elmnt.style.position = 'fixed';
+                        elmnt.style.zIndex = 100;
+                    }
+
+                    function closeDragElement() {
+                        // stop moving when mouse button is released:
+                        elmnt.onmousedown = null;
+                        elmnt.style.zIndex = null;
+                        document.onmouseup = null;
+                        document.onmousemove = null;
+                        let xPos = (elmnt.offsetLeft - pos1) > window.innerWidth ? window.innerWidth - 200 : (elmnt.offsetLeft - pos1);
+                        let yPos = (elmnt.offsetTop - pos2) > window.innerHeight - 20 ? window.innerHeight - 100 : (elmnt.offsetTop - pos2)
+                        xPos = xPos < 0 ? 0 : xPos;
+                        yPos = yPos < 0 ? 0 : yPos;
+                        if (xPos != (elmnt.offsetLeft - pos1) || yPos != (elmnt.offsetTop - pos2)) {
+                            elmnt.style.top = (yPos) + "px";
+                            elmnt.style.left = (xPos) + "px";
+                        }
+                        log(`Setting monks-tokenbar position:`, xPos, xPos);
+                        game.user.update({ flags: { 'monks-tokenbar': { 'position': { top: yPos, left: xPos } } } });
+                    }
+                }
+            }
+        });
 
         // Activate context menu
         this._contextMenu(html);
