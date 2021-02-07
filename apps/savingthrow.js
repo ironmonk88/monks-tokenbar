@@ -166,9 +166,9 @@ export class SavingThrow {
 
         if (actor != undefined) {
             let rollfn = null;
-            let rollParams = [request, { fastForward: fastForward, chatMessage: false }];
+            let rollParams = [request, { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true }];
             if (requesttype == 'ability')
-                rollfn = actor.rollAbilityTest;
+                rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
             else if (requesttype == 'saving') {
                 rollfn = actor.rollAbilitySave;
             }
@@ -202,7 +202,7 @@ export class SavingThrow {
                     log("Roll", roll, actor);
                     if (roll != undefined) {
                         let finishroll;
-                        if (game.dice3d != undefined) {// && !fastForward) {
+                        if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
                             let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                             if (rollmode == 'gmroll' && !game.user.isGM)
                                 whisper.push(game.user._id);
@@ -212,11 +212,11 @@ export class SavingThrow {
 
                             setTimeout(() => {
                                 //just confirm that the roll has finished.  Mass rolls aren't saving properly.
-                                //SavingThrow.finishRolling(actorid, message);
+                                //SavingThrow.finishRolling(item, message);
                             }, 3000);
 
                             finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
-                                return { id: item.id, reveal: true };
+                                return { id: item.id, reveal: true, userid: game.userId };
                             });
                         }
 
@@ -351,16 +351,19 @@ export class SavingThrow {
         if (updates.length == 0) return;
 
         if (!game.user.isGM) {
-            game.socket.emit(
-                MonksTokenBar.SOCKET,
-                {
-                    msgtype: 'finishroll',
-                    type: 'savingthrow',
-                    senderId: game.user._id,
-                    response: updates,
-                    msgid: message.id
-                }
-            );
+            let response = updates.filter(r => { return r.userid == game.userId; });
+            if (response.length) {
+                game.socket.emit(
+                    MonksTokenBar.SOCKET,
+                    {
+                        msgtype: 'finishroll',
+                        type: 'savingthrow',
+                        senderId: game.user._id,
+                        response: response,
+                        msgid: message.id
+                    }
+                );
+            }
         } else {
             let flags = {};
             for (let update of updates) {
@@ -502,7 +505,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
 Hooks.on("renderChatMessage", (message, html, data) => {
     const svgCard = html.find(".monks-tokenbar.savingthrow");
     if (svgCard.length !== 0) {
-        log('Rendering chat message');
+        log('Rendering chat message', message);
         if (!game.user.isGM)
             html.find(".gm-only").remove();
         if (game.user.isGM)
@@ -523,38 +526,41 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             var item = items[i];
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId);//actors.find(a => { return a.id == actorId; });
-            let actor = game.actors.get(msgtoken.actorid);
+            if (msgtoken) {
+                let actor = game.actors.get(msgtoken.actorid);
 
-            $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
+                $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
 
-            if (game.user.isGM || actor.owner)
-                $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
-            $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
-            $('.dice-total', item).toggle(msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
-            if (msgtoken.roll != undefined) {
-                let roll = Roll.fromData(msgtoken.roll);
-                let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
-                $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.owner));
-                if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM)) {
-                    $('.dice-result', item).html(!msgtoken.reveal ? '...' : '-');
-                } else {
-                    $('.dice-result', item)
-                        .toggleClass('success', roll.dice[0].total >= roll.dice[0].options.critical)
-                        .toggleClass('fail', roll.dice[0].total <= roll.dice[0].options.fumble);
+                if (game.user.isGM || actor.owner)
+                    $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
+                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
+                $('.dice-total', item).toggle(msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
+                if (msgtoken.roll != undefined && msgtoken.roll.class == "Roll") {
+                    //log('Chat roll:', msgtoken.roll);
+                    let roll = Roll.fromData(msgtoken.roll);
+                    let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
+                    $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.owner));
+                    if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM)) {
+                        $('.dice-result', item).html(!msgtoken.reveal ? '...' : '-');
+                    } else {
+                        $('.dice-result', item)
+                            .toggleClass('success', roll.dice[0].total >= roll.dice[0].options.critical)
+                            .toggleClass('fail', roll.dice[0].total <= roll.dice[0].options.fumble);
+                    }
+                    if (!msgtoken.reveal && game.user.isGM)
+                        $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken.id], message));
+                    //if (showroll && msgactor.reveal && $('.dice-tooltip', item).is(':empty')) {
+                    //    let tooltip = await roll.getTooltip();
+                    //    $('.dice-tooltip', item).empty().append(tooltip);
+                    //}
+                    $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
+                    $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
+
+                    $('.dice-text', item).toggle(showroll && msgtoken.passed != undefined).toggleClass('passed', msgtoken.passed === true).toggleClass('failed', msgtoken.passed === false).html(msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
+
+                    count++;
+                    groupdc += roll.total;
                 }
-                if (!msgtoken.reveal && game.user.isGM)
-                    $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken.id], message));
-                //if (showroll && msgactor.reveal && $('.dice-tooltip', item).is(':empty')) {
-                //    let tooltip = await roll.getTooltip();
-                //    $('.dice-tooltip', item).empty().append(tooltip);
-                //}
-                $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
-                $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
-
-                $('.dice-text', item).toggle(showroll && msgtoken.passed != undefined).toggleClass('passed', msgtoken.passed === true).toggleClass('failed', msgtoken.passed === false).html(msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
-
-                count++;
-                groupdc += roll.total;
             }
 
             //if there hasn't been a roll, then show the button if this is the GM or if this token is controlled by the current user

@@ -101,11 +101,13 @@ export class MonksTokenBar {
                     ContestedRoll.updateContestedRoll(data.response, message, revealDice);
             } break;
             case 'finishroll': {
-                let message = game.messages.get(data.msgid);
-                if (data.type == 'savingthrow')
-                    SavingThrow.finishRolling(data.response, message);
-                else if (data.type == 'contestedroll')
-                    ContestedRoll.finishRolling(data.actorid, message);
+                if (game.user.isGM) {
+                    let message = game.messages.get(data.msgid);
+                    if (data.type == 'savingthrow')
+                        SavingThrow.finishRolling(data.response, message);
+                    else if (data.type == 'contestedroll')
+                        ContestedRoll.finishRolling(data.actorid, message);
+                }
             } break;
             case 'assignxp': {
                 let message = game.messages.get(data.msgid);
@@ -200,7 +202,7 @@ Hooks.once('init', async function () {
 });
 
 Hooks.on("deleteCombat", function (combat) {
-    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking'))
+    if (combat.started == true && game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking'))
         new AssignXPApp(combat).render(true);
 
     if (game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
