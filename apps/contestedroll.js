@@ -316,8 +316,8 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 $('.roll-result', item).toggleClass('result-passed selected', actorData.passed == 'won' && revealAll)
                 $('.roll-result i', item)
                     .toggleClass('fa-check', actorData.passed == 'won' && revealAll && (game.user.isGM || rollmode != 'blindroll'))
-                    .toggleClass('fa-times', actorData.passed == 'failed')
-                    .toggleClass('fa-minus', actorData.passed == 'tied' && !actorRolling && (game.user.isGM || rollmode != 'blindroll'))
+                    .toggleClass('fa-times', actorData.passed == 'failed' && revealAll && (game.user.isGM || rollmode != 'blindroll'))
+                    .toggleClass('fa-minus', actorData.passed == 'tied' && revealAll && (game.user.isGM || rollmode != 'blindroll'))
                     .toggleClass('fa-ellipsis-h', (actorData.passed == 'waiting' || !revealAll) && actorData.roll != undefined && (game.user.isGM || rollmode != 'blindroll'));
             }
 
