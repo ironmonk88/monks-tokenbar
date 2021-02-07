@@ -89,16 +89,18 @@ export class MonksTokenBar {
     static onMessage(data) {
         switch (data.msgtype) {
             case 'rollability': {
-                let message = game.messages.get(data.msgid);
-                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-                for (let response of data.response) {
-                    let r = Roll.fromData(response.roll);
-                    response.roll = r;
+                if (game.user.isGM) {
+                    let message = game.messages.get(data.msgid);
+                    const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                    for (let response of data.response) {
+                        let r = Roll.fromData(response.roll);
+                        response.roll = r;
+                    }
+                    if (data.type == 'savingthrow')
+                        SavingThrow.updateMessage(data.response, message, revealDice);
+                    else if (data.type == 'contestedroll')
+                        ContestedRoll.updateContestedRoll(data.response, message, revealDice);
                 }
-                if(data.type == 'savingthrow')
-                    SavingThrow.updateMessage(data.response, message, revealDice);
-                else if (data.type == 'contestedroll')
-                    ContestedRoll.updateContestedRoll(data.response, message, revealDice);
             } break;
             case 'finishroll': {
                 if (game.user.isGM) {
