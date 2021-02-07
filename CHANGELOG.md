@@ -1,3 +1,8 @@
+## Version 1.0.10
+Fixed issue with saving throws getting into a loop informing each other that the roll had finished.
+
+Fixed an issue with contested rolls not rendering properly.
+
 ## Version 1.0.9
 Fixed issue with multiple tokens being added or removed from scene.
 
