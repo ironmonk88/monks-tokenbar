@@ -148,7 +148,7 @@ export class MonksTokenBar {
     }
 
     static allowMovement(token) {
-        let blockCombat = function (tokenId) {
+        let blockCombat = function (token) {
             //combat movement is only acceptable if the token is the current token.
             //or the previous token
             //let allowPrevMove = game.settings.get("combatdetails", "allow-previous-move");
@@ -168,8 +168,8 @@ export class MonksTokenBar {
                     if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
                     preventry = curCombat.turns[prevturn];
                 }*/
-
-                return !(entry.tokenId == tokenId); // || preventry.tokenId == tokenId);
+                log('Blocking movement', entry.name, token.name, entry, token.id, token);
+                return !(entry.tokenId == token.id); // || preventry.tokenId == tokenId);
             }
 
             return true;
@@ -178,7 +178,7 @@ export class MonksTokenBar {
         if (!game.user.isGM && token != undefined) {
             let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
-                (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token.id))) {
+                (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token))) {
                 //prevent the token from moving
                 if (!token.getFlag("monks-tokenbar", "notified") || false) {
                     ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? i18n("MonksTokenBar.CombatTurnMovementLimited") : i18n("MonksTokenBar.NormalMovementLimited"));
