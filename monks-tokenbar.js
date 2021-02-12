@@ -37,7 +37,7 @@ export class MonksTokenBar {
 
         let oldTokenCanDrag = Token.prototype._canDrag;
         Token.prototype._canDrag = function (user, event) {
-            return (MonksTokenBar.allowMovement(this) ? oldTokenCanDrag.call(this, user, event) : false);
+            return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
         };
     }
 
@@ -147,7 +147,7 @@ export class MonksTokenBar {
         }
     }
 
-    static allowMovement(token) {
+    static allowMovement(token, notify = true) {
         let blockCombat = function (token) {
             //combat movement is only acceptable if the token is the current token.
             //or the previous token
@@ -180,7 +180,7 @@ export class MonksTokenBar {
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
                 (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token))) {
                 //prevent the token from moving
-                if (!token.getFlag("monks-tokenbar", "notified") || false) {
+                if (notify && (!token.getFlag("monks-tokenbar", "notified") || false)) {
                     ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? i18n("MonksTokenBar.CombatTurnMovementLimited") : i18n("MonksTokenBar.NormalMovementLimited"));
                     token.setFlag("monks-tokenbar", "notified", true);
                     setTimeout(function (token) {
@@ -207,7 +207,7 @@ Hooks.on("deleteCombat", function (combat) {
     if (combat.started == true && game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking'))
         new AssignXPApp(combat).render(true);
 
-    if (game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
+    if (game.user.isGM && game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
         //set movement to free movement
         MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.FREE);
     }
