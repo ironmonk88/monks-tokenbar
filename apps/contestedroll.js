@@ -111,6 +111,40 @@ export class ContestedRollApp extends Application {
 
 export class ContestedRoll {
     static async onRollAbility(actorid, message, fastForward = false, e) {
+        let returnRoll = async function (roll) {
+            log("Roll", roll, actor);
+            let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
+
+            if (!game.user.isGM) {
+                game.socket.emit(
+                    MonksTokenBar.SOCKET,
+                    {
+                        msgtype: 'rollability',
+                        type: 'contestedroll',
+                        senderId: game.user._id,
+                        response: [{ actorid: actorid, roll: roll }],
+                        msgid: message.id
+                    },
+                    (resp) => { }
+                );
+            } else {
+                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                await ContestedRoll.updateContestedRoll([{ actorid: actorid, roll: roll }], message, revealDice && !fastForward);
+            }
+
+            if (game.dice3d != undefined && !fastForward) {
+                let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                if (rollmode == 'gmroll' && !game.user.isGM)
+                    whisper.push(game.user._id);
+                const sound = MonksTokenBar.getDiceSound();
+                if (sound != undefined)
+                    AudioHelper.play({ src: sound });
+                game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+                    ContestedRoll.finishRolling(actorid, message);
+                });
+            }
+        }
+
         let actor = game.actors.get(actorid);
 
         if (actor != undefined) {
@@ -121,49 +155,71 @@ export class ContestedRoll {
                 let requesttype = msgactor.requesttype;
 
                 let roll = null;
-                if (requesttype == 'ability')
-                    roll = await actor.rollAbilityTest(request, { fastForward: fastForward, chatMessage: false });
-                else if (requesttype == 'saving')
-                    roll = await actor.rollAbilitySave(request, { fastForward: fastForward, chatMessage: false });
-                else if (requesttype == 'skill')
-                    roll = await actor.rollSkill(request, { fastForward: fastForward, chatMessage: false });
+                if (game.system.id == 'dnd5e') {
+                    if (requesttype == 'ability')
+                        roll = await actor.rollAbilityTest(request, { fastForward: fastForward, chatMessage: false });
+                    else if (requesttype == 'saving')
+                        roll = await actor.rollAbilitySave(request, { fastForward: fastForward, chatMessage: false });
+                    else if (requesttype == 'skill')
+                        roll = await actor.rollSkill(request, { fastForward: fastForward, chatMessage: false });
+                } else if (game.system.id == 'pf2e') {
+                    let rollfn = null;
+                    let opts = request;
+                    if (requesttype == 'attribute') {
+                        if (actor.data.data.attributes[request]?.roll) {
+                            opts = actor.getRollOptions(["all", request]);
+                            rollfn = actor.data.data.attributes[request].roll;
+                        } else
+                            rollfn = actor.rollAttribute;
+                    }
+                    else if (requesttype == 'ability') {
+                        rollfn = function (event, abilityName) {
+                            const skl = this.data.data.abilities[abilityName],
+                                flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
+                            return DicePF2e.d20Roll({
+                                event: event,
+                                parts: ["@mod"],
+                                data: {
+                                    mod: skl.mod
+                                },
+                                title: flavor,
+                                speaker: ChatMessage.getSpeaker({
+                                    actor: this
+                                }),
+                                rollType: 'ignore'
+                            });
+                        }
+                    }
+                    else if (requesttype == 'saving') {
+                        if (actor.data.data.saves[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "saving-throw", request]);
+                            rollfn = actor.data.data.saves[request].roll;
+                        } else
+                            rollfn = actor.rollSave;
+                    }
+                    else if (requesttype == 'skill') {
+                        if (actor.data.data.skills[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "skill-check", request]);
+                            rollfn = actor.data.data.skills[request].roll;
+                        } else
+                            rollfn = actor.rollSkill;
+                    }
+
+                    if (rollfn != undefined) {
+                        if (requesttype == 'ability')
+                            roll = await rollfn.call(actor, e, opts);
+                        else {
+                            opts.push("ignore");
+                            rollfn.call(actor, e, opts, returnRoll);
+                        }
+                    } else
+                        ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
+                } else
+                    ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
 
                 if (roll != undefined) {
-                    let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
-
-                    if (!game.user.isGM) {
-                        game.socket.emit(
-                            MonksTokenBar.SOCKET,
-                            {
-                                msgtype: 'rollability',
-                                type: 'contestedroll',
-                                senderId: game.user._id,
-                                response: [{actorid: actorid, roll: roll}],
-                                msgid: message.id
-                            },
-                            (resp) => { }
-                        );
-                    } else {
-                        const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-                        await ContestedRoll.updateContestedRoll([{ actorid: actorid, roll: roll }], message, revealDice && !fastForward);
-                    }
-
-                    log('rolling ability', msgactor, roll);
-
-                    if (game.dice3d != undefined && !fastForward) {
-                        let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                        if (rollmode == 'gmroll' && !game.user.isGM)
-                            whisper.push(game.user._id);
-                        const sound = MonksTokenBar.getDiceSound();
-                        if (sound != undefined)
-                            AudioHelper.play({ src: sound });
-                        game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
-                            ContestedRoll.finishRolling(actorid, message);
-                        });
-                    }
+                    returnRoll(roll);
                 }
-
-                log("Roll", roll, actor);
             }
         }
         return message;

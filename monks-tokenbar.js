@@ -46,6 +46,9 @@ export class MonksTokenBar {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
         if (game.system.id == "pf2e") {
             MonksTokenBar.requestoptions.push({
+                id: "attribute", text: "Attributes", groups: { "perception" : CONFIG.PF2E.attributes.perception }
+            });
+            MonksTokenBar.requestoptions.push({
                 id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
             });
             MonksTokenBar.requestoptions.push({

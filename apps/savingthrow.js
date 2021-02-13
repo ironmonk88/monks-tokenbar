@@ -161,71 +161,111 @@ export class SavingThrowApp extends Application {
 export class SavingThrow {
     static msgcontent = {};
 
-    static _rollAbility(item, request, requesttype, rollmode, fastForward) {
+    static _rollAbility(item, request, requesttype, rollmode, fastForward, e) {
+        let returnRoll = function (roll) {
+            log("Roll", roll, actor);
+            if (roll != undefined) {
+                let finishroll;
+                if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
+                    let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                    if (rollmode == 'gmroll' && !game.user.isGM)
+                        whisper.push(game.user._id);
+                    const sound = MonksTokenBar.getDiceSound();
+                    if (sound != undefined)
+                        AudioHelper.play({ src: sound });
+
+                    setTimeout(() => {
+                        //just confirm that the roll has finished.  Mass rolls aren't saving properly.
+                        //SavingThrow.finishRolling(item, message);
+                    }, 3000);
+
+                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+                        return { id: item.id, reveal: true, userid: game.userId };
+                    });
+                }
+
+                return { id: item.id, roll: roll, finish: finishroll };
+            }
+        }
+
         let actor = game.actors.get(item.actorid);
 
         if (actor != undefined) {
-            let rollfn = null;
-            let rollParams = [request, { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true }];
-            if (requesttype == 'ability')
-                rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
-            else if (requesttype == 'saving') {
-                rollfn = actor.rollAbilitySave;
-            }
-            else if (requesttype == 'skill') {
-                if (game.system.id == 'dnd5e')
+            if (game.system.id == 'dnd5e') {
+                let rollfn = null;
+                if (requesttype == 'ability') {
+                    rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
+                }
+                else if (requesttype == 'saving') {
+                    rollfn = actor.rollAbilitySave;
+                }
+                else if (requesttype == 'skill') {
                     rollfn = actor.rollSkill;
-                else if (game.system.id == 'pf2e') {
-                    var _a, _b;
-                    if (null === (_a = actor.data.data.skills[requestroll]) || void 0 === _a ? void 0 : _a.roll) {
-                        //const opts = actor.getRollOptions(["all", "skill-check", null !== (_b = actor_1.SKILL_DICTIONARY[requestroll]) && void 0 !== _b ? _b : requestroll]);
-                        rollfn = actor.data.data.skills[requestroll].roll;//(ev, opts)
-                        rollParams = [null, null, { fastForward: fastForward, chatMessage: false }];
-                    } else {
-                        rollfn = actor.rollSkill; //(ev, requestroll);
-                        rollParams = [null, request, { fastForward: fastForward, chatMessage: false }];
+                } else {
+                    if (request == 'death')
+                        rollfn = SavingThrow.rollDeathSave;
+                }
+
+                if (rollfn != undefined) {
+                    return rollfn.call(actor, request, { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true }).then((roll) => { return returnRoll(roll); });
+                } else
+                    ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+            } else if (game.system.id == 'pf2e') {
+                let rollfn = null;
+                let opts = request;
+                if (requesttype == 'attribute') {
+                    if (actor.data.data.attributes[request]?.roll) {
+                        opts = actor.getRollOptions(["all", request]);
+                        rollfn = actor.data.data.attributes[request].roll;
+                    } else
+                        rollfn = actor.rollAttribute;
+                }
+                else if (requesttype == 'ability') {
+                    rollfn = function (event, abilityName) {
+                        const skl = this.data.data.abilities[abilityName],
+                            flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
+                        return DicePF2e.d20Roll({
+                            event: event,
+                            parts: ["@mod"],
+                            data: {
+                                mod: skl.mod
+                            },
+                            title: flavor,
+                            speaker: ChatMessage.getSpeaker({
+                                actor: this
+                            }),
+                            rollType: 'ignore'
+                        });
                     }
                 }
-            } else {
-                if (request == 'death')
-                    rollfn = SavingThrow.rollDeathSave;
-            }
+                else if (requesttype == 'saving') {
+                    if (actor.data.data.saves[request]?.roll) {
+                        opts = actor.getRollOptions(["all", "saving-throw", request]);
+                        rollfn = actor.data.data.saves[request].roll;
+                    } else 
+                        rollfn = actor.rollSave;
+                }
+                else if (requesttype == 'skill') {
+                    if (actor.data.data.skills[request]?.roll) {
+                        opts = actor.getRollOptions(["all", "skill-check", request]);
+                        rollfn = actor.data.data.skills[request].roll;
+                    } else
+                        rollfn = actor.rollSkill;
+                }
 
-
-
-			
-
-
-
-            if (rollfn != undefined) {
-                return rollfn.apply(actor, rollParams).then((roll) => {
-                    log("Roll", roll, actor);
-                    if (roll != undefined) {
-                        let finishroll;
-                        if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
-                            let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                            if (rollmode == 'gmroll' && !game.user.isGM)
-                                whisper.push(game.user._id);
-                            const sound = MonksTokenBar.getDiceSound();
-                            if (sound != undefined)
-                                AudioHelper.play({ src: sound });
-
-                            setTimeout(() => {
-                                //just confirm that the roll has finished.  Mass rolls aren't saving properly.
-                                //SavingThrow.finishRolling(item, message);
-                            }, 3000);
-
-                            finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
-                                return { id: item.id, reveal: true, userid: game.userId };
-                            });
-                        }
-
-                        return {id: item.id, roll: roll, finish: finishroll};
+                if (rollfn != undefined) {
+                    if (requesttype == 'ability')
+                        return rollfn.call(actor, e, opts).then((roll) => { return returnRoll(roll); });
+                    else {
+                        opts.push("ignore");
+                        return new Promise(function (resolve, reject) {
+                            rollfn.call(actor, e, opts, function (roll) { resolve(returnRoll(roll)); });
+                        });
                     }
-
-                });
+                } else
+                    ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
             } else
-                ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
+                ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
         }
     }
 
@@ -253,7 +293,7 @@ export class SavingThrow {
                 let actor = game.actors.get(msgtoken.actorid);
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    promises.push(SavingThrow._rollAbility({ id: id, actorid: msgtoken.actorid }, request, requesttype, rollmode, fastForward));
+                    promises.push(SavingThrow._rollAbility({ id: id, actorid: msgtoken.actorid }, request, requesttype, rollmode, fastForward, e));
                 }
             }
         };
@@ -420,7 +460,7 @@ export class SavingThrow {
         await message.setFlag('monks-tokenbar', 'actor' + actorid, msgactor); //message.setFlag('monks-tokenbar', 'actors', actors);
     }*/
 
-    static async onRollAll(tokentype, message) {
+    static async onRollAll(tokentype, message, e) {
         if (game.user.isGM) {
             let flags = message.data.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)
@@ -433,7 +473,7 @@ export class SavingThrow {
                 return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
             }).map(a => a.id);
 
-            SavingThrow.onRollAbility(ids, message, true);
+            SavingThrow.onRollAbility(ids, message, true, e);
 
             /*
             for (let msgactor of actors) {
@@ -492,7 +532,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = app.tokens.filter(t => t.actor?.data.data.attributes.hp.value == 0).length;
-        $('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? 'skill:prc' : $('#savingthrow-request option:first', html).val()));
+        $('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : $('#savingthrow-request option:first', html).val()));
     } else
         $('#savingthrow-request', html).val(app.request);
 
@@ -582,5 +622,16 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //let content = duplicate(message.data.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
+    }
+});
+
+Hooks.on("init", () => {
+    if (game.system.id == "pf2e") {
+        Hooks.on("preCreateChatMessage", (message, option, userid) => {
+            if (message?.flags?.pf2e?.context != undefined && (message.flags.pf2e.context?.options?.includes("ignore") || message.flags.pf2e.context.type == 'ignore'))
+                return false;
+            else
+                return true;
+        });
     }
 });
