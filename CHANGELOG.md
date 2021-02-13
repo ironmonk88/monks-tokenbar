@@ -1,3 +1,6 @@
+## Version 1.0.11
+Adding support for pathfinder rolls
+
 ## Version 1.0.10
 Fixed issue with saving throws getting into a loop informing each other that the roll had finished.
 
