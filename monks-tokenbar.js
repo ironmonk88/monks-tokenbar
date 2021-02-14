@@ -225,7 +225,7 @@ Hooks.on("deleteCombat", function (combat) {
 });
 
 Hooks.on("updateCombat", function (data, delta) {
-    if (MonksTokenBar.tokenbar != undefined) {
+    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
         $(MonksTokenBar.tokenbar.tokens).each(function () {
             this.token.unsetFlag("monks-tokenbar", "nofified");
         });
