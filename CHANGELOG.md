@@ -1,6 +1,8 @@
 ## Version 1.0.12
 Adding a setting so that players can now see their own tokens on a bar.  Should be helpful for players with companions.
 
+Sort of added the start of customisable stats for the bar.
+
 ## Version 1.0.11
 Adding support for pathfinder rolls
 
