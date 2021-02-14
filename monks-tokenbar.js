@@ -15,6 +15,9 @@ export let error = (...args) => console.error("monks-tokenbar | ", ...args);
 export let i18n = key => {
     return game.i18n.localize(key);
 };
+export let setting = key => {
+    return game.settings.get("monks-tokenbar", key);
+};
 
 export const MTB_MOVEMENT_TYPE = {
     FREE: 'free',
@@ -82,7 +85,7 @@ export class MonksTokenBar {
             });
         }
 
-        if (game.user.isGM) {
+        if (game.user.isGM || game.settings.get("monks-tokenbar", "allow-player")) { //game.user.isGM) {
             MonksTokenBar.tokenbar = new TokenBar();
             MonksTokenBar.tokenbar.getCurrentTokens();
             MonksTokenBar.tokenbar.render(true);

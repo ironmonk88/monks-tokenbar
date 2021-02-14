@@ -106,31 +106,30 @@
     background: rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 5px #000 inset;
     cursor: pointer;
+    justify-content: flex-end;
 }
 
 #tokenbar .token .token-details{
     width:25px;
 }
 
-#tokenbar .token .token-ac,
-#tokenbar .token .token-pp {
+#tokenbar .token .token-stat {
     position: relative;
     width: 100%;
     text-align: center;
     padding: 1px 3px;
-    background: #111;
+    background: url(../../../ui/denim075.png) repeat;
     color: #f0f0e0;
     font-weight: bold;
     pointer-events: none;
+    flex: 0 0 20px;
 }
 
-#tokenbar .token .token-ac i,
-#tokenbar .token .token-pp i{
+#tokenbar .token .token-stat i{
     padding-top:2px;
 }
 
-#tokenbar .token .token-ac span,
-#tokenbar .token .token-pp span{
+#tokenbar .token .token-stat span{
 }
 
 #tokenbar .token .token-icon {
@@ -139,6 +138,8 @@
     object-fit: contain;
     object-position: 50% 50%;
     border: none;
+    flex: 0 0 48px;
+    box-shadow: 0 0 5px #444 inset;
 }
 
 #tokenbar .token:hover .token-icon {
@@ -280,6 +281,10 @@
     margin: 0;
     white-space: nowrap;
     overflow-x: hidden;
+}
+
+.monks-tokenbar .sheet .items-list .item-name h4 .request-name{
+    font-weight:normal;
 }
 
 .monks-tokenbar .sheet .items-list .item-controls {

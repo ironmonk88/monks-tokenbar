@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, error, i18n, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, setting, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
 import { SavingThrowApp } from "../apps/savingthrow.js";
 import { ContestedRollApp } from "../apps/contestedroll.js";
 import { AssignXPApp } from "../apps/assignxp.js";
@@ -41,8 +41,9 @@ export class TokenBar extends Application {
 	getData(options) {
         return {
             tokens: this.tokens,
-            barClass: this._collapsed ? "collapsed" : "",
-            movement: game.settings.get("monks-tokenbar", "movement")
+            movement: setting("movement"),
+            stat1icon: setting("stat1-icon"),
+            stat2icon: setting("stat2-icon")
         };
     }
 
@@ -64,30 +65,33 @@ export class TokenBar extends Application {
     mapToken(token) {
         let actor = token.actor;
 
-        let ac = 10
+        let stat1 = getProperty(actor.data, "data." + setting("stat1-resource")) || 0;
+
+        /*
+        stat1 = 10;
         if (game.world.system === "pf1") {
-            ac = actor.data.data.attributes.ac.normal.total
+            stat1 = actor.data.data.attributes.ac.normal.total
         } else {
-            ac = (isNaN(parseInt(actor.data.data.attributes.ac.value)) || parseInt(actor.data.data.attributes.ac.value) === 0) ? 10 : parseInt(actor.data.data.attributes.ac.value);
-        }
+            stat1 = (isNaN(parseInt(actor.data.data.attributes.ac.value)) || parseInt(actor.data.data.attributes.ac.value) === 0) ? 10 : parseInt(actor.data.data.attributes.ac.value);
+        }*/
 
         //let perceptionTitle = "Passive Perception";
-        let perception = 10;
+        let stat2 = 10;
         if (game.world.system === "pf1") {
-            perception = actor.data.data.skills.per.mod
+            stat2 = actor.data.data.skills.per.mod
             //perceptionTitle = "Perception Mod";
         } else if (game.world.system === "pf2e") {
             if (actor.data.type === "npc" || actor.data.type === "familiar") {
-                perception = perception + actor.data.data.attributes.perception.value;
+                stat2 = stat2 + actor.data.data.attributes.perception.value;
             } else {
                 const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
-                perception = perception + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
+                stat2 = stat2 + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
             }
             //perceptionTitle = "Perception DC";
         } else if (game.world.system === "dnd5e") {
-            perception = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
+            stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
         } else {
-            perception = '';
+            stat2 = '';
         }
 
         token.unsetFlag("monks-tokenbar", "notified");
@@ -117,8 +121,8 @@ export class TokenBar extends Application {
             id: token.id,
             token: token,
             icon: img,
-            ac: ac,
-            pp: perception,
+            stat1: stat1,
+            stat2: stat2,
             resource1: resources[0],
             resource2: resources[1]
         }
@@ -127,7 +131,7 @@ export class TokenBar extends Application {
     getCurrentTokens() {
         log('Get current Tokens');
         let tokens = canvas.tokens.placeables.filter(t => {
-            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+            return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM ? t.actor?.data.type != 'npc' : t.actor?.owner );
         }).map(t => {
             return this.mapToken(t);
         });
@@ -148,7 +152,7 @@ export class TokenBar extends Application {
     * Collapse the Hotbar, minimizing its display.
     * @return {Promise}    A promise which resolves once the collapse animation completes
     */
-    async collapse() {
+    /*async collapse() {
         if ( this._collapsed ) return true;
         const toggle = this.element.find(".bar-toggle");
         const icon = toggle.children("i");
@@ -161,7 +165,7 @@ export class TokenBar extends Application {
             resolve(true);
             });
         });
-    }
+    }*/
 
 	/* -------------------------------------------- */
 
@@ -169,6 +173,7 @@ export class TokenBar extends Application {
     * Expand the Hotbar, displaying it normally.
     * @return {Promise}    A promise which resolves once the expand animation completes
     */
+    /*
     expand() {
         if ( !this._collapsed ) return true;
         const toggle = this.element.find(".bar-toggle");
@@ -183,7 +188,7 @@ export class TokenBar extends Application {
             resolve(true);
             });
         });
-    }
+    }*/
 
 	/* -------------------------------------------- */
     /*  Event Listeners and Handlers
@@ -194,11 +199,13 @@ export class TokenBar extends Application {
         super.activateListeners(html);
 
         // Macro actions
-        html.find('.bar-toggle').click(this._onToggleBar.bind(this));
-        html.find(".request-roll").click(this._onRequestRoll.bind(this));
-        html.find(".contested-roll").click(this._onContestedRoll.bind(this));
-        html.find(".assign-xp").click(this._onAssignXP.bind(this));
-        html.find(".token-movement").click(this._onChangeMovement.bind(this));
+        //html.find('.bar-toggle').click(this._onToggleBar.bind(this));
+        if (game.user.isGM) {
+            html.find(".request-roll").click(this._onRequestRoll.bind(this));
+            html.find(".contested-roll").click(this._onContestedRoll.bind(this));
+            html.find(".assign-xp").click(this._onAssignXP.bind(this));
+            html.find(".token-movement").click(this._onChangeMovement.bind(this));
+        }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
 
         html.find('#tokenbar-move-handle').mousedown(ev => {
@@ -289,6 +296,7 @@ export class TokenBar extends Application {
             {
                 name: "MonksTokenBar.TargetToken",
                 icon: '<i class="fas fa-bullseye"></i>',
+                condition: game.user.isGM,
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     const targeted = !entry.token.isTargeted;
@@ -298,6 +306,7 @@ export class TokenBar extends Application {
             {
                 name: "MonksTokenBar.FreeMovement",
                 icon: '<i class="fas fa-running" data-movement="free"></i>',
+                condition: game.user.isGM,
                 callback: li => {
                     this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.FREE);
                 }
@@ -305,6 +314,7 @@ export class TokenBar extends Application {
             {
                 name: "MonksTokenBar.NoMovement",
                 icon: '<i class="fas fa-street-view" data-movement="none"></i>',
+                condition: game.user.isGM,
                 callback: li => {
                     this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.NONE);
                 }
@@ -312,6 +322,7 @@ export class TokenBar extends Application {
             {
                 name: "MonksTokenBar.CombatTurn",
                 icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
+                condition: game.user.isGM,
                 callback: li => {
                     this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.COMBAT);
                 }
@@ -482,11 +493,12 @@ export class TokenBar extends Application {
     * @param {Event} event
     * @private
     */
+    /*
     _onToggleBar(event) {
         event.preventDefault();
         if ( this._collapsed ) this.expand();
         else this.collapse();
-    }
+    }*/
 }
 
 Hooks.on('renderTokenBar', (app, html) => {
@@ -508,7 +520,7 @@ Hooks.on('renderTokenBar', (app, html) => {
     } else {
         //$('.dialog-col', html).hide();
     }
-
+    $('.dialog-col', html).toggle(game.user.isGM);
 
 });
 
