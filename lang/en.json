@@ -12,6 +12,7 @@
 	"MonksTokenBar.FreeMovement": "Free Movement",
 	"MonksTokenBar.NoMovement": "No Movement",
 	"MonksTokenBar.CombatTurn": "Combat Turn",
+	"MonksTokenBar.Ignore": "Ignore",
 
 	"MonksTokenBar.MovementChanged": "Movement changed to ",
 
@@ -60,6 +61,8 @@
 	"MonksTokenBar.stat2-icon.hint": "Change the icon to display for the second stat.",
 	"MonksTokenBar.stat2-resource.name": "Stat2 Resource",
 	"MonksTokenBar.stat2-resource.hint": "Change the resource dsiplayed by the second resource",
+	"MonksTokenBar.movement-after-combat.name": "Set movement after combat",
+	"MonksTokenBar.movement-after-combat.hint": "When combat ends, select what movement type to set it back to",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

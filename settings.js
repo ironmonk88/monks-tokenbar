@@ -6,6 +6,13 @@ export const registerSettings = function () {
 		'token': game.i18n.localize("MonksTokenBar.token-pictures.token"),
 		'actor': game.i18n.localize("MonksTokenBar.token-pictures.actor"),
 	};
+
+	let movementoptions = {
+		'free': game.i18n.localize("MonksTokenBar.FreeMovement"),
+		'none': game.i18n.localize("MonksTokenBar.NoMovement"),
+		'combat': game.i18n.localize("MonksTokenBar.CombatTurn"),
+		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
+	};
 	
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
@@ -41,6 +48,15 @@ export const registerSettings = function () {
 		default: "token",
 		type: String,
 		choices: imageoptions,
+	});
+	game.settings.register(modulename, "movement-after-combat", {
+		name: game.i18n.localize("MonksTokenBar.movement-after-combat.name"),
+		hint: game.i18n.localize("MonksTokenBar.movement-after-combat.hint"),
+		scope: "world",
+		config: true,
+		default: "free",
+		type: String,
+		choices: movementoptions,
 	});
 	game.settings.register(modulename, "allow-player", {
 		name: game.i18n.localize("MonksTokenBar.allow-player.name"),

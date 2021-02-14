@@ -131,7 +131,7 @@ export class TokenBar extends Application {
     getCurrentTokens() {
         log('Get current Tokens');
         let tokens = canvas.tokens.placeables.filter(t => {
-            return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM ? t.actor?.data.type != 'npc' : t.actor?.owner );
+            return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc';
         }).map(t => {
             return this.mapToken(t);
         });

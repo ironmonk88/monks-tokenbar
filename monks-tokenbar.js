@@ -218,7 +218,9 @@ Hooks.on("deleteCombat", function (combat) {
 
     if (game.user.isGM && game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
         //set movement to free movement
-        MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.FREE);
+        let movement = setting("movement-after-combat");
+        if (movement != 'ignore')
+            MonksTokenBar.tokenbar.changeGlobalMovement(movement);
     }
 });
 
@@ -227,6 +229,10 @@ Hooks.on("updateCombat", function (data, delta) {
         $(MonksTokenBar.tokenbar.tokens).each(function () {
             this.token.unsetFlag("monks-tokenbar", "nofified");
         });
+
+        if (delta.round === 1 && data.turn === 0 && data.started === true) {
+            MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
+        }
     }
 });
 
