@@ -125,6 +125,9 @@ export class MonksTokenBar {
                 if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.owner) {
                     ui.notifications.warn(data.msg);
                     log('movement change');
+                    if (MonksTokenBar.tokenbar != undefined) {
+                        MonksTokenBar.tokenbar.render(true);
+                    }
                 }
             }
         }
