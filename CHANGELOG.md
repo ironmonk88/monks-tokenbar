@@ -1,3 +1,12 @@
+## Version 1.0.14
+Adding option to disable the token bar, now that it's available for players to see.
+
+Added the option to turn off changing the movement to combat when an encounter is started.
+
+Changed the Add player on the request saving throw to add the currently selected tokens, rather than using it as a toggle switch to add tokens being clicked.  It was very unintuitive.
+
+Changed to the code so that Pathfinder changes to ac and perception are reflected.
+
 ## Version 1.0.12
 Adding a setting so that players can now see their own tokens on a bar.  Should be helpful for players with companions.
 
