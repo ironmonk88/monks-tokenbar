@@ -53,6 +53,8 @@
 	"MonksTokenBar.token-pictures.actor": "Actor Portrait",
 	"MonksTokenBar.allow-player.name": "Allow Player to use",
 	"MonksTokenBar.allow-player.hint": "Allow the player to use the toolbar, restricted to characters they own.",
+	"MonksTokenBar.disable-tokenbar.name": "Disable Tokenbar",
+	"MonksTokenBar.disable-tokenbar.hint": "If you don't wish to see the tokenbar, click this setting",
 	"MonksTokenBar.stat1-icon.name": "Stat1 Icon",
 	"MonksTokenBar.stat1-icon.hint": "Change the icon to display for the first stat.",
 	"MonksTokenBar.stat1-resource.name": "Stat1 Resource",
@@ -63,6 +65,8 @@
 	"MonksTokenBar.stat2-resource.hint": "Change the resource dsiplayed by the second resource",
 	"MonksTokenBar.movement-after-combat.name": "Set movement after combat",
 	"MonksTokenBar.movement-after-combat.hint": "When combat ends, select what movement type to set it back to",
+	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
+	"MonksTokenBar.change-to-combat.hint": "Change movement to combat when combat starts",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

@@ -84,8 +84,8 @@ export class TokenBar extends Application {
             if (actor.data.type === "npc" || actor.data.type === "familiar") {
                 stat2 = stat2 + actor.data.data.attributes.perception.value;
             } else {
-                const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
-                stat2 = stat2 + actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
+                //const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
+                stat2 = stat2 + actor.data.data.attributes.perception.value; //actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
             }
             //perceptionTitle = "Perception DC";
         } else if (game.world.system === "dnd5e") {
@@ -540,6 +540,10 @@ Hooks.on('updateActor', (actor, data) => {
         if (tkn != undefined) {
             if (data?.attributes?.ac != undefined
                 || data?.skills?.prc != undefined
+                || data?.data?.customModifiers?.ac != undefined
+                || data?.data?.customModifiers?.perception != undefined
+                || data?.data?.abilities?.wis != undefined
+                || data?.data?.abilities?.dex != undefined
                 || getProperty(data.data, tkn.token.data.bar1.attribute) != undefined
                 || getProperty(data.data, tkn.token.data.bar2.attribute) != undefined)
             {

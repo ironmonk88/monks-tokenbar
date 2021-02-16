@@ -49,6 +49,14 @@ export const registerSettings = function () {
 		type: String,
 		choices: imageoptions,
 	});
+	game.settings.register(modulename, "change-to-combat", {
+		name: game.i18n.localize("MonksTokenBar.change-to-combat.name"),
+		hint: game.i18n.localize("MonksTokenBar.change-to-combat.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean
+	});
 	game.settings.register(modulename, "movement-after-combat", {
 		name: game.i18n.localize("MonksTokenBar.movement-after-combat.name"),
 		hint: game.i18n.localize("MonksTokenBar.movement-after-combat.hint"),
@@ -62,6 +70,14 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.allow-player.name"),
 		hint: game.i18n.localize("MonksTokenBar.allow-player.hint"),
 		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+	game.settings.register(modulename, "disable-tokenbar", {
+		name: game.i18n.localize("MonksTokenBar.disable-tokenbar.name"),
+		hint: game.i18n.localize("MonksTokenBar.disable-tokenbar.hint"),
+		scope: "client",
 		config: true,
 		default: false,
 		type: Boolean,

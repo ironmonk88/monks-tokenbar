@@ -34,12 +34,16 @@ export class SavingThrowApp extends Application {
         };
     }
 
-    addToken(token) {
-        if (this.tokens.find(t => t.id === token.id) == undefined) {
-            if (token.actor == undefined)
-                ui.notifications.warn(i18n("MonksTokenBar.TokenNoActorAttrs"));
-            else
-                this.tokens.push(token);
+    addToken(tokens) {
+        if (!$.isArray(tokens))
+            tokens = [tokens];
+        for (let token of tokens) {
+            if (this.tokens.find(t => t.id === token.id) == undefined) {
+                if (token.actor == undefined)
+                    ui.notifications.warn(i18n("MonksTokenBar.TokenNoActorAttrs"));
+                else
+                    this.tokens.push(token);
+            }
         }
         this.render(true);
     }
@@ -59,8 +63,8 @@ export class SavingThrowApp extends Application {
                 this.render(true);
                 break;
             case 'actor': //toggle the select actor button
-                this.select = !this.select;
-                $(e.target).toggleClass('selected', this.select);
+                let tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
+                MonksTokenBar.tokenbar.savingthrow.addToken(tokens);
                 break;
             case 'clear':
                 this.tokens = [];
@@ -519,12 +523,6 @@ Hooks.on("diceSoNiceRollComplete", (messageid) => {
         if()
     }
 })*/
-
-Hooks.on("controlToken", (token, select) => {
-    if (game.user.isGM && MonksTokenBar.tokenbar.savingthrow != undefined && MonksTokenBar.tokenbar.savingthrow.select && select) {
-        MonksTokenBar.tokenbar.savingthrow.addToken(token);
-    }
-});
 
 Hooks.on("renderSavingThrowApp", (app, html) => {
     if (app.request == undefined) {

@@ -85,7 +85,7 @@ export class MonksTokenBar {
             });
         }
 
-        if (game.user.isGM || game.settings.get("monks-tokenbar", "allow-player")) { //game.user.isGM) {
+        if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
             MonksTokenBar.tokenbar.getCurrentTokens();
             MonksTokenBar.tokenbar.render(true);
@@ -230,7 +230,7 @@ Hooks.on("updateCombat", function (data, delta) {
             this.token.unsetFlag("monks-tokenbar", "nofified");
         });
 
-        if (delta.round === 1 && data.turn === 0 && data.started === true) {
+        if (delta.round === 1 && data.turn === 0 && data.started === true && setting("change-to-combat")) {
             MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
         }
     }
