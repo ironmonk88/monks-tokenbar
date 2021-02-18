@@ -1,3 +1,10 @@
+## Version 1.0.15
+Added option to change defeated enemies into lootables if you have Loot Sheet installed.
+
+Fixed issue with webm tokens not being displayed.
+
+Fixed issue with tokenbar disappearing off the edge of the screen when the browser is resized.  If the token bar is repositioned near the bottom half of the screen it will position relative to the bottom, not the top.  And added a button to the configuration setup to reset the tokenbar position.
+
 ## Version 1.0.14
 Adding option to disable the token bar, now that it's available for players to see.
 
