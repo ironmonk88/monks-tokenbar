@@ -543,7 +543,11 @@
     display: none;
 }
 
-#tokenbar-resetposition{
+.monks-tokenbar li.item .dice-roll .dice-tooltip.noshow{
     display:none !important;
+}
+
+#tokenbar-resetposition {
+    display: none !important;
 }
 

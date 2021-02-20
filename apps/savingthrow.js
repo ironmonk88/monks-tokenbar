@@ -591,6 +591,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                     //    let tooltip = await roll.getTooltip();
                     //    $('.dice-tooltip', item).empty().append(tooltip);
                     //}
+                    $('.dice-tooltip', item).toggleClass('noshow', !showroll);
                     $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
                     $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
 
