@@ -102,7 +102,7 @@ export class MonksTokenBar {
                 npcSheetNames.forEach((sheetName) => {
                     Hooks.on("render" + sheetName, (app, html, data) => {
                         // only for GMs or the owner of this npc
-                        if (app.element.find(".revert-lootable").length == 0) { //app.object.getFlag('monks-tokenbar', 'converted') && 
+                        if (app.object.getFlag('monks-tokenbar', 'converted') && app.element.find(".revert-lootable").length == 0) {
                             const link = $('<a class="revert-lootable"><i class="fas fa-backward"></i>Revert Lootable</a>');
                             link.on("click", () => LootablesApp.revertLootable(app));
                             app.element.find(".window-title").after(link);
