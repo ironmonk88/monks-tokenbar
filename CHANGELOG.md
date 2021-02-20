@@ -1,3 +1,6 @@
+## Version 1.0.16
+Fixed issue with dice tooltip showing when request was sent as a blind gm roll
+
 ## Version 1.0.15
 Added option to change defeated enemies into lootables if you have Loot Sheet installed.
 
