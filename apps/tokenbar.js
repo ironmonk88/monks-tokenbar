@@ -43,7 +43,8 @@ export class TokenBar extends Application {
             tokens: this.tokens,
             movement: setting("movement"),
             stat1icon: setting("stat1-icon"),
-            stat2icon: setting("stat2-icon")
+            stat2icon: setting("stat2-icon"),
+            playanimation: setting('token-animation')
         };
     }
 
@@ -52,11 +53,14 @@ export class TokenBar extends Application {
     }
 
     setPos() {
-        let hbpos = $('#hotbar').position();
-        let width = $('#hotbar').width();
-        let pos = (game.user.getFlag("monks-tokenbar", "position") || { left: hbpos.left + width + 4 });
+        let pos = game.user.getFlag("monks-tokenbar", "position");
 
-        this.setPosition(pos.left, pos.top);
+        if (pos == undefined) {
+            let hbpos = $('#hotbar').position();
+            let width = $('#hotbar').width();
+            pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: '' };
+        }
+
         $(this.element).css(pos);
 
         return this;
@@ -114,13 +118,14 @@ export class TokenBar extends Application {
         }
 
         let img = token.data.img;
-        if (game.settings.get("monks-tokenbar", "token-pictures") == "actor" && token.actor != undefined)
+        if (setting("token-pictures") == "actor" && token.actor != undefined)
             img = token.actor.data.img;
 
         return {
             id: token.id,
             token: token,
             icon: img,
+            animated: img.endsWith('webm'),
             stat1: stat1,
             stat2: stat2,
             resource1: resources[0],
@@ -243,7 +248,8 @@ export class TokenBar extends Application {
                         pos3 = e.clientX;
                         pos4 = e.clientY;
                         // set the element's new position:
-                        elmnt.style.bottom = null
+                        elmnt.style.bottom = null;
+                        elmnt.style.right = null
                         elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
                         elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
                         elmnt.style.position = 'fixed';
@@ -256,16 +262,30 @@ export class TokenBar extends Application {
                         elmnt.style.zIndex = null;
                         document.onmouseup = null;
                         document.onmousemove = null;
-                        let xPos = (elmnt.offsetLeft - pos1) > window.innerWidth ? window.innerWidth - 200 : (elmnt.offsetLeft - pos1);
-                        let yPos = (elmnt.offsetTop - pos2) > window.innerHeight - 20 ? window.innerHeight - 100 : (elmnt.offsetTop - pos2)
-                        xPos = xPos < 0 ? 0 : xPos;
-                        yPos = yPos < 0 ? 0 : yPos;
-                        if (xPos != (elmnt.offsetLeft - pos1) || yPos != (elmnt.offsetTop - pos2)) {
-                            elmnt.style.top = (yPos) + "px";
-                            elmnt.style.left = (xPos) + "px";
-                        }
-                        log(`Setting monks-tokenbar position:`, xPos, xPos);
-                        game.user.update({ flags: { 'monks-tokenbar': { 'position': { top: yPos, left: xPos } } } });
+
+                        let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
+                        let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
+
+                        let position = {top: null, bottom: null, left: null, right: null};
+                        if (yPos > (window.innerHeight / 2))
+                            position.bottom = (window.innerHeight - yPos - elmnt.offsetHeight);
+                        else 
+                            position.top = yPos + 1;
+
+                        //if (xPos > (window.innerWidth / 2))
+                        //    position.right = (window.innerWidth - xPos);
+                        //else
+                            position.left = xPos + 1;
+
+                        elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
+                        elmnt.style.right = (position.right ? position.right + "px" : null);
+                        elmnt.style.top = (position.top ? position.top + "px" : null);
+                        elmnt.style.left = (position.left ? position.left + "px" : null);
+
+                        //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
+
+                        log(`Setting monks-tokenbar position:`, position);
+                        game.user.setFlag('monks-tokenbar', 'position', position);
                     }
                 }
             }

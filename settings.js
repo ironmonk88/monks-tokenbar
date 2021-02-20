@@ -1,3 +1,5 @@
+import { ResetPosition } from "./apps/resetposition.js";
+
 export const registerSettings = function () {
     // Register any custom module settings here
 	let modulename = "monks-tokenbar";
@@ -49,6 +51,14 @@ export const registerSettings = function () {
 		type: String,
 		choices: imageoptions,
 	});
+	game.settings.register(modulename, "token-animation", {
+		name: game.i18n.localize("MonksTokenBar.token-animation.name"),
+		hint: game.i18n.localize("MonksTokenBar.token-animation.hint"),
+		scope: "client",
+		config: true,
+		default: false,
+		type: Boolean
+	});
 	game.settings.register(modulename, "change-to-combat", {
 		name: game.i18n.localize("MonksTokenBar.change-to-combat.name"),
 		hint: game.i18n.localize("MonksTokenBar.change-to-combat.hint"),
@@ -65,6 +75,14 @@ export const registerSettings = function () {
 		default: "free",
 		type: String,
 		choices: movementoptions,
+	});
+	game.settings.register(modulename, "assign-loot", {
+		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
+		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
+		scope: "world",
+		config: game.modules.get("lootsheetnpc5e")?.active,
+		default: game.modules.get("lootsheetnpc5e")?.active,
+		type: Boolean,
 	});
 	game.settings.register(modulename, "allow-player", {
 		name: game.i18n.localize("MonksTokenBar.allow-player.name"),
@@ -113,6 +131,17 @@ export const registerSettings = function () {
 		config: false,
 		default: false,
 		type: String,
+	});
+	game.settings.registerMenu(modulename, 'resetPosition', {
+		name: 'Reset Position',
+		label: 'Reset Position',
+		hint: 'Reset the position of the tokenbar if it disappears off the screen.',
+		icon: 'fas fa-desktop',
+		restricted: true,
+		type: ResetPosition,
+		onClick: (value) => {
+			log('Reset position');
+		}
 	});
 	
 	//this is just a global setting for movement mode

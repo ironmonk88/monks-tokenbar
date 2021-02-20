@@ -19,6 +19,7 @@
 	"MonksTokenBar.RequestRoll": "Request Roll",
 	"MonksTokenBar.ContestedRoll": "Contested Roll",
 	"MonksTokenBar.AssignXP": "Assign XP",
+	"MonksTokenBar.Lootables": "Convert Lootables",
 
 	"MonksTokenBar.Ability": "Ability",
 	"MonksTokenBar.AbilityCheck": "Ability Check",
@@ -67,6 +68,10 @@
 	"MonksTokenBar.movement-after-combat.hint": "When combat ends, select what movement type to set it back to",
 	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
 	"MonksTokenBar.change-to-combat.hint": "Change movement to combat when combat starts",
+	"MonksTokenBar.assign-loot.name": "Convert enemies to lootable",
+	"MonksTokenBar.assign-loot.hint": "Only works with the Loot Sheet module, but once the combat is over, convert the fallen enemies to lootable",
+	"MonksTokenBar.token-animation.name": "Show token animation",
+	"MonksTokenBar.token-animation.hint": "If the token picture uses a webm file, animate it on the tokenbar.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -98,5 +103,8 @@
 	"MonksTokenBar.Clear": " Clear",
 	"MonksTokenBar.RollAll": "Roll All",
 	"MonksTokenBar.RollNPC": "Roll NPCs",
-	"MonksTokenBar.GroupDC": "Group DC"
+	"MonksTokenBar.GroupDC": "Group DC",
+	"MonksTokenBar.AssignByCR": "Assign gold by CR",
+	"MonksTokenBar.ConvertToLootable": "Convert to Lootable",
+	"MonksTokenBar.Gold": "Gold"
 }

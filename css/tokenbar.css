@@ -370,7 +370,8 @@
     max-height: 225px;
 }
 
-#assignexperience .item .item-image {
+#assignexperience .item .item-image,
+#lootables .item .item-image {
     color: transparent;
     font-size: 25px;
     text-align: center;
@@ -382,15 +383,13 @@
     color: #808080;
 }
 
+.monks-tokenbar .item.disabled .item-name {
+    text-decoration: line-through;
+}
 /*
 .monks-tokenbar.assignxp .sheet.actor .inventory-list .item-controls {
     flex: 0 0 70px;
 }*/
-
-
-
-
-
 /*---------------------------------------Chat card styles-------------------------------*/
 .monks-tokenbar.chat-card {
     font-style: normal;
@@ -542,5 +541,9 @@
 
 .monks-tokenbar li.item .dice-roll .dice-total .dice-text:empty {
     display: none;
+}
+
+#tokenbar-resetposition{
+    display:none !important;
 }
 

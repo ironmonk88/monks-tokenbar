@@ -3,6 +3,7 @@ import { TokenBar } from "./apps/tokenbar.js";
 import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
 import { SavingThrow } from "./apps/savingthrow.js";
 import { ContestedRoll } from "./apps/contestedroll.js";
+import { LootablesApp } from "./apps/lootables.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -89,6 +90,26 @@ export class MonksTokenBar {
             MonksTokenBar.tokenbar = new TokenBar();
             MonksTokenBar.tokenbar.getCurrentTokens();
             MonksTokenBar.tokenbar.render(true);
+        }
+
+        if (game.user.isGM && setting('assign-loot') && game.modules.get("lootsheetnpc5e")?.active) {
+            let npcObject = (CONFIG.Actor.sheetClasses.npc || CONFIG.Actor.sheetClasses.minion);
+            if (npcObject != undefined) {
+                let npcSheetNames = Object.values(npcObject)
+                    .map((sheetClass) => sheetClass.cls)
+                    .map((sheet) => sheet.name);
+
+                npcSheetNames.forEach((sheetName) => {
+                    Hooks.on("render" + sheetName, (app, html, data) => {
+                        // only for GMs or the owner of this npc
+                        if (app.element.find(".revert-lootable").length == 0) { //app.object.getFlag('monks-tokenbar', 'converted') && 
+                            const link = $('<a class="revert-lootable"><i class="fas fa-backward"></i>Revert Lootable</a>');
+                            link.on("click", () => LootablesApp.revertLootable(app));
+                            app.element.find(".window-title").after(link);
+                        }
+                    });
+                });
+            }
         }
     }
 
@@ -203,6 +224,37 @@ export class MonksTokenBar {
 
         return true;
     }
+
+    static async onDeleteCombat(combat) {
+        if (combat.started == true && game.user.isGM) {
+            let axpa;
+            if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "dnd5e" || (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')))) {
+                axpa = new AssignXPApp(combat);
+                await axpa.render(true);
+            }
+
+            if (setting("assign-loot") && game.modules.get("lootsheetnpc5e")?.active) {
+                let lapp = new LootablesApp(combat);
+                await lapp.render(true);
+
+                if (axpa != undefined) {
+                    setTimeout(function () {
+                        axpa.position.left += 204;
+                        axpa.render();
+                        lapp.position.left -= 204;
+                        lapp.render();
+                    }, 100);
+                }
+            }
+        }
+
+        if (game.user.isGM && game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
+            //set movement to free movement
+            let movement = setting("movement-after-combat");
+            if (movement != 'ignore')
+                MonksTokenBar.tokenbar.changeGlobalMovement(movement);
+        }
+    }
 }
 
 Hooks.once('init', async function () {
@@ -212,17 +264,7 @@ Hooks.once('init', async function () {
     MonksTokenBar.init();
 });
 
-Hooks.on("deleteCombat", function (combat) {
-    if (combat.started == true && game.user.isGM && game.settings.get("monks-tokenbar", "show-xp-dialog") && game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking'))
-        new AssignXPApp(combat).render(true);
-
-    if (game.user.isGM && game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
-        //set movement to free movement
-        let movement = setting("movement-after-combat");
-        if (movement != 'ignore')
-            MonksTokenBar.tokenbar.changeGlobalMovement(movement);
-    }
-});
+Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
 
 Hooks.on("updateCombat", function (data, delta) {
     if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
