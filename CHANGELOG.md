@@ -1,4 +1,4 @@
-## Version 1.0.17
+## Version 1.0.17 --In Development--
 Added support for Death Saving throw
 
 Added support to request a roll for tools.
