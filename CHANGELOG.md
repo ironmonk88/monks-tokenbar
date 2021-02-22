@@ -1,3 +1,10 @@
+## Version 1.0.17
+Added support for Death Saving throw
+
+Added support for request a roll for tools.
+
+Added ability to recall the last set of tokens used for a requested roll
+
 ## Version 1.0.16
 Fixed issue with dice tooltip showing when request was sent as a blind gm roll
 
