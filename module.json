@@ -12,6 +12,11 @@
 			"path": "lang/en.json"
 		},
 		{
+			"lang": "pt-BR",
+			"name": "Português",
+			"path": "lang/pt-BR.json"
+		},
+		{
 			"lang": "cn",
 			"name": "中文",
 			"path": "lang/cn.json"

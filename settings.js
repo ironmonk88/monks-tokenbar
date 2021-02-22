@@ -16,6 +16,18 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 	
+	let stat1;
+	switch (game.world.system) {
+		case "pf1":
+			stat1 = "attributes.ac.normal.total";
+			break;
+		case "tormenta20":
+			stat1 = "defesa.value";
+			break;
+		default:
+			stat1 = "attributes.ac.value";
+	}
+	
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
 		hint: game.i18n.localize("MonksTokenBar.notify-on-change.hint"),
@@ -113,7 +125,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.stat1-resource.hint"),
 		scope: "client",
 		config: true,
-		default: (game.world.system === "pf1" ? "attributes.ac.normal.total" : "attributes.ac.value"),
+		default: stat1,
 		type: String,
 	});
 	game.settings.register(modulename, "stat2-icon", {
