@@ -49,6 +49,10 @@ Clicking on the assign XP button will open a dialog to facilitate assigning XP.
 Automatically fill with the current player characters associated with the current scene.  Add experience at the top and it will divide between the players evenly.
 Additionally once an encounter has finished, the dialog will automatically popup with the calculated XP for the encounter, divided evenly between the participants of the encounter.
 
+### Lootables
+
+New to 1.0.15 added support for converting npc's to lootable if you have the <a href="https://foundryvtt.com/packages/lootsheetnpc5e/">Lootsheet module</a> installed.  TokenBar will remove all feats of the character that should not be lootable and will save them so that the character can be reverted back from lootable.
+
 ## Bug Reporting
 I'm sure there are lots of issues with it.
 Please feel free to contact me on discord if you have any questions or concerns. ironmonk88#4075
