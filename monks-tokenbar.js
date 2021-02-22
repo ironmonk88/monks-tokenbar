@@ -4,6 +4,7 @@ import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
 import { SavingThrow } from "./apps/savingthrow.js";
 import { ContestedRoll } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
+import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -102,7 +103,7 @@ export class MonksTokenBar {
                 npcSheetNames.forEach((sheetName) => {
                     Hooks.on("render" + sheetName, (app, html, data) => {
                         // only for GMs or the owner of this npc
-                        if (app.object.getFlag('monks-tokenbar', 'converted') && app.element.find(".revert-lootable").length == 0) {
+                        if (app?.token?.actor?.getFlag('monks-tokenbar', 'converted') && app.element.find(".revert-lootable").length == 0) {
                             const link = $('<a class="revert-lootable"><i class="fas fa-backward"></i>Revert Lootable</a>');
                             link.on("click", () => LootablesApp.revertLootable(app));
                             app.element.find(".window-title").after(link);
@@ -154,6 +155,10 @@ export class MonksTokenBar {
         }
     }
 
+    static isMovement(movement) {
+        return movement != undefined && MTB_MOVEMENT_TYPE[movement.toUpperCase()] != undefined;
+    }
+
     static getDiceSound(hasMaestroSound = false) {
         const has3DDiceSound = game.dice3d ? game.settings.get("dice-so-nice", "settings").enabled : false;
         const playRollSounds = true; //game.settings.get("betterrolls5e", "playRollSounds")
@@ -174,6 +179,70 @@ export class MonksTokenBar {
                     MonksTokenBar.refreshTimer = null;
                 }, 100);
             }
+        }
+    }
+
+    static async changeGlobalMovement(movement) {
+        if (movement == MTB_MOVEMENT_TYPE.COMBAT && (game.combat == undefined || !game.combat.started))
+            return;
+
+        log('Changing global movement', movement);
+        await game.settings.set("monks-tokenbar", "movement", movement);
+        //clear all the tokens individual movement settings
+        if (MonksTokenBar.tokenbar != undefined) {
+            let tokenbar = MonksTokenBar.tokenbar;
+            for (let i = 0; i < tokenbar.tokens.length; i++) {
+                await tokenbar.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
+                tokenbar.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
+            };
+            tokenbar.render(true);
+        }
+
+        MonksTokenBar.displayNotification(movement);
+    }
+
+    static async changeTokenMovement(movement, tokens) {
+        if (tokens == undefined)
+            return;
+
+        if (!MonksTokenBar.isMovement(movement))
+            return;
+
+        tokens = tokens instanceof Array ? tokens : [tokens];
+
+        log('Changing token movement', tokens);
+
+        let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
+        for (let token of tokens) {
+            let oldMove = token.getFlag("monks-tokenbar", "movement");
+            if (newMove != oldMove) {
+                await token.setFlag("monks-tokenbar", "movement", newMove);
+                await token.unsetFlag("monks-tokenbar", "notified");
+
+                let dispMove = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+                MonksTokenBar.displayNotification(dispMove, token);
+            }
+        }
+
+        if (MonksTokenBar.tokenbar != undefined)
+            MonksTokenBar.tokenbar.render(true);
+    }
+
+    static displayNotification(movement, token) {
+        if (game.settings.get("monks-tokenbar", "notify-on-change")) {
+            let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == MTB_MOVEMENT_TYPE.FREE ? i18n("MonksTokenBar.FreeMovement") : (movement == MTB_MOVEMENT_TYPE.NONE ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
+            ui.notifications.warn(msg);
+            log('display notification');
+            game.socket.emit(
+                MonksTokenBar.SOCKET,
+                {
+                    msgtype: 'movementchange',
+                    senderId: game.user._id,
+                    msg: msg,
+                    tokenid: token?.id
+                },
+                (resp) => { }
+            );
         }
     }
 
@@ -252,7 +321,7 @@ export class MonksTokenBar {
             //set movement to free movement
             let movement = setting("movement-after-combat");
             if (movement != 'ignore')
-                MonksTokenBar.tokenbar.changeGlobalMovement(movement);
+                MonksTokenBar.changeGlobalMovement(movement);
         }
     }
 }
@@ -262,6 +331,7 @@ Hooks.once('init', async function () {
     // Assign custom classes and constants here
     // Register custom module settings
     MonksTokenBar.init();
+    MonksTokenBarAPI.init();
 });
 
 Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
@@ -273,7 +343,7 @@ Hooks.on("updateCombat", function (data, delta) {
         });
 
         if (delta.round === 1 && data.turn === 0 && data.started === true && setting("change-to-combat")) {
-            MonksTokenBar.tokenbar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
+            MonksTokenBar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
         }
     }
 });

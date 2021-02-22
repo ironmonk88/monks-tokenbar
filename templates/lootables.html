@@ -20,7 +20,10 @@
                         {{#each tokens}}
                         <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.token.id}}" draggable="true">
                             <div class="item-name flexrow rollable">
-                                <div class="item-image" style="background-image: url('{{this.token.data.img}}')"><i class="fas fa-ban"></i></div>
+                                <div class="item-image" style="background-image: url('{{this.token.data.img}}')">
+                                    <video width="30" height="30"><source src="{{this.token.data.img}}" /></video>
+                                    <i class="fas fa-ban"></i>
+                                </div>
                                 <h4>
                                     {{this.token.name}}
                                 </h4>

@@ -1,12 +1,18 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class LootablesApp extends Application {
-    constructor(combat, options) {
+    constructor(entity, options) {
         super(options);
 
         this.usecr = false;
-        if (combat != undefined) {
-            this.tokens = combat.combatants.filter(a => { return a.token?.disposition != 1 }).map(a => { return { actor: a.actor, token: a.actor.token, gold: null }; });
+        if (entity != undefined && entity instanceof Combat) {
+            this.tokens = entity.combatants.filter(a => { return a.token?.disposition != 1 }).map(a => { return { actor: a.actor, token: a.actor.token, gold: null }; });
+        } else {
+            this.tokens = entity || canvas.tokens.controlled.filter(t => t.actor != undefined && t.actor.data.type !== 'character');
+            if (this.tokens != undefined && !$.isArray(this.tokens))
+                this.tokens = [this.tokens];
+
+            this.tokens = this.tokens.map(t => { return { actor: t.actor, token: t, gold: null }; });
         }
     }
 
@@ -192,7 +198,12 @@ export class LootablesApp extends Application {
     }
 
     static async revertLootable(app) {
-        let actor = app.object;
+        let actor = app.token.actor;//game.actors.get(app.object._id);
+
+        log('Reverting lootable', actor);
+
+        if (actor == undefined)
+            return;
 
         $('.revert-lootable', app.element).remove();
         await app.close(true);
@@ -208,7 +219,7 @@ export class LootablesApp extends Application {
             }
         };
 
-        if (actor.getFlag('monks-tokenbar', 'olditems').length) {
+        if (actor.getFlag('monks-tokenbar', 'olditems')?.length) {
             actorData.items = duplicate(actor.data.items);
             for (let olditem of actor.getFlag('monks-tokenbar', 'olditems')) {
                 if (actorData.items.findIndex(i => { return i._id == olditem._id; }) < 0)
@@ -228,7 +239,7 @@ export class LootablesApp extends Application {
         lootingUsers.forEach(user => {
             permissions[user.data._id] = 0;
         });
-        await actor.token.update({
+        await app.token.update({
             "overlayEffect": null,
             "actorData": {
                 "permission": permissions

@@ -1,11 +1,16 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class ContestedRollApp extends Application {
-    constructor(options) {
+    constructor(item0, item1, options) {
         super(options);
-        this.item0 = { token: (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null), request: 'ability:str' };
-        this.item1 = { token: (game.user.targets.values()?.next()?.value || (canvas.tokens.controlled.length > 1 ? canvas.tokens.controlled[1] : null)), request: 'ability:str' };
-        this.rollmode = (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
+        this.item0 = item0 || {token: null, request: null};
+        this.item0.token = (this.item0.token || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null));
+        this.item0.request = (this.item0.request || 'ability:str');
+        this.item1 = item1 || { token: null, request: null };
+        this.item1.token = (this.item1.token || (game.user.targets.values()?.next()?.value || (canvas.tokens.controlled.length > 1 ? canvas.tokens.controlled[1] : null)));
+        this.item1.request = (this.item1.request || 'ability:str');
+
+        this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
     }
 
     static get defaultOptions() {
@@ -49,7 +54,7 @@ export class ContestedRollApp extends Application {
                     requesttype: requesttype,
                     request: request,
                     requestname: requestname,
-                    icon: item.token.data.img,
+                    icon: (item.token.data.img.endsWith('webm') ? item.token.actor.data.img : item.token.data.img),
                     name: item.token.name,
                     passed: 'waiting'
                 };

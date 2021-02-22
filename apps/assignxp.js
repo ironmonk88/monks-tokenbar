@@ -1,29 +1,34 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class AssignXPApp extends Application {
-    constructor(combat, options) {
+    constructor(entity, options) {
         super(options);
 
-        var that = this;
+        this.xp = options?.xp || 0;
+        this.reason = options?.reason;
 
-        this.xp = 0;
-        if (combat != undefined) {
+        if (entity != undefined && entity instanceof Combat) {
             this.actors = [];
-            $(combat.combatants).each(function () {
-                if (this.token?.disposition != 1) {
-                    that.xp += this.actor?.data.data.details.xp.value;
-                } else if (this.actor)
-                    that.actors.push({
-                        actor: this.actor,
+            let combatxp = 0;
+            for (let combatant of entity.combatants) {
+                if (combatant.token?.disposition != 1) {
+                    combatxp += combatant.actor?.data.data.details.xp.value;
+                } else if (combatant.actor) {
+                    this.actors.push({
+                        actor: combatant.actor,
                         disabled: false,
                         xp: 0
                     });
-            });
-            this.reason = i18n("MonksTokenBar.CombatExperience");
+                }
+            };
+            this.xp = this.xp || combatxp;
+            this.reason = this.reason || i18n("MonksTokenBar.CombatExperience");
         } else {
-            this.actors = canvas.tokens.placeables.filter(t => {
+            if (entity != undefined && !$.isArray(entity))
+                entity = [entity];
+            this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables).filter(t => {
                 return t.actor?.hasPlayerOwner && t.actor?.data.type == 'character'
-            }).map(t => {
+            })).map(t => {
                 return {
                     actor: t.actor,
                     disabled: false,

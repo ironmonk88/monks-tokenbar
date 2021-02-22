@@ -81,7 +81,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
 		scope: "world",
 		config: game.modules.get("lootsheetnpc5e")?.active,
-		default: game.modules.get("lootsheetnpc5e")?.active,
+		default: false,
 		type: Boolean,
 	});
 	game.settings.register(modulename, "allow-player", {

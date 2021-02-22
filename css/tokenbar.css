@@ -140,6 +140,9 @@
     border: none;
     flex: 0 0 48px;
     box-shadow: 0 0 5px #444 inset;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 #tokenbar .token:hover .token-icon {
@@ -334,12 +337,19 @@
 .monks-tokenbar .sheet .items-list .item .item-name .item-image {
     flex: 0 0 30px;
     height: 30px;
+    width:30px;
     background-size: 30px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     border: none;
     margin-right: 5px;
+    text-align:center;
+}
+
+.window-content .monks-tokenbar .sheet .items-list .item .item-name .item-image {
+    flex: 0 0 48px;
+    width: 48px;
 }
 
 .monks-tokenbar .sheet .items-list .items-header {

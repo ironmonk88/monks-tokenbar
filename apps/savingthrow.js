@@ -1,15 +1,19 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class SavingThrowApp extends Application {
-    constructor(options) {
+    constructor(tokens, options) {
         super(options);
-        this.tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
+
+        if (tokens != undefined && !$.isArray(tokens))
+            tokens = [tokens];
+        this.tokens = (tokens || canvas.tokens.controlled.filter(t => t.actor != undefined));
+
         if (this.tokens.length == 0) {   //if none have been selected then default to the party
             this.tokens = canvas.tokens.placeables.filter(t => {
                 return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
-            })
+            });
         }
-        this.rollmode = (game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
+        this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
     }
 
     static get defaultOptions() {
@@ -87,7 +91,7 @@ export class SavingThrowApp extends Application {
                 return {
                     id: t.id,
                     actorid: t.actor.id,
-                    icon: t.data.img,
+                    icon: (t.data.img.endsWith('webm') ? t.actor.data.img : t.data.img),
                     name: t.name
                 };
             });

@@ -21,7 +21,7 @@ export class TokenBar extends Application {
             */
         this._hover = null;
 
-        //this.changeGlobalMovement("free");
+        //MonksTokenBar.changeGlobalMovement("free");
     }
 
     /* -------------------------------------------- */
@@ -328,7 +328,8 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-running" data-movement="free"></i>',
                 condition: game.user.isGM,
                 callback: li => {
-                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.FREE);
+                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.FREE, entry.token);
                 }
             },
             {
@@ -336,7 +337,8 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-street-view" data-movement="none"></i>',
                 condition: game.user.isGM,
                 callback: li => {
-                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.NONE);
+                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.NONE, entry.token);
                 }
             },
             {
@@ -344,7 +346,8 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
                 condition: game.user.isGM,
                 callback: li => {
-                    this.changeTokenMovement(this.getEntry(li[0].dataset.tokenId), MTB_MOVEMENT_TYPE.COMBAT);
+                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.COMBAT, entry.token);
                 }
             }
         ]);
@@ -391,59 +394,7 @@ export class TokenBar extends Application {
         event.preventDefault();
 
         const btn = event.currentTarget;
-        this.changeGlobalMovement(btn.dataset.movement);
-    }
-
-    async changeGlobalMovement(movement) {
-        if (movement == MTB_MOVEMENT_TYPE.COMBAT && (game.combat == undefined || !game.combat.started))
-            return;
-
-        await game.settings.set("monks-tokenbar", "movement", movement);
-        //clear all the tokens individual movement settings
-        for (let i = 0; i < this.tokens.length; i++) {
-            await this.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
-            this.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
-        };
-        this.render(true);
-
-        this.displayNotification(movement);
-    }
-
-    async changeTokenMovement(entry, movement) {
-        if (typeof entry == 'string')
-            entry = this.getEntry(entry);
-
-        if (movement != undefined && MTB_MOVEMENT_TYPE[movement] == undefined)
-            return;
-
-        let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
-        let oldMove = entry.token.getFlag("monks-tokenbar", "movement");
-        if (newMove != oldMove) {
-            await entry.token.setFlag("monks-tokenbar", "movement", newMove);
-            entry.token.unsetFlag("monks-tokenbar", "notified");
-            this.render(true);
-
-            let dispMove = entry.token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
-            this.displayNotification(dispMove, entry.token);
-        }
-    }
-
-    displayNotification(movement, token) {
-        if (game.settings.get("monks-tokenbar", "notify-on-change")) {
-            let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == MTB_MOVEMENT_TYPE.FREE ? i18n("MonksTokenBar.FreeMovement") : (movement == MTB_MOVEMENT_TYPE.NONE ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
-            ui.notifications.warn(msg);
-            log('display notification');
-            game.socket.emit(
-                MonksTokenBar.SOCKET,
-                {
-                    msgtype: 'movementchange',
-                    senderId: game.user._id,
-                    msg: msg,
-                    tokenid: token?.id
-                },
-                (resp) => { }
-            );
-        }
+        MonksTokenBar.changeGlobalMovement(btn.dataset.movement);
     }
 
     /* -------------------------------------------- */

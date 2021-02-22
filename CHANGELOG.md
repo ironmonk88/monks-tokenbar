@@ -1,6 +1,10 @@
 ## Version 1.0.16
 Fixed issue with dice tooltip showing when request was sent as a blind gm roll
 
+Added API functionality, but still need to document how to use it
+
+Fixed an issue where npc's converted to lootable weren't able to revert due to no old items saved from being converted to lootable.
+
 ## Version 1.0.15
 Added option to change defeated enemies into lootables if you have Loot Sheet installed.
 

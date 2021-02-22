@@ -55,7 +55,9 @@
                         {{#each tokens}}
                         <li class="item flexrow " data-item-id="{{this.id}}" draggable="true">
                             <div class="item-name flexrow rollable">
-                                <div class="item-image" style="background-image: url('{{this.data.img}}')"></div>
+                                <div class="item-image" style="background-image: url('{{this.data.img}}')">
+                                    <video width="30" height="30"><source src="{{this.data.img}}" /></video>
+                                </div>
                                 <h4>
                                     {{this.name}}
                                 </h4>
