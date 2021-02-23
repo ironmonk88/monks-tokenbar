@@ -72,6 +72,16 @@ export class MonksTokenBar {
             MonksTokenBar.requestoptions.push({
                 id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
             });
+        } else if (game.system.id == "tormenta20") {
+            MonksTokenBar.requestoptions.push({
+                id:"ability", text: i18n("MonksTokenBar.Ability"), groups:CONFIG.T20.atributos
+            });
+            MonksTokenBar.requestoptions.push({
+                id:"saving", text: i18n("MonksTokenBar.SavingThrow"), groups:CONFIG.T20.resistencias
+            });
+            MonksTokenBar.requestoptions.push({
+                id:"skill", text: i18n("MonksTokenBar.Skill"), groups:CONFIG.T20.pericias
+            });
         } else {
             MonksTokenBar.requestoptions.push({
                 id:"ability", text: i18n("MonksTokenBar.Ability"), groups:CONFIG.DND5E.abilities

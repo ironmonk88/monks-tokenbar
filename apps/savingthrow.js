@@ -101,10 +101,20 @@ export class SavingThrowApp extends Application {
             let rollmode = $('#savingthrow-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
-
+            
+            let name;
+            switch (game.i18n.lang) {
+                case "pt-BR":
+                case "es":
+                    name = (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check"))) + ": " + $('#savingthrow-request option:selected', this.element).html();
+                    break;
+                case "en":
+                default:
+                    name = $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
+            }
             let requestdata = {
                 dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
-                name: $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check"))),
+                name: name,
                 requesttype: requesttype,
                 request: request,
                 rollmode: rollmode,
@@ -218,7 +228,29 @@ export class SavingThrow {
                     return rollfn.call(actor, request, { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true }).then((roll) => { return returnRoll(roll); });
                 } else
                     ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-            } else if (game.system.id == 'pf2e') {
+            }
+            else if (game.system.id == 'tormenta20') {
+                let rollfn = null;
+                let opts = request;
+                if (requesttype == 'ability') {
+                    rollfn = actor.rollAtributo;
+                }
+                else if (requesttype == 'saving' || requesttype == 'skill') {
+                    opts = {
+                        actor: actor,
+                        type: "perícia",
+                        data: actor.data.data.pericias[opts],
+                        name: actor.data.data.pericias[opts].label,
+                        id: opts
+                    };
+                    rollfn = actor.rollPericia;
+                }
+                if (rollfn != undefined) {
+                    return rollfn.call(actor, opts, e).then((roll) => { return returnRoll(roll); });
+                } 
+                else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+            }
+            else if (game.system.id == 'pf2e') {
                 let rollfn = null;
                 let opts = request;
                 if (requesttype == 'attribute') {
@@ -272,8 +304,10 @@ export class SavingThrow {
                     }
                 } else
                     ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-            } else
+            }
+            else {
                 ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+            }
         }
     }
 
