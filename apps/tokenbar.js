@@ -81,22 +81,22 @@ export class TokenBar extends Application {
 
         //let perceptionTitle = "Passive Perception";
         let stat2 = 10;
-        if (game.world.system === "pf1") {
-            stat2 = actor.data.data.skills.per.mod
-            //perceptionTitle = "Perception Mod";
-        } else if (game.world.system === "pf2e") {
-            if (actor.data.type === "npc" || actor.data.type === "familiar") {
-                stat2 = stat2 + actor.data.data.attributes.perception.value;
-            } else {
-                //const proficiency = actor.data.data.attributes.perception.rank ? actor.data.data.attributes.perception.rank * 2 + actor.data.data.details.level.value : 0;
-                stat2 = stat2 + actor.data.data.attributes.perception.value; //actor.data.data.abilities[actor.data.data.attributes.perception.ability].mod + proficiency + actor.data.data.attributes.perception.item;
-            }
-            //perceptionTitle = "Perception DC";
-        } else if (game.world.system === "dnd5e") {
-            stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
-        } else {
-            stat2 = '';
-        }
+				switch (game.world.system) {
+					case "pf1":
+						stat2 = actor.data.data.skills.per.mod;
+						break;
+					case "pf2e":
+						stat2 = stat2 + actor.data.data.attributes.perception.value;
+						break;
+					case "dnd5e":
+						stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
+						break;
+					case "tormenta20":
+						stat2 = actor.data.data?.pericias?.per?.value;
+						break;
+					default:
+						stat2 = "";
+				}
 
         token.unsetFlag("monks-tokenbar", "notified");
 
