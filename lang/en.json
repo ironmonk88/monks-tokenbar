@@ -98,6 +98,8 @@
 	"MonksTokenBar.Players": " Players",
 	"MonksTokenBar.AddMonsters": "Add Currently Visible Monsters",
 	"MonksTokenBar.Monsters": " Monsters",
+	"MonksTokenBar.AddLastTokens": "Add Last Tokens selected",
+	"MonksTokenBar.LastTokens": " Last",
 	"MonksTokenBar.AddActor": "Add Actor",
 	"MonksTokenBar.ClearAll": "Clear All",
 	"MonksTokenBar.Clear": " Clear",

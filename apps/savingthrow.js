@@ -29,12 +29,28 @@ export class SavingThrowApp extends Application {
 
     getData(options) {
 
+        let tools = {};
+        for (let token of this.tokens) {
+            for (let item of token.actor.items) {
+                if (item.type == 'tool') {
+                    let sourceID = item.getFlag("core", "sourceId")
+                    //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
+                    tools[sourceID] = item.data.name;
+                }
+            }
+        }
+
+        let requestoptions = MonksTokenBar.requestoptions;
+        if (Object.keys(tools).length > 0) {
+            requestoptions = requestoptions.concat([{id:'tool',text:'Tools',groups:tools}]);
+        }
+
         return {
             tokens: this.tokens,
             select: this.select,
             request: this.request,
             rollmode: this.rollmode,
-            options: MonksTokenBar.requestoptions
+            options: requestoptions
         };
     }
 
@@ -60,11 +76,12 @@ export class SavingThrowApp extends Application {
                 });
                 this.render(true);
                 break;
-            case 'monster':
-                this.tokens = canvas.tokens.placeables.filter(t => {
-                    return t.actor != undefined && t.visible && !t.actor?.hasPlayerOwner;
-                });
-                this.render(true);
+            case 'last':
+                if (SavingThrow.lastTokens) {
+                    this.tokens = SavingThrow.lastTokens;
+                    this.request = SavingThrow.lastRequest;
+                    this.render(true);
+                }
                 break;
             case 'actor': //toggle the select actor button
                 let tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
@@ -87,6 +104,7 @@ export class SavingThrowApp extends Application {
 
     async requestRoll() {
         if (this.tokens.length > 0) {
+            SavingThrow.lastTokens = this.tokens;
             let tokens = this.tokens.map(t => {
                 return {
                     id: t.id,
@@ -95,6 +113,8 @@ export class SavingThrowApp extends Application {
                     name: t.name
                 };
             });
+            SavingThrow.lastRequest = this.request;
+
             let parts = $('#savingthrow-request', this.element).val().split(':');
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
@@ -178,6 +198,7 @@ export class SavingThrowApp extends Application {
 
 export class SavingThrow {
     static msgcontent = {};
+    static lastTokens;
 
     static _rollAbility(item, request, requesttype, rollmode, fastForward, e) {
         let returnRoll = function (roll) {
@@ -211,6 +232,8 @@ export class SavingThrow {
         if (actor != undefined) {
             if (game.system.id == 'dnd5e') {
                 let rollfn = null;
+                let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true };
+                let context = actor;
                 if (requesttype == 'ability') {
                     rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
                 }
@@ -219,13 +242,20 @@ export class SavingThrow {
                 }
                 else if (requesttype == 'skill') {
                     rollfn = actor.rollSkill;
+                } else if (requesttype == 'tool') {
+                    let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request; });
+                    context = item;
+                    request = options;
+                    rollfn = item.rollToolCheck;
                 } else {
-                    if (request == 'death')
-                        rollfn = SavingThrow.rollDeathSave;
+                    if (request == 'death') {
+                        rollfn = actor.rollDeathSave;
+                        request = options;
+                    }
                 }
 
                 if (rollfn != undefined) {
-                    return rollfn.call(actor, request, { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true }).then((roll) => { return returnRoll(roll); });
+                    return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
                 } else
                     ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
             }
@@ -568,9 +598,10 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = app.tokens.filter(t => t.actor?.data.data.attributes.hp.value == 0).length;
-        $('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : $('#savingthrow-request option:first', html).val()));
-    } else
-        $('#savingthrow-request', html).val(app.request);
+        app.request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
+        //$('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
+    } //else
+    $('#savingthrow-request', html).val(app.request);
 
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);

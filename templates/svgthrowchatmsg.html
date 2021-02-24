@@ -1,9 +1,11 @@
 <div class="monks-tokenbar savingthrow chat-card">
     <header class="card-header flexrow">
         <h3 class="item-name">{{name}}</h3>
-        <div class="item-controls flexrow" style="text-align:right;">
-            {{#if dc}}<h3 class="gm-only">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>{{/if}}
+        {{#if dc}}
+        <div class="item-controls flexrow" style="text-align: right;flex: 0 0 55px;">
+            <h3 class="gm-only">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>
         </div>
+        {{/if}}
     </header>
     <div class="message-content" style="margin:5px 0px;">
         <div class="card-content"></div>

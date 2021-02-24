@@ -420,6 +420,9 @@
     font-size: 20px;
     font-weight: 700;
     color: #4b4a44;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .monks-tokenbar.chat-card .card-header h3:hover {
