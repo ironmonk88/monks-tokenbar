@@ -7,6 +7,8 @@ Added ability to recall the last set of tokens used for a requested roll
 
 Added support for Tormenta20 and translation corrections (Thank you mclemente!)
 
+Added Japanese translations (Thank you touge!)
+
 ## Version 1.0.16
 Fixed issue with dice tooltip showing when request was sent as a blind gm roll
 
