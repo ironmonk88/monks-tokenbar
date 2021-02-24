@@ -81,22 +81,22 @@ export class TokenBar extends Application {
 
         //let perceptionTitle = "Passive Perception";
         let stat2 = 10;
-				switch (game.world.system) {
-					case "pf1":
-						stat2 = actor.data.data.skills.per.mod;
-						break;
-					case "pf2e":
-						stat2 = stat2 + actor.data.data.attributes.perception.value;
-						break;
-					case "dnd5e":
-						stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
-						break;
-					case "tormenta20":
-						stat2 = actor.data.data?.pericias?.per?.value;
-						break;
-					default:
-						stat2 = "";
-				}
+		switch (game.world.system) {
+			case "pf1":
+				stat2 = actor.data.data.skills.per.mod;
+				break;
+			case "pf2e":
+				stat2 = stat2 + actor.data.data.attributes.perception.value;
+				break;
+			case "dnd5e":
+				stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
+				break;
+			case "tormenta20":
+				stat2 = actor.data.data?.pericias?.per?.value;
+				break;
+			default:
+				stat2 = "";
+		}
 
         token.unsetFlag("monks-tokenbar", "notified");
 
