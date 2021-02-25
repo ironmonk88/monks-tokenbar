@@ -213,10 +213,10 @@ export class SavingThrow {
                     if (sound != undefined)
                         AudioHelper.play({ src: sound });
 
-                    setTimeout(() => {
+                    //setTimeout(() => {
                         //just confirm that the roll has finished.  Mass rolls aren't saving properly.
                         //SavingThrow.finishRolling(item, message);
-                    }, 3000);
+                    //}, 3000);
 
                     finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                         return { id: item.id, reveal: true, userid: game.userId };
@@ -268,7 +268,7 @@ export class SavingThrow {
                 else if (requesttype == 'saving' || requesttype == 'skill') {
                     opts = {
                         actor: actor,
-                        type: "perÃ­cia",
+                        type: "perícia",
                         data: actor.data.data.pericias[opts],
                         name: actor.data.data.pericias[opts].label,
                         id: opts

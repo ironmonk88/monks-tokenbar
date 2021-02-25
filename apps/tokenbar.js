@@ -137,7 +137,8 @@ export class TokenBar extends Application {
         log('Get current Tokens');
         let tokens = canvas.tokens.placeables.filter(t => {
             return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc';
-        }).map(t => {
+        }).sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
+            .map(t => {
             return this.mapToken(t);
         });
 
