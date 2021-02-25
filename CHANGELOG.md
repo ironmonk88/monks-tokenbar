@@ -1,3 +1,6 @@
+## Version 1.0.18 - In Development -
+Fixing issue when a toolkit rool is requested but the item can't be found, then an error is throw.  Added a check to make sure the tool in question can be found.
+
 ## Version 1.0.17
 Added support for Death Saving throw
 
