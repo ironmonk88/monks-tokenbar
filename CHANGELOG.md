@@ -1,6 +1,8 @@
 ## Version 1.0.18 - In Development -
 Fixing issue when a toolkit rool is requested but the item can't be found, then an error is throw.  Added a check to make sure the tool in question can be found.
 
+Added Private Message to the right click menu on the tokens to start a private message with the player that owns that token.
+
 ## Version 1.0.17
 Added support for Death Saving throw
 
