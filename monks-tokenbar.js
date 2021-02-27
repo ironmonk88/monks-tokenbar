@@ -44,36 +44,6 @@ export class MonksTokenBar {
         Token.prototype._canDrag = function (user, event) {
             return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
         };
-        /*
-        if (setting("token-combat-highlight")) {
-            let oldTokenRefresh = Token.prototype.refresh;
-            Token.prototype.refresh = function () {
-                oldTokenRefresh.call(this);
-
-                //is this token the currently visible combat's current target
-                let activeCombats = game.combats.filter(c => {
-                    return c?.scene?.id == game.scenes.viewed.id && c.started;
-                });
-                let activeTokens = activeCombats.map(c => { return c.current.tokenId });
-
-                let showmarker = activeTokens.includes(this.id);
-                if (this.turnmarker == undefined) {
-                    loadTexture("modules/turnmarker/assets/incendium.png").then((tex) => { //"modules/monks-little-details/img/chest.png"
-                        if (this.turnmarker == undefined) {
-                            const icon = new PIXI.Sprite(tex);
-                            const size = Math.max(this.w, this.h) * 1.5;
-                            icon.width = icon.height = size;
-                            icon.position.set((this.w - size) / 2, (this.h - size) / 2);
-                            icon.alpha = 0.8;
-                            icon.visible = showmarker;
-                            this.turnmarker = icon;
-                            this.addChildAt(this.turnmarker, 0);
-                        }
-                    });
-                } else
-                    this.turnmarker.visible = showmarker;
-            }
-        }*/
     }
 
     static ready() {
