@@ -27,20 +27,24 @@
     <nav id="token-action-bar" class="flexrow">
         <ol class="flexrow token-list">{{#each tokens}}
             <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}}>
-                <div class="token-stat stat1 flexrow"><i class="fas {{../stat1icon}}"></i><span>{{this.stat1}}</span></div>
-                <div class="token-stat stat2 flexrow"><i class="fas {{../stat2icon}}"></i><span>{{this.stat2}}</span></div>
-                <div class="movement-icon" movement="{{this.movement}}"><i class="fas"></i></div>
-                {{#if this.icon}}
-                <div class="token-icon" style="background-image:url('{{this.icon}}')" >
-                    <video width="48" height="48" class="token-icon" {{#if ../playanimation}} autoplay loop{{/if}}><source src="{{this.icon}}" /></video>
+                <div class="token-stats flexcol">
+                    <div class="token-stat stat1 flexrow">{{#if this.stat1}}<i class="fas {{../stat1icon}}"></i><span>{{this.stat1}}</span>{{/if}}</div>
+                    <div class="token-stat stat2 flexrow">{{#if this.stat2}}<i class="fas {{../stat2icon}}"></i><span>{{this.stat2}}</span>{{/if}}</div>
                 </div>
-                {{/if}}
-                {{#if this.resource1}}
-                <div class="resource" resource="1"><div class="bar" style="width:{{this.resource1.pct}}%;background-color:{{this.resource1.color}}"></div></div>
-                {{/if}}
-                {{#if this.resource2}}
-                <div class="resource" resource="2"><div class="bar" style="width:{{this.resource2.pct}}%;background-color:{{this.resource2.color}}"></div></div>
-                {{/if}}
+                <div class="token-content">
+                    <div class="movement-icon" movement="{{this.movement}}"><i class="fas"></i></div>
+                    {{#if this.icon}}
+                    <div class="token-icon" style="background-image:url('{{this.icon}}')">
+                        <video width="48" height="48" class="token-icon" {{#if ../playanimation}} autoplay loop{{/if}}><source src="{{this.icon}}" /></video>
+                    </div>
+                    {{/if}}
+                    {{#if this.resource1}}
+                    <div class="resource" resource="1"><div class="bar" style="width:{{this.resource1.pct}}%;background-color:{{this.resource1.color}}"></div></div>
+                    {{/if}}
+                    {{#if this.resource2}}
+                    <div class="resource" resource="2"><div class="bar" style="width:{{this.resource2.pct}}%;background-color:{{this.resource2.color}}"></div></div>
+                    {{/if}}
+                </div>
             </li>
             {{/each}}</ol>
     </nav>

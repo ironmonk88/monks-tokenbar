@@ -244,9 +244,12 @@ export class SavingThrow {
                     rollfn = actor.rollSkill;
                 } else if (requesttype == 'tool') {
                     let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request; });
-                    context = item;
-                    request = options;
-                    rollfn = item.rollToolCheck;
+                    if (item != undefined) {
+                        context = item;
+                        request = options;
+                        rollfn = item.rollToolCheck;
+                    } else
+                        ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoTool"));
                 } else {
                     if (request == 'death') {
                         rollfn = actor.rollDeathSave;
@@ -335,6 +338,21 @@ export class SavingThrow {
                 } else
                     ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
             }
+            else if (game.system.id == 'ose') {
+                let rollfn = null;
+                let options = {
+                    fastForward: fastForward, chatMessage: false
+                };
+                if (requesttype == 'scores') {
+                    rollfn = actor.rollCheck;
+                } else if (requesttype == 'saving') {
+                    rollfn = actor.rollSave;
+                }
+                if (rollfn != undefined) {
+                    return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
+                }
+                else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+            }
             else {
                 ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
             }
@@ -415,34 +433,36 @@ export class SavingThrow {
                 let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 log('updating actor', msgtoken, update.roll);
 
-                msgtoken.roll = update.roll.toJSON();
-                msgtoken.reveal = reveal;
-                msgtoken.total = update.roll.total;
+                if (update.roll) {
+                    msgtoken.roll = update.roll.toJSON();
+                    msgtoken.reveal = reveal;
+                    msgtoken.total = update.roll.total;
 
-                let tooltip = await update.roll.getTooltip();
+                    let tooltip = await update.roll.getTooltip();
 
-                if (dc != '')
-                    msgtoken.passed = (msgtoken.total >= dc);
+                    if (dc != '')
+                        msgtoken.passed = (msgtoken.total >= dc);
 
 
-                if ($('.item[data-item-id="' + update.id + '"] .item-row .dice-tooltip', content).length == 0)
-                    $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
-                $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
-                if ($('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).length == 0) {
-                    $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow" style="display:none;">
-                <div class="dice-result">${msgtoken.total}</div >
-                <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
-                    <i class="fas fa-check"></i>
-                </a>
-                <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
-                    <i class="fas fa-times"></i>
-                </a>
-                <div class="dice-text player-only"></div>
-            </div >`);
+                    if ($('.item[data-item-id="' + update.id + '"] .item-row .dice-tooltip', content).length == 0)
+                        $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
+                    $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
+                    if ($('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).length == 0) {
+                        $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
+                            `<div class="dice-total flexrow" style="display:none;">
+                            <div class="dice-result">${msgtoken.total}</div >
+                            <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            <div class="dice-text player-only"></div>
+                        </div >`);
+                    }
+                    flags["token" + update.id] = msgtoken;
+                    //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 }
-                flags["token" + update.id] = msgtoken;
-                //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
 
                 if (update.finish != undefined)
                     promises.push(update.finish);
@@ -597,8 +617,15 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         //if all the tokens are players, then default to perception
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => t.actor?.data.data.attributes.hp.value == 0).length;
-        app.request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
+        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
+        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : null) ||
+            (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : null) ||
+            SavingThrow.lastRequest ||
+            $('#savingthrow-request option:first', html).val();
+        if ($('#savingthrow-request option[value="' + request + '"]').length == 0)
+            request = $('#savingthrow-request option:first', html).val();
+
+        app.request = request;
         //$('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
     } //else
     $('#savingthrow-request', html).val(app.request);

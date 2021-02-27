@@ -24,8 +24,26 @@ export const registerSettings = function () {
 		case "tormenta20":
 			stat1 = "defesa.value";
 			break;
+		case "ose":
+			stat1 = "ac.value";
+			break;
 		default:
 			stat1 = "attributes.ac.value";
+	}
+
+	let stat2;
+	switch (game.world.system) {
+		case "pf1":
+			stat2 = "skills.per.mod";
+			break;
+		case "dnd5e":
+			stat2 = "skills.prc.passive";
+			break;
+		case "tormenta20":
+			stat2 = "pericias.per.value";
+			break;
+		default:
+			stat2 = "";
 	}
 	
 	game.settings.register(modulename, "notify-on-change", {
@@ -112,6 +130,14 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "popout-tokenbar", {
+		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),
+		hint: game.i18n.localize("MonksTokenBar.popout-tokenbar.hint"),
+		scope: "client",
+		config: false,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "stat1-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat1-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-icon.hint"),
@@ -132,7 +158,7 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat2-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-icon.hint"),
 		scope: "client",
-		config: false,
+		config: true,
 		default: "fa-eye",
 		type: String,
 	});
@@ -140,8 +166,8 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat2-resource.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-resource.hint"),
 		scope: "client",
-		config: false,
-		default: false,
+		config: true,
+		default: stat2,
 		type: String,
 	});
 	game.settings.registerMenu(modulename, 'resetPosition', {

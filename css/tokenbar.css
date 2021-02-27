@@ -1,15 +1,25 @@
 #tokenbar {
     z-index: 65;
     position: fixed;
-    bottom:10px;
-    height: 92px;
+    /*height: 92px;*/
     pointer-events: none;
     flex-wrap: nowrap;
 }
 
+#tokenbar-window #tokenbar {
+    pointer-events: all;
+    position: relative;
+}
+
+body #tokenbar-window:first-child{
+    top: 0px !important;
+    left:0px !important;
+    width:100% !important;
+}
+
 #tokenbar .bar-controls {
     flex: 0 0 auto;
-    height: 100%;
+    height: 92px;
     margin: 0 2px;
     text-align: center;
     color: #c9c7b8;
@@ -17,7 +27,7 @@
     border: 1px solid #000;
     box-shadow: 0 0 3px #444 inset;
     border-radius: 3px;
-    flex-wrap:nowrap;
+    flex-wrap: nowrap;
 }
 
 #tokenbar .bar-controls > div{
@@ -34,6 +44,7 @@
 
 #tokenbar .bar-controls > div > * {
     line-height: 30px;
+    flex: 0 0 30px;
 }
 
 #tokenbar .bar-controls .token-movement i {
@@ -71,9 +82,13 @@
 
 #token-action-bar {
     flex: 1 1 auto;
-    height: 100%;
+    height: 92px;
     pointer-events: all;
     flex-wrap: nowrap;
+}
+
+#tokenbar-window #token-action-bar {
+    flex: 0 0 auto;
 }
 
 #token-action-bar.collapsed {
@@ -113,12 +128,18 @@
     width:25px;
 }
 
+#tokenbar .token .token-stats {
+    flex: 0 0 40px;
+    height: 50px;
+    justify-content: flex-end;
+    background: url(../../../ui/denim075.png) repeat;
+}
+
 #tokenbar .token .token-stat {
     position: relative;
     width: 100%;
     text-align: center;
     padding: 1px 3px;
-    background: url(../../../ui/denim075.png) repeat;
     color: #f0f0e0;
     font-weight: bold;
     pointer-events: none;

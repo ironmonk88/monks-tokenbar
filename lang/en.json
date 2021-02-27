@@ -2,6 +2,7 @@
 	"MonksTokenBar.EditCharacter": "Edit Character",
 	"MonksTokenBar.EditToken": "Edit Token",
 	"MonksTokenBar.TargetToken": "Target Token",
+	"MonksTokenBar.PrivateMessage": "Private Message",
 
 	"MonksTokenBar.easy": "Easy",
 	"MonksTokenBar.average": "Average",
@@ -41,6 +42,7 @@
 	"MonksTokenBar.RequestActorMissing": "Cannot send request if either actor is missing",
 	"MonksTokenBar.TokenNoActorAttrs": "token has no actor to use for additional attributes",
 	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
+	"MonksTokenBar.ActorNoTool": ": Does not have that tool",
 
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
 	"MonksTokenBar.notify-on-change.hint": "Send a notification to all players when the GM changes the allowable movement",
@@ -59,11 +61,11 @@
 	"MonksTokenBar.stat1-icon.name": "Stat1 Icon",
 	"MonksTokenBar.stat1-icon.hint": "Change the icon to display for the first stat.",
 	"MonksTokenBar.stat1-resource.name": "Stat1 Resource",
-	"MonksTokenBar.stat1-resource.hint": "Change the resource dsiplayed by the first resource",
+	"MonksTokenBar.stat1-resource.hint": "Change the resource displayed by the first stat",
 	"MonksTokenBar.stat2-icon.name": "Stat2 Icon",
 	"MonksTokenBar.stat2-icon.hint": "Change the icon to display for the second stat.",
 	"MonksTokenBar.stat2-resource.name": "Stat2 Resource",
-	"MonksTokenBar.stat2-resource.hint": "Change the resource dsiplayed by the second resource",
+	"MonksTokenBar.stat2-resource.hint": "Change the resource displayed by the second stat",
 	"MonksTokenBar.movement-after-combat.name": "Set movement after combat",
 	"MonksTokenBar.movement-after-combat.hint": "When combat ends, select what movement type to set it back to",
 	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
@@ -72,6 +74,8 @@
 	"MonksTokenBar.assign-loot.hint": "Only works with the Loot Sheet module, but once the combat is over, convert the fallen enemies to lootable",
 	"MonksTokenBar.token-animation.name": "Show token animation",
 	"MonksTokenBar.token-animation.hint": "If the token picture uses a webm file, animate it on the tokenbar.",
+	"MonksTokenBar.popout-tokenbar.name": "Popout TokenBar",
+	"MonksTokenBar.popout-tokenbar.hint": "Put the TokenBar in a dialog window so that you can use the PopOut! module.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

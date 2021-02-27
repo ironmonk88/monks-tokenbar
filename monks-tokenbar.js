@@ -44,57 +44,101 @@ export class MonksTokenBar {
         Token.prototype._canDrag = function (user, event) {
             return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
         };
+        /*
+        if (setting("token-combat-highlight")) {
+            let oldTokenRefresh = Token.prototype.refresh;
+            Token.prototype.refresh = function () {
+                oldTokenRefresh.call(this);
+
+                //is this token the currently visible combat's current target
+                let activeCombats = game.combats.filter(c => {
+                    return c?.scene?.id == game.scenes.viewed.id && c.started;
+                });
+                let activeTokens = activeCombats.map(c => { return c.current.tokenId });
+
+                let showmarker = activeTokens.includes(this.id);
+                if (this.turnmarker == undefined) {
+                    loadTexture("modules/turnmarker/assets/incendium.png").then((tex) => { //"modules/monks-little-details/img/chest.png"
+                        if (this.turnmarker == undefined) {
+                            const icon = new PIXI.Sprite(tex);
+                            const size = Math.max(this.w, this.h) * 1.5;
+                            icon.width = icon.height = size;
+                            icon.position.set((this.w - size) / 2, (this.h - size) / 2);
+                            icon.alpha = 0.8;
+                            icon.visible = showmarker;
+                            this.turnmarker = icon;
+                            this.addChildAt(this.turnmarker, 0);
+                        }
+                    });
+                } else
+                    this.turnmarker.visible = showmarker;
+            }
+        }*/
     }
 
     static ready() {
         MonksTokenBar.requestoptions = [];
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
-        if (game.system.id == "pf2e") {
-            MonksTokenBar.requestoptions.push({
-                id: "attribute", text: "Attributes", groups: { "perception" : CONFIG.PF2E.attributes.perception }
-            });
-            MonksTokenBar.requestoptions.push({
-                id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
-            });
-            MonksTokenBar.requestoptions.push({
-                id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.saves
-            });
-            MonksTokenBar.requestoptions.push({
-                id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
-            });
-        } else if (game.system.id == "D35E") {
-            MonksTokenBar.requestoptions.push({
-                id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
-            });
-            MonksTokenBar.requestoptions.push({
-                id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.savingThrows
-            });
-            MonksTokenBar.requestoptions.push({
-                id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
-            });
-        } else if (game.system.id == "tormenta20") {
-            MonksTokenBar.requestoptions.push({
-                id:"ability", text: i18n("MonksTokenBar.Ability"), groups:CONFIG.T20.atributos
-            });
-            MonksTokenBar.requestoptions.push({
-                id:"saving", text: i18n("MonksTokenBar.SavingThrow"), groups:CONFIG.T20.resistencias
-            });
-            MonksTokenBar.requestoptions.push({
-                id:"skill", text: i18n("MonksTokenBar.Skill"), groups:CONFIG.T20.pericias
-            });
-        } else {
-            MonksTokenBar.requestoptions.push({
-                id:"ability", text: i18n("MonksTokenBar.Ability"), groups:CONFIG.DND5E.abilities
-            });
-            MonksTokenBar.requestoptions.push({
-                id:"saving", text: i18n("MonksTokenBar.SavingThrow"), groups:CONFIG.DND5E.abilities
-            });
-            MonksTokenBar.requestoptions.push({
-                id:"skill", text: i18n("MonksTokenBar.Skill"), groups:CONFIG.DND5E.skills
-            });
-            MonksTokenBar.requestoptions.push({
-                id:"death", text: i18n("MonksTokenBar.DeathSavingThrow")
-            });
+        switch (game.system.id) {
+            case "pf2e":
+                MonksTokenBar.requestoptions.push({
+                    id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception }
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.saves
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
+                });
+                break;
+
+            case "D35E":
+                MonksTokenBar.requestoptions.push({
+                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.savingThrows
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
+                });
+                break;
+            case "tormenta20":
+                MonksTokenBar.requestoptions.push({
+                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.T20.atributos
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.T20.resistencias
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.T20.pericias
+                });
+                break;
+            case "ose":
+                MonksTokenBar.requestoptions.push({
+                    id: "scores", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.OSE.scores
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.OSE.saves_long
+                });
+                break;
+            case "dnd5e":
+                MonksTokenBar.requestoptions.push({
+                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.DND5E.abilities
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "saving", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.DND5E.abilities
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.DND5E.skills
+                });
+                MonksTokenBar.requestoptions.push({
+                    id: "death", text: i18n("MonksTokenBar.DeathSavingThrow")
+                });
+            break;
         }
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
@@ -305,33 +349,35 @@ export class MonksTokenBar {
     }
 
     static async onDeleteCombat(combat) {
-        if (combat.started == true && game.user.isGM) {
-            let axpa;
-            if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "dnd5e" || (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')))) {
-                axpa = new AssignXPApp(combat);
-                await axpa.render(true);
-            }
+        if (game.user.isGM) {
+            if (combat.started == true) {
+                let axpa;
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "dnd5e" || (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')))) {
+                    axpa = new AssignXPApp(combat);
+                    await axpa.render(true);
+                }
 
-            if (setting("assign-loot") && game.modules.get("lootsheetnpc5e")?.active) {
-                let lapp = new LootablesApp(combat);
-                await lapp.render(true);
+                if (setting("assign-loot") && game.modules.get("lootsheetnpc5e")?.active) {
+                    let lapp = new LootablesApp(combat);
+                    await lapp.render(true);
 
-                if (axpa != undefined) {
-                    setTimeout(function () {
-                        axpa.position.left += 204;
-                        axpa.render();
-                        lapp.position.left -= 204;
-                        lapp.render();
-                    }, 100);
+                    if (axpa != undefined) {
+                        setTimeout(function () {
+                            axpa.position.left += 204;
+                            axpa.render();
+                            lapp.position.left -= 204;
+                            lapp.render();
+                        }, 100);
+                    }
                 }
             }
-        }
 
-        if (game.user.isGM && game.combats.combats.length == 0 && MonksTokenBar.tokenbar != undefined) {
-            //set movement to free movement
-            let movement = setting("movement-after-combat");
-            if (movement != 'ignore')
-                MonksTokenBar.changeGlobalMovement(movement);
+            if (game.combats.combats.length == 0) {
+                //set movement to free movement
+                let movement = setting("movement-after-combat");
+                if (movement != 'ignore')
+                    MonksTokenBar.changeGlobalMovement(movement);
+            }
         }
     }
 }
@@ -346,13 +392,15 @@ Hooks.once('init', async function () {
 
 Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
 
-Hooks.on("updateCombat", function (data, delta) {
-    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
-        $(MonksTokenBar.tokenbar.tokens).each(function () {
-            this.token.unsetFlag("monks-tokenbar", "nofified");
-        });
+Hooks.on("updateCombat", function (combat, delta) {
+    if (game.user.isGM) {
+        if (MonksTokenBar.tokenbar) {
+            $(MonksTokenBar.tokenbar.tokens).each(function () {
+                this.token.unsetFlag("monks-tokenbar", "nofified");
+            });
+        }
 
-        if (delta.round === 1 && data.turn === 0 && data.started === true && setting("change-to-combat")) {
+        if (delta.round === 1 && combat.turn === 0 && combat.started === true && setting("change-to-combat")) {
             MonksTokenBar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
         }
     }

@@ -29,9 +29,9 @@ export class TokenBar extends Application {
     /** @override */
 	static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-        id: "tokenbar",
+        id: "tokenbar-window",
         template: "./modules/monks-tokenbar/templates/tokenbar.html",
-        popOut: false
+        popOut: setting('popout-tokenbar')
     });
     }
 
@@ -58,7 +58,7 @@ export class TokenBar extends Application {
         if (pos == undefined) {
             let hbpos = $('#hotbar').position();
             let width = $('#hotbar').width();
-            pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: '' };
+            pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
         }
 
         $(this.element).css(pos);
@@ -69,7 +69,7 @@ export class TokenBar extends Application {
     mapToken(token) {
         let actor = token.actor;
 
-        let stat1 = getProperty(actor.data, "data." + setting("stat1-resource")) || 0;
+        let stat1 = getProperty(actor.data, "data." + setting("stat1-resource"));
 
         /*
         stat1 = 10;
@@ -80,6 +80,7 @@ export class TokenBar extends Application {
         }*/
 
         //let perceptionTitle = "Passive Perception";
+        /*
         let stat2 = 10;
 		switch (game.world.system) {
 			case "pf1":
@@ -96,7 +97,9 @@ export class TokenBar extends Application {
 				break;
 			default:
 				stat2 = "";
-		}
+		}*/
+
+        let stat2 = getProperty(actor.data, "data." + setting("stat2-resource"));
 
         token.unsetFlag("monks-tokenbar", "notified");
 
@@ -214,83 +217,85 @@ export class TokenBar extends Application {
         }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
 
-        html.find('#tokenbar-move-handle').mousedown(ev => {
-            ev.preventDefault();
-            ev = ev || window.event;
-            let isRightMB = false;
-            if ("which" in ev) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-                isRightMB = ev.which == 3;
-            } else if ("button" in ev) { // IE, Opera 
-                isRightMB = ev.button == 2;
-            }
+        if (!setting('popout-tokenbar')) {
+            html.find('#tokenbar-move-handle').mousedown(ev => {
+                ev.preventDefault();
+                ev = ev || window.event;
+                let isRightMB = false;
+                if ("which" in ev) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+                    isRightMB = ev.which == 3;
+                } else if ("button" in ev) { // IE, Opera 
+                    isRightMB = ev.button == 2;
+                }
 
-            if (!isRightMB) {
-                dragElement(document.getElementById("tokenbar"));
-                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                if (!isRightMB) {
+                    dragElement(document.getElementById("tokenbar"));
+                    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-                function dragElement(elmnt) {
-                    elmnt.onmousedown = dragMouseDown;
-                    function dragMouseDown(e) {
-                        e = e || window.event;
-                        e.preventDefault();
-                        pos3 = e.clientX;
-                        pos4 = e.clientY;
+                    function dragElement(elmnt) {
+                        elmnt.onmousedown = dragMouseDown;
+                        function dragMouseDown(e) {
+                            e = e || window.event;
+                            e.preventDefault();
+                            pos3 = e.clientX;
+                            pos4 = e.clientY;
 
-                        document.onmouseup = closeDragElement;
-                        document.onmousemove = elementDrag;
-                    }
+                            document.onmouseup = closeDragElement;
+                            document.onmousemove = elementDrag;
+                        }
 
-                    function elementDrag(e) {
-                        e = e || window.event;
-                        e.preventDefault();
-                        // calculate the new cursor position:
-                        pos1 = pos3 - e.clientX;
-                        pos2 = pos4 - e.clientY;
-                        pos3 = e.clientX;
-                        pos4 = e.clientY;
-                        // set the element's new position:
-                        elmnt.style.bottom = null;
-                        elmnt.style.right = null
-                        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-                        elmnt.style.position = 'fixed';
-                        elmnt.style.zIndex = 100;
-                    }
+                        function elementDrag(e) {
+                            e = e || window.event;
+                            e.preventDefault();
+                            // calculate the new cursor position:
+                            pos1 = pos3 - e.clientX;
+                            pos2 = pos4 - e.clientY;
+                            pos3 = e.clientX;
+                            pos4 = e.clientY;
+                            // set the element's new position:
+                            elmnt.style.bottom = null;
+                            elmnt.style.right = null
+                            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                            elmnt.style.position = 'fixed';
+                            elmnt.style.zIndex = 100;
+                        }
 
-                    function closeDragElement() {
-                        // stop moving when mouse button is released:
-                        elmnt.onmousedown = null;
-                        elmnt.style.zIndex = null;
-                        document.onmouseup = null;
-                        document.onmousemove = null;
+                        function closeDragElement() {
+                            // stop moving when mouse button is released:
+                            elmnt.onmousedown = null;
+                            elmnt.style.zIndex = null;
+                            document.onmouseup = null;
+                            document.onmousemove = null;
 
-                        let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
-                        let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
+                            let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
+                            let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
 
-                        let position = {top: null, bottom: null, left: null, right: null};
-                        if (yPos > (window.innerHeight / 2))
-                            position.bottom = (window.innerHeight - yPos - elmnt.offsetHeight);
-                        else 
-                            position.top = yPos + 1;
+                            let position = { top: null, bottom: null, left: null, right: null };
+                            if (yPos > (window.innerHeight / 2))
+                                position.bottom = (window.innerHeight - yPos - elmnt.offsetHeight);
+                            else
+                                position.top = yPos + 1;
 
-                        //if (xPos > (window.innerWidth / 2))
-                        //    position.right = (window.innerWidth - xPos);
-                        //else
+                            //if (xPos > (window.innerWidth / 2))
+                            //    position.right = (window.innerWidth - xPos);
+                            //else
                             position.left = xPos + 1;
 
-                        elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
-                        elmnt.style.right = (position.right ? position.right + "px" : null);
-                        elmnt.style.top = (position.top ? position.top + "px" : null);
-                        elmnt.style.left = (position.left ? position.left + "px" : null);
+                            elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
+                            elmnt.style.right = (position.right ? position.right + "px" : null);
+                            elmnt.style.top = (position.top ? position.top + "px" : null);
+                            elmnt.style.left = (position.left ? position.left + "px" : null);
 
-                        //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
+                            //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
 
-                        log(`Setting monks-tokenbar position:`, position);
-                        game.user.setFlag('monks-tokenbar', 'position', position);
+                            log(`Setting monks-tokenbar position:`, position);
+                            game.user.setFlag('monks-tokenbar', 'position', position);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Activate context menu
         this._contextMenu(html);
@@ -298,6 +303,18 @@ export class TokenBar extends Application {
 
     _contextMenu(html) {
         let context = new ContextMenu(html, ".token", [
+            {
+                name: "MonksTokenBar.PrivateMessage",
+                icon: '<i class="fas fa-microphone"></i>',
+                callback: li => {
+                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    let players = game.users.entities.filter(u => u.active && !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)).map(u => {
+                        return u.name;
+                    });
+                    $("#chat-message").val('/w ' + players.join(' ') + ' ');
+                    $("#chat-message").focus();
+                }
+            },
             {
                 name: "MonksTokenBar.EditCharacter",
                 icon: '<i class="fas fa-edit"></i>',
@@ -476,10 +493,21 @@ export class TokenBar extends Application {
 Hooks.on('renderTokenBar', (app, html) => {
     //MonksTokenBar.tokenbar.setPos().show();
     app.setPos().show();
+
+    if (setting('popout-tokenbar') && MonksTokenBar.tokenbar.element[0] != undefined) {
+        MonksTokenBar.tokenbar.element[0].style.width = null;
+        MonksTokenBar.tokenbar.setPosition();
+    }
     //MonksTokenBar.tokenbar._getTokensByScene();
     let gMovement = game.settings.get("monks-tokenbar", "movement");
     $('.token-movement[data-movement="' + gMovement + '"]', html).addClass('active');
-    $('.token-movement[data-movement="combat"]', html).toggleClass('disabled', game.combats.active?.started !== true);
+
+    //does the scene have an active combat
+    //let combats = game.combats.filter(c => {
+    //    return c?.scene?.id == game.scenes?.viewed?.id && c.started;
+    //});
+
+    //$('.token-movement[data-movement="combat"]', html).toggleClass('disabled', combats.length == 0);
     $(app.tokens).each(function () {
         let tMovement = this.token.getFlag("monks-tokenbar", "movement");
         if (tMovement != undefined && tMovement != gMovement) {
@@ -510,7 +538,7 @@ Hooks.on('updateActor', (actor, data) => {
     if (game.user.isGM && game.settings.get("monks-tokenbar", "show-resource-bars") && MonksTokenBar.tokenbar != undefined) {
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
         if (tkn != undefined) {
-            if (data?.attributes?.ac != undefined
+            /*if (data?.attributes?.ac != undefined
                 || data?.skills?.prc != undefined
                 || data?.data?.customModifiers?.ac != undefined
                 || data?.data?.customModifiers?.perception != undefined
@@ -518,10 +546,10 @@ Hooks.on('updateActor', (actor, data) => {
                 || data?.data?.abilities?.dex != undefined
                 || getProperty(data.data, tkn.token.data.bar1.attribute) != undefined
                 || getProperty(data.data, tkn.token.data.bar2.attribute) != undefined)
-            {
+            {*/
                 MonksTokenBar.tokenbar.updateToken(tkn.token);
                 MonksTokenBar.tokenbar.render();
-            }
+            //}
         }
     }
 });
