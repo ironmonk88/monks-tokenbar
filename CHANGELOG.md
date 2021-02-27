@@ -1,7 +1,13 @@
-## Version 1.0.18 - In Development -
+## Version 1.0.18
 Fixing issue when a toolkit rool is requested but the item can't be found, then an error is throw.  Added a check to make sure the tool in question can be found.
 
 Added Private Message to the right click menu on the tokens to start a private message with the player that owns that token.
+
+Added support for OSE
+
+Made the second stat customisable
+
+Attempted to allow the TokenBar to be popped out, but that didn't work very well.  Left the code to go back to it at a later time.
 
 ## Version 1.0.17
 Added support for Death Saving throw
