@@ -40,7 +40,7 @@
 	"packs": [],
 	"url": "https://github.com/ironmonk88/monks-tokenbar",
 	"download": "https://github.com/ironmonk88/monks-tokenbar/archive/1.0.18.zip",
-	"manifest": "https://github.com/ironmonk88/monks-tokenbar/releases/download/1.0.18/module.json",
+	"manifest": "https://github.com/ironmonk88/monks-tokenbar/releases/latest/download/module.json",
 	"minimumCoreVersion": "0.7.0",
 	"compatibleCoreVersion": "0.7.9"
 }
