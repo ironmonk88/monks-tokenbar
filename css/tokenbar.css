@@ -130,9 +130,13 @@ body #tokenbar-window:first-child{
 
 #tokenbar .token .token-stats {
     flex: 0 0 40px;
-    height: 50px;
+    height: 40px;
     justify-content: flex-end;
     background: url(../../../ui/denim075.png) repeat;
+}
+
+#tokenbar .token .token-stats.hidden{
+    visibility:hidden;
 }
 
 #tokenbar .token .token-stat {
@@ -143,7 +147,7 @@ body #tokenbar-window:first-child{
     color: #f0f0e0;
     font-weight: bold;
     pointer-events: none;
-    flex: 0 0 20px;
+    flex: 0 0 18px;
 }
 
 #tokenbar .token .token-stat i{
@@ -161,9 +165,6 @@ body #tokenbar-window:first-child{
     border: none;
     flex: 0 0 48px;
     box-shadow: 0 0 5px #444 inset;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
 #tokenbar .token:hover .token-icon {

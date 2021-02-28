@@ -118,6 +118,7 @@ export class TokenBar extends Application {
             thumb: thumb.thumb,
             stat1: stat1,
             stat2: stat2,
+            statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
             resource1: resources[0],
             resource2: resources[1]
         }
@@ -167,10 +168,12 @@ export class TokenBar extends Application {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
         if (tkn.stat1 != getProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
-            diff.stat1 = getProperty(tkn.token.actor.data.data, setting("stat1-resource"))
+            diff.stat1 = getProperty(tkn.token.actor.data.data, setting("stat1-resource"));
+            diff.statClass = (stat1 == undefined && stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.stat2 != getProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
-            diff.stat2 = getProperty(tkn.token.actor.data.data, setting("stat2-resource"))
+            diff.stat2 = getProperty(tkn.token.actor.data.data, setting("stat2-resource"));
+            diff.statClass = (stat1 == undefined && stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);

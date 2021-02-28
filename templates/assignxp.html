@@ -6,6 +6,10 @@
                 <input type="text" id="assign-xp-value" style="text-align:right;" value="{{xp}}" />
             </div>
             <div class="form-group">
+                <label>{{localize 'MonksTokenBar.DivideExperience'}}</label>
+                <input type="checkbox" id="divide-xp" {{#if dividexp}}checked{{/if}} />
+            </div>
+            <div class="form-group">
                 <label>{{localize 'MonksTokenBar.Reason'}}</label>
                 <input type="text" id="assign-xp-reason" value="{{reason}}" />
             </div>

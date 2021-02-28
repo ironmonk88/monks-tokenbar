@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
 
 export class AssignXPApp extends Application {
     constructor(entity, options = {}) {
@@ -6,6 +6,7 @@ export class AssignXPApp extends Application {
 
         this.xp = options?.xp || 0;
         this.reason = options?.reason;
+        this.dividexp = options?.dividexp || setting("divide-xp");
 
         if (entity != undefined && entity instanceof Combat) {
             this.actors = [];
@@ -55,6 +56,7 @@ export class AssignXPApp extends Application {
         return {
             actors: this.actors,
             xp: this.xp,
+            dividexp: this.dividexp,
             reason: this.reason
         };
     }
@@ -63,7 +65,7 @@ export class AssignXPApp extends Application {
         if(xp != undefined)
             this.xp = xp;
 
-        let charxp = parseInt(this.xp / this.actors.filter(a => { return !a.disabled; }).length);
+        let charxp = (this.dividexp ? parseInt(this.xp / this.actors.filter(a => { return !a.disabled; }).length) : this.xp);
 
         $(this.actors).each(function(){
             this.xp = (this.disabled ? 0 : charxp);
@@ -131,9 +133,15 @@ export class AssignXPApp extends Application {
 
         $('.dialog-buttons.assign', html).click($.proxy(this.assign, this));
 
+        $('#divide-xp', html).click(function () {
+            that.dividexp = $(this).is(':checked');
+            that.changeXP.call(that);
+            that.render(true);
+        });
+
         $('#assign-xp-value', html).blur(function () {
-            let xp = parseInt($(this).val());
-            that.changeXP.call(that, xp);
+            that.xp = parseInt($(this).val());
+            that.changeXP.call(that, that.xp);
             that.render(true);
         });
     };

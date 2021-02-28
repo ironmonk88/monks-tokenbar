@@ -27,7 +27,7 @@
     <nav id="token-action-bar" class="flexrow">
         <ol class="flexrow token-list">{{#each tokens}}
             <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}}>
-                <div class="token-stats flexcol">
+                <div class="token-stats flexcol {{this.statClass}}">
                     <div class="token-stat stat1 flexrow">{{#if this.stat1}}<i class="fas {{../stat1icon}}"></i><span>{{this.stat1}}</span>{{/if}}</div>
                     <div class="token-stat stat2 flexrow">{{#if this.stat2}}<i class="fas {{../stat2icon}}"></i><span>{{this.stat2}}</span>{{/if}}</div>
                 </div>

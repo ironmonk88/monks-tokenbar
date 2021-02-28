@@ -45,6 +45,10 @@ export const registerSettings = function () {
 		default:
 			stat2 = "";
 	}
+
+	let dividexp = true;
+	if (game.world.system == 'pf2e')
+		dividexp = false;
 	
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
@@ -61,6 +65,15 @@ export const registerSettings = function () {
 		scope: "world",
 		config: true,
 		default: true,
+		type: Boolean,
+	});
+
+	game.settings.register(modulename, "divide-xp", {
+		name: game.i18n.localize("MonksTokenBar.divide-xp.name"),
+		hint: game.i18n.localize("MonksTokenBar.divide-xp.hint"),
+		scope: "world",
+		config: true,
+		default: dividexp,
 		type: Boolean,
 	});
 
