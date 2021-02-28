@@ -43,8 +43,7 @@ export class TokenBar extends Application {
             tokens: this.tokens,
             movement: setting("movement"),
             stat1icon: setting("stat1-icon"),
-            stat2icon: setting("stat2-icon"),
-            playanimation: setting('token-animation')
+            stat2icon: setting("stat2-icon")
         };
     }
 
@@ -66,10 +65,10 @@ export class TokenBar extends Application {
         return this;
     }
 
-    mapToken(token) {
+    async mapToken(token) {
         let actor = token.actor;
 
-        let stat1 = getProperty(actor.data, "data." + setting("stat1-resource"));
+        let stat1 = getProperty(actor.data.data, setting("stat1-resource"));
 
         /*
         stat1 = 10;
@@ -99,36 +98,24 @@ export class TokenBar extends Application {
 				stat2 = "";
 		}*/
 
-        let stat2 = getProperty(actor.data, "data." + setting("stat2-resource"));
+        let stat2 = getProperty(actor.data.data, setting("stat2-resource"));
 
         token.unsetFlag("monks-tokenbar", "notified");
 
-        let resources = [null, null];
+        let resources = [{}, {}];
         if (game.settings.get("monks-tokenbar", "show-resource-bars")) {
-            ["bar1", "bar2"].forEach((b, i) => {
-                const attr = token.getBarAttribute(b);
-
-                if (attr != undefined && attr.type == "bar") {
-                    const val = Number(attr.value);
-                    const pct = Math.clamped(val, 0, attr.max) / attr.max;
-
-                    if (val != undefined) {
-                        let color = (i === 0) ? [(1 - (pct / 2)), pct, 0] : [(0.5 * pct), (0.7 * pct), 0.5 + (pct / 2)];
-                        resources[i] = { pct: (pct * 100), color: 'rgba(' + parseInt(color[0] * 255) + ',' + parseInt(color[1] * 255) + ',' + parseInt(color[2] * 255) + ', 0.7)' };
-                    }
-                }
-            });
+            resources[0] = this.getResourceBar(token, "bar1");
+            resources[1] = this.getResourceBar(token, "bar2");
         }
 
-        let img = token.data.img;
-        if (setting("token-pictures") == "actor" && token.actor != undefined)
-            img = token.actor.data.img;
+        let img = (setting("token-pictures") == "actor" && token.actor != undefined ? token.actor.data.img : token.data.img);
+        let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
 
         return {
             id: token.id,
             token: token,
-            icon: img,
-            animated: img.endsWith('webm'),
+            img: img,
+            thumb: thumb.thumb,
             stat1: stat1,
             stat2: stat2,
             resource1: resources[0],
@@ -136,23 +123,70 @@ export class TokenBar extends Application {
         }
     }
 
-    getCurrentTokens() {
+    async getCurrentTokens() {
         log('Get current Tokens');
-        let tokens = canvas.tokens.placeables.filter(t => {
-            return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc';
-        }).sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
-            .map(t => {
-            return this.mapToken(t);
-        });
+        let promises = canvas.tokens.placeables
+            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc'; })
+            .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
+            .map(t => { return this.mapToken(t); });
 
-        this.tokens = tokens;
+        Promise.all(promises).then(response => {
+            this.tokens = response;
+        });
     }
 
-    updateToken(token) {
-        log('Update token', token);
-        let idx = this.tokens.map(function (e) { return e.id; }).indexOf(token.id);
-        if(idx != -1)
-            this.tokens[idx] = this.mapToken(token);
+    getResourceBar(token, bar) {
+        let resource = {};
+        if (token.data.displayBars > 0) {
+            const attr = token.getBarAttribute(bar);
+
+            if (attr != undefined && attr.type == "bar") {
+                const val = Number(attr.value);
+                const pct = Math.clamped(val, 0, attr.max) / attr.max;
+
+                if (val != undefined) {
+                    let color = (bar === "bar1") ? [(1 - (pct / 2)), pct, 0] : [(0.5 * pct), (0.7 * pct), 0.5 + (pct / 2)];
+                    resource = { value: val, pct: (pct * 100), color: 'rgba(' + parseInt(color[0] * 255) + ',' + parseInt(color[1] * 255) + ',' + parseInt(color[2] * 255) + ', 0.7)' };
+                }
+            }
+        }
+
+        return resource;
+    }
+
+    async updateToken(tkn) {
+        //is the token different from our token element?
+        //need to check the tokens resource bars getProperty(data.data, tkn.token.data.bar2.attribute)
+        //and need to check the stat values
+        //and need to check the image
+        let diff = {};
+        if (tkn?.resource1?.value != getProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
+            diff.resource1 = this.getResourceBar(tkn.token, "bar1");
+        }
+        if (tkn?.resource2?.value != getProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
+            diff.resource2 = this.getResourceBar(tkn.token, "bar2");
+        }
+        if (tkn.stat1 != getProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
+            diff.stat1 = getProperty(tkn.token.actor.data.data, setting("stat1-resource"))
+        }
+        if (tkn.stat2 != getProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
+            diff.stat2 = getProperty(tkn.token.actor.data.data, setting("stat2-resource"))
+        }
+        if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
+            diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
+            let thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+            diff.thumb = thumb.thumb;
+        }
+
+        if (Object.keys(diff).length > 0) {
+            log('preUpdateTokenBarToken', tkn, diff);
+            mergeObject(tkn, diff);
+            //let idx = this.tokens.map(function (e) { return e.id; }).indexOf(tkn.id);
+            //if (idx != -1)
+            //    this.tokens[idx] = this.mapToken(tkn.token);
+            log('updateTokenBarToken', tkn);
+            this.render();
+        }
     }
 
 	/* -------------------------------------------- */
@@ -525,17 +559,16 @@ Hooks.on('renderTokenBar', (app, html) => {
 });
 
 Hooks.on('updateToken', (scene, token, data) => {
-    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-resource-bars") && MonksTokenBar.tokenbar != undefined) {
+    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token._id);
-        if (tkn != undefined && (data.bar1 != undefined || data.bar2 != undefined)) {
-            MonksTokenBar.tokenbar.updateToken(tkn.token);
-            MonksTokenBar.tokenbar.render();
+        if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
+            MonksTokenBar.tokenbar.updateToken(tkn)
         }
     }
 });
 
 Hooks.on('updateActor', (actor, data) => {
-    if (game.user.isGM && game.settings.get("monks-tokenbar", "show-resource-bars") && MonksTokenBar.tokenbar != undefined) {
+    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars") 
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
         if (tkn != undefined) {
             /*if (data?.attributes?.ac != undefined
@@ -547,8 +580,7 @@ Hooks.on('updateActor', (actor, data) => {
                 || getProperty(data.data, tkn.token.data.bar1.attribute) != undefined
                 || getProperty(data.data, tkn.token.data.bar2.attribute) != undefined)
             {*/
-                MonksTokenBar.tokenbar.updateToken(tkn.token);
-                MonksTokenBar.tokenbar.render();
+                MonksTokenBar.tokenbar.updateToken(tkn)
             //}
         }
     }

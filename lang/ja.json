@@ -70,8 +70,6 @@
 	"MonksTokenBar.change-to-combat.hint": "戦闘が開始したときに、移動制限を“戦闘ターン”に変更します。",
 	"MonksTokenBar.assign-loot.name": "敵を戦利品に変換する",
 	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵を戦利品に変換します。「Loot Sheet」モジュールが必要です。",
-	"MonksTokenBar.token-animation.name": "トークンのアニメーションを表示する",
-	"MonksTokenBar.token-animation.hint": "トークン画像にwebmファイルを使用している場合、トークンバー上でもアニメーションを表示します。",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",

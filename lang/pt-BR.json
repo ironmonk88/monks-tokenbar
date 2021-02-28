@@ -70,8 +70,6 @@
 	"MonksTokenBar.change-to-combat.hint": "Muda o movimento para combate quando o combate começa",
 	"MonksTokenBar.assign-loot.name": "Converter inimigos em pilháveis",
 	"MonksTokenBar.assign-loot.hint": "Só funciona com o módulo Loot Sheet, mas quando o combate acaba, converte inimigos caídos em pilháveis",
-	"MonksTokenBar.token-animation.name": "Mostrar animação de token",
-	"MonksTokenBar.token-animation.hint": "Se a imagem do token usa um arquivo .webm, animar ele na barra de tokens.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Atores",

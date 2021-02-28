@@ -81,14 +81,6 @@ export const registerSettings = function () {
 		type: String,
 		choices: imageoptions,
 	});
-	game.settings.register(modulename, "token-animation", {
-		name: game.i18n.localize("MonksTokenBar.token-animation.name"),
-		hint: game.i18n.localize("MonksTokenBar.token-animation.hint"),
-		scope: "client",
-		config: true,
-		default: false,
-		type: Boolean
-	});
 	game.settings.register(modulename, "change-to-combat", {
 		name: game.i18n.localize("MonksTokenBar.change-to-combat.name"),
 		hint: game.i18n.localize("MonksTokenBar.change-to-combat.hint"),

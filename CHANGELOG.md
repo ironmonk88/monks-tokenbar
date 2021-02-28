@@ -1,3 +1,16 @@
+## Version 1.0.19 - In Development -
+Adding Initiative to the requested rolls
+
+Added plain dice to the requested rolls
+
+Removed token animation from the TokenBar, it just ended up being too much of a headache.
+
+Updated the function that updates the tokens on the bar.  It will now check for changes first and instead of replacing the entire dataset, it will just update what's needed.  This should catch all the weird cases where the token updates but the bar doesn't.
+
+Respecting the setting if the resource bars are always to be hidden they won't show up on the TokenBar.
+
+
+
 ## Version 1.0.18
 Fixing issue when a toolkit rool is requested but the item can't be found, then an error is throw.  Added a check to make sure the tool in question can be found.
 

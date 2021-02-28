@@ -133,7 +133,7 @@ export class SavingThrowApp extends Application {
                     break;
                 case "en":
                 default:
-                    name = $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
+                    name = $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : (requesttype == 'dice' ? 'Roll' : (request != 'death' && request != 'init' ? i18n("MonksTokenBar.Check") : ""))));
             }
             let requestdata = {
                 dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
@@ -204,166 +204,185 @@ export class SavingThrow {
     static lastTokens;
 
     static _rollAbility(item, request, requesttype, rollmode, fastForward, e) {
+        let actor = game.actors.get(item.actorid);
+
         let returnRoll = function (roll) {
             log("Roll", roll, actor);
             if (roll != undefined) {
-                let finishroll;
-                if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
-                    let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                    if (rollmode == 'gmroll' && !game.user.isGM)
-                        whisper.push(game.user._id);
-                    const sound = MonksTokenBar.getDiceSound();
-                    if (sound != undefined)
-                        AudioHelper.play({ src: sound });
+                if (roll instanceof Combat) {
+                    let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
+                    if (combatant != undefined) {
+                        let initTotal = combatant.actor.data.data.attributes.init.total;
+                        let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
+                        let fakeroll = Roll.fromJSON(jsonRoll);
+                        return { id: item.id, roll: fakeroll, finish: null, reveal: true };
+                    }
+                } else {
+                    let finishroll;
+                    if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
+                        let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                        if (rollmode == 'gmroll' && !game.user.isGM)
+                            whisper.push(game.user._id);
+                        const sound = MonksTokenBar.getDiceSound();
+                        if (sound != undefined)
+                            AudioHelper.play({ src: sound });
 
-                    //setTimeout(() => {
+                        //setTimeout(() => {
                         //just confirm that the roll has finished.  Mass rolls aren't saving properly.
                         //SavingThrow.finishRolling(item, message);
-                    //}, 3000);
+                        //}, 3000);
 
-                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
-                        return { id: item.id, reveal: true, userid: game.userId };
-                    });
+                        finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+                            return { id: item.id, reveal: true, userid: game.userId };
+                        });
+                    }
+
+                    return { id: item.id, roll: roll, finish: finishroll };
                 }
-
-                return { id: item.id, roll: roll, finish: finishroll };
             }
         }
 
-        let actor = game.actors.get(item.actorid);
-
         if (actor != undefined) {
-            if (game.system.id == 'dnd5e') {
-                let rollfn = null;
-                let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true };
-                let context = actor;
-                if (requesttype == 'ability') {
-                    rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
-                }
-                else if (requesttype == 'saving') {
-                    rollfn = actor.rollAbilitySave;
-                }
-                else if (requesttype == 'skill') {
-                    rollfn = actor.rollSkill;
-                } else if (requesttype == 'tool') {
-                    let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request; });
-                    if (item != undefined) {
-                        context = item;
-                        request = options;
-                        rollfn = item.rollToolCheck;
-                    } else
-                        ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoTool"));
-                } else {
-                    if (request == 'death') {
-                        rollfn = actor.rollDeathSave;
-                        request = options;
+            if (requesttype == 'dice') {
+                //roll the dice
+                return SavingThrow.rollDice(request).then((roll) => { return returnRoll(roll); });
+            } else {
+                if (game.system.id == 'dnd5e') {
+                    let rollfn = null;
+                    let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true };
+                    let context = actor;
+                    if (requesttype == 'ability') {
+                        rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
                     }
-                }
-
-                if (rollfn != undefined) {
-                    return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
-                } else
-                    ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-            }
-            else if (game.system.id == 'tormenta20') {
-                let rollfn = null;
-                let opts = request;
-                if (requesttype == 'ability') {
-                    rollfn = actor.rollAtributo;
-                }
-                else if (requesttype == 'saving' || requesttype == 'skill') {
-                    opts = {
-                        actor: actor,
-                        type: "perícia",
-                        data: actor.data.data.pericias[opts],
-                        name: actor.data.data.pericias[opts].label,
-                        id: opts
-                    };
-                    rollfn = actor.rollPericia;
-                }
-                if (rollfn != undefined) {
-                    return rollfn.call(actor, opts, e).then((roll) => { return returnRoll(roll); });
-                } 
-                else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-            }
-            else if (game.system.id == 'pf2e') {
-                let rollfn = null;
-                let opts = request;
-                if (requesttype == 'attribute') {
-                    if (actor.data.data.attributes[request]?.roll) {
-                        opts = actor.getRollOptions(["all", request]);
-                        rollfn = actor.data.data.attributes[request].roll;
-                    } else
-                        rollfn = actor.rollAttribute;
-                }
-                else if (requesttype == 'ability') {
-                    rollfn = function (event, abilityName) {
-                        const skl = this.data.data.abilities[abilityName],
-                            flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
-                        return DicePF2e.d20Roll({
-                            event: event,
-                            parts: ["@mod"],
-                            data: {
-                                mod: skl.mod
-                            },
-                            title: flavor,
-                            speaker: ChatMessage.getSpeaker({
-                                actor: this
-                            }),
-                            rollType: 'ignore'
-                        });
+                    else if (requesttype == 'saving') {
+                        rollfn = actor.rollAbilitySave;
                     }
-                }
-                else if (requesttype == 'saving') {
-                    if (actor.data.data.saves[request]?.roll) {
-                        opts = actor.getRollOptions(["all", "saving-throw", request]);
-                        rollfn = actor.data.data.saves[request].roll;
-                    } else 
-                        rollfn = actor.rollSave;
-                }
-                else if (requesttype == 'skill') {
-                    if (actor.data.data.skills[request]?.roll) {
-                        opts = actor.getRollOptions(["all", "skill-check", request]);
-                        rollfn = actor.data.data.skills[request].roll;
-                    } else
+                    else if (requesttype == 'skill') {
                         rollfn = actor.rollSkill;
-                }
-
-                if (rollfn != undefined) {
-                    if (requesttype == 'ability')
-                        return rollfn.call(actor, e, opts).then((roll) => { return returnRoll(roll); });
-                    else {
-                        opts.push("ignore");
-                        return new Promise(function (resolve, reject) {
-                            rollfn.call(actor, e, opts, function (roll) { resolve(returnRoll(roll)); });
-                        });
+                    } else if (requesttype == 'tool') {
+                        let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request; });
+                        if (item != undefined) {
+                            context = item;
+                            request = options;
+                            rollfn = item.rollToolCheck;
+                        } else
+                            ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoTool"));
+                    } else {
+                        if (request == 'death') {
+                            rollfn = actor.rollDeathSave;
+                            request = options;
+                        }
+                        else if (request == 'init') {
+                            rollfn = actor.rollInitiative;
+                            request = { createCombatants: false, initiativeOptions: options };
+                        }
                     }
-                } else
-                    ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-            }
-            else if (game.system.id == 'ose') {
-                let rollfn = null;
-                let options = {
-                    fastForward: fastForward, chatMessage: false
-                };
-                if (requesttype == 'scores') {
-                    rollfn = actor.rollCheck;
-                } else if (requesttype == 'saving') {
-                    rollfn = actor.rollSave;
+
+                    if (rollfn != undefined) {
+                        return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
+                    } else
+                        ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
                 }
-                if (rollfn != undefined) {
-                    return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
+                else if (game.system.id == 'tormenta20') {
+                    let rollfn = null;
+                    let opts = request;
+                    if (requesttype == 'ability') {
+                        rollfn = actor.rollAtributo;
+                    }
+                    else if (requesttype == 'saving' || requesttype == 'skill') {
+                        opts = {
+                            actor: actor,
+                            type: "perícia",
+                            data: actor.data.data.pericias[opts],
+                            name: actor.data.data.pericias[opts].label,
+                            id: opts
+                        };
+                        rollfn = actor.rollPericia;
+                    }
+                    if (rollfn != undefined) {
+                        return rollfn.call(actor, opts, e).then((roll) => { return returnRoll(roll); });
+                    }
+                    else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
                 }
-                else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-            }
-            else {
-                ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+                else if (game.system.id == 'pf2e') {
+                    let rollfn = null;
+                    let opts = request;
+                    if (requesttype == 'attribute') {
+                        if (actor.data.data.attributes[request]?.roll) {
+                            opts = actor.getRollOptions(["all", request]);
+                            rollfn = actor.data.data.attributes[request].roll;
+                        } else
+                            rollfn = actor.rollAttribute;
+                    }
+                    else if (requesttype == 'ability') {
+                        rollfn = function (event, abilityName) {
+                            const skl = this.data.data.abilities[abilityName],
+                                flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
+                            return DicePF2e.d20Roll({
+                                event: event,
+                                parts: ["@mod"],
+                                data: {
+                                    mod: skl.mod
+                                },
+                                title: flavor,
+                                speaker: ChatMessage.getSpeaker({
+                                    actor: this
+                                }),
+                                rollType: 'ignore'
+                            });
+                        }
+                    }
+                    else if (requesttype == 'saving') {
+                        if (actor.data.data.saves[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "saving-throw", request]);
+                            rollfn = actor.data.data.saves[request].roll;
+                        } else
+                            rollfn = actor.rollSave;
+                    }
+                    else if (requesttype == 'skill') {
+                        if (actor.data.data.skills[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "skill-check", request]);
+                            rollfn = actor.data.data.skills[request].roll;
+                        } else
+                            rollfn = actor.rollSkill;
+                    }
+
+                    if (rollfn != undefined) {
+                        if (requesttype == 'ability')
+                            return rollfn.call(actor, e, opts).then((roll) => { return returnRoll(roll); });
+                        else {
+                            opts.push("ignore");
+                            return new Promise(function (resolve, reject) {
+                                rollfn.call(actor, e, opts, function (roll) { resolve(returnRoll(roll)); });
+                            });
+                        }
+                    } else
+                        ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
+                }
+                else if (game.system.id == 'ose') {
+                    let rollfn = null;
+                    let options = {
+                        fastForward: fastForward, chatMessage: false
+                    };
+                    if (requesttype == 'scores') {
+                        rollfn = actor.rollCheck;
+                    } else if (requesttype == 'saving') {
+                        rollfn = actor.rollSave;
+                    }
+                    if (rollfn != undefined) {
+                        return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
+                    }
+                    else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+                }
+                else {
+                    ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+                }
             }
         }
     }
 
-    static async rollDeathSave() {
-        let r = new Roll("1d20");
+    static async rollDice(dice) {
+        let r = new Roll(dice);
         r.evaluate();
         return r;
     }
@@ -437,11 +456,13 @@ export class SavingThrow {
                 log('updating actor', msgtoken, update.roll);
 
                 if (update.roll) {
-                    msgtoken.roll = update.roll.toJSON();
-                    msgtoken.reveal = reveal;
-                    msgtoken.total = update.roll.total;
-
-                    let tooltip = await update.roll.getTooltip();
+                    let tooltip = '';
+                    if (update.roll instanceof Roll) {
+                        msgtoken.roll = update.roll.toJSON();
+                        msgtoken.total = update.roll.total;
+                        msgtoken.reveal = update.reveal || reveal;
+                        tooltip = await update.roll.getTooltip();
+                    }
 
                     if (dc != '')
                         msgtoken.passed = (msgtoken.total >= dc);

@@ -70,8 +70,6 @@
 	"MonksTokenBar.change-to-combat.hint": "战斗开始时，将移动方式修改为战斗回合",
 	"MonksTokenBar.assign-loot.name": "将敌人转换为战利品",
 	"MonksTokenBar.assign-loot.hint": "Loot Sheet 模组启用时有效，战斗结束时，将死亡的敌人变为可打开的战利品",
-	"MonksTokenBar.token-animation.name": "显示指示物图片动画",
-	"MonksTokenBar.token-animation.hint": "如果指示物图片使用webm文件，在指示物栏上显示其动效",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "角色",

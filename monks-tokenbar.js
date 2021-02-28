@@ -96,6 +96,8 @@ export class MonksTokenBar {
                 });
                 break;
             case "dnd5e":
+                MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
+                MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
                 MonksTokenBar.requestoptions.push({
                     id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.DND5E.abilities
                 });
@@ -105,16 +107,18 @@ export class MonksTokenBar {
                 MonksTokenBar.requestoptions.push({
                     id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.DND5E.skills
                 });
-                MonksTokenBar.requestoptions.push({
-                    id: "death", text: i18n("MonksTokenBar.DeathSavingThrow")
-                });
             break;
         }
+        MonksTokenBar.requestoptions.push({
+            id: "dice", text: "Dice", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
+        });
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
-            MonksTokenBar.tokenbar.getCurrentTokens();
-            MonksTokenBar.tokenbar.render(true);
+            MonksTokenBar.tokenbar.getCurrentTokens().then(() => {
+                MonksTokenBar.tokenbar.render(true);
+            });
+            
         }
 
         if (game.user.isGM && setting('assign-loot') && game.modules.get("lootsheetnpc5e")?.active) {
@@ -198,8 +202,9 @@ export class MonksTokenBar {
         if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
             if (MonksTokenBar.refreshTimer == null) {
                 MonksTokenBar.refreshTimer = setTimeout(function () {
-                    MonksTokenBar.tokenbar.getCurrentTokens();
-                    MonksTokenBar.tokenbar.render(true);
+                    MonksTokenBar.tokenbar.getCurrentTokens().then(() => {
+                        MonksTokenBar.tokenbar.render(true);
+                    });
                     MonksTokenBar.refreshTimer = null;
                 }, 100);
             }
