@@ -1,4 +1,4 @@
-## Version 1.0.19 - In Development -
+## Version 1.0.19
 Adding Initiative to the requested rolls
 
 Added plain dice to the requested rolls
