@@ -9,7 +9,7 @@ Updated the function that updates the tokens on the bar.  It will now check for 
 
 Respecting the setting if the resource bars are always to be hidden they won't show up on the TokenBar.
 
-Fixing some styling issues witht he TokenBar
+Fixing some styling issues with the TokenBar
 
 Added option to split the expereience between players or add directly.
 

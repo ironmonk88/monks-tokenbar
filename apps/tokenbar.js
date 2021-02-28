@@ -169,11 +169,11 @@ export class TokenBar extends Application {
         }
         if (tkn.stat1 != getProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
             diff.stat1 = getProperty(tkn.token.actor.data.data, setting("stat1-resource"));
-            diff.statClass = (stat1 == undefined && stat2 == undefined ? 'hidden' : '');
+            diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.stat2 != getProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
             diff.stat2 = getProperty(tkn.token.actor.data.data, setting("stat2-resource"));
-            diff.statClass = (stat1 == undefined && stat2 == undefined ? 'hidden' : '');
+            diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
