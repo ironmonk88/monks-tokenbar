@@ -1,7 +1,7 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class SavingThrowApp extends Application {
-    constructor(tokens, options) {
+    constructor(tokens, options = {}) {
         super(options);
 
         if (tokens != undefined && !$.isArray(tokens))
@@ -14,6 +14,8 @@ export class SavingThrowApp extends Application {
             });
         }
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
+        this.request = options.request;
+        this.requestoptions = options.requestoptions;
     }
 
     static get defaultOptions() {
@@ -28,26 +30,27 @@ export class SavingThrowApp extends Application {
     }
 
     getData(options) {
+        let requestoptions = this.requestoptions || MonksTokenBar.requestoptions;
 
-        let tools = {};
-        for (let token of this.tokens) {
-            for (let item of token.actor.items) {
-                if (item.type == 'tool') {
-                    let sourceID = item.getFlag("core", "sourceId")
-                    //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
-                    tools[sourceID] = item.data.name;
+        if (this.requestoptions == undefined) {
+            let tools = {};
+            for (let token of this.tokens) {
+                for (let item of token.actor.items) {
+                    if (item.type == 'tool') {
+                        let sourceID = item.getFlag("core", "sourceId")
+                        //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
+                        tools[sourceID] = item.data.name;
+                    }
                 }
             }
-        }
 
-        let requestoptions = MonksTokenBar.requestoptions;
-        if (Object.keys(tools).length > 0) {
-            requestoptions = requestoptions.concat([{id:'tool',text:'Tools',groups:tools}]);
+            if (Object.keys(tools).length > 0) {
+                requestoptions = requestoptions.concat([{ id: 'tool', text: 'Tools', groups: tools }]);
+            }
         }
 
         return {
             tokens: this.tokens,
-            select: this.select,
             request: this.request,
             rollmode: this.rollmode,
             options: requestoptions

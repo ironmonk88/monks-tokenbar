@@ -1,7 +1,7 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class ContestedRollApp extends Application {
-    constructor(item0, item1, options) {
+    constructor(item0, item1, options = {}) {
         super(options);
         this.item0 = item0 || {token: null, request: null};
         this.item0.token = (this.item0.token || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null));

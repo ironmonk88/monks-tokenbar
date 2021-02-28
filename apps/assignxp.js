@@ -1,7 +1,7 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
 export class AssignXPApp extends Application {
-    constructor(entity, options) {
+    constructor(entity, options = {}) {
         super(options);
 
         this.xp = options?.xp || 0;
