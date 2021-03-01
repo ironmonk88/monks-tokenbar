@@ -22,6 +22,19 @@ export class TokenBar extends Application {
         this._hover = null;
 
         //MonksTokenBar.changeGlobalMovement("free");
+
+        Hooks.on('canvasReady', () => {
+            this.refresh();
+        });
+
+        Hooks.on("createToken", (token) => {
+            this.refresh();
+        });
+
+        Hooks.on("deleteToken", (token) => {
+            this.refresh();
+        });
+
     }
 
     /* -------------------------------------------- */
@@ -63,6 +76,16 @@ export class TokenBar extends Application {
         $(this.element).css(pos);
 
         return this;
+    }
+
+    refresh() {
+        var that = this;
+        if (this.refreshTimer == null) {
+            this.refreshTimer = setTimeout(function () {
+                that.getCurrentTokens();
+                that.refreshTimer = null;
+            }, 100);
+        }
     }
 
     async mapToken(token) {
@@ -109,13 +132,16 @@ export class TokenBar extends Application {
         }
 
         let img = (setting("token-pictures") == "actor" && token.actor != undefined ? token.actor.data.img : token.data.img);
-        let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        let thumb = img;
+        if (VideoHelper.hasVideoExtension(img))
+            thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        //let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
 
         return {
             id: token.id,
             token: token,
             img: img,
-            thumb: thumb.thumb,
+            thumb: thumb?.thumb || thumb,
             stat1: stat1,
             stat2: stat2,
             statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
@@ -133,6 +159,7 @@ export class TokenBar extends Application {
 
         Promise.all(promises).then(response => {
             this.tokens = response;
+            this.render(true);
         });
     }
 
@@ -177,8 +204,10 @@ export class TokenBar extends Application {
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
-            let thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
-            diff.thumb = thumb.thumb;
+            let thumb = img;
+            if (VideoHelper.hasVideoExtension(img))
+                thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+            diff.thumb = (thumb?.thumb || thumb);
         }
 
         if (Object.keys(diff).length > 0) {
@@ -465,8 +494,8 @@ export class TokenBar extends Application {
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
         log('Center on token', entry, entry.token);
-        entry.token.control({ releaseOthers: true });
-        return canvas.animatePan({ x: entry.token.x, y: entry.token.y });
+        entry?.token?.control({ releaseOthers: true });
+        return canvas.animatePan({ x: entry?.token?.x, y: entry?.token?.y });
     }
 
     async _onDblClickToken(event) {

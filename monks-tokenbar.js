@@ -115,10 +115,7 @@ export class MonksTokenBar {
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
-            MonksTokenBar.tokenbar.getCurrentTokens().then(() => {
-                MonksTokenBar.tokenbar.render(true);
-            });
-            
+            MonksTokenBar.tokenbar.refresh();
         }
 
         if (game.user.isGM && setting('assign-loot') && game.modules.get("lootsheetnpc5e")?.active) {
@@ -196,19 +193,6 @@ export class MonksTokenBar {
         }
 
         return null;
-    }
-
-    static refresh() {
-        if (game.user.isGM && MonksTokenBar.tokenbar != undefined) {
-            if (MonksTokenBar.refreshTimer == null) {
-                MonksTokenBar.refreshTimer = setTimeout(function () {
-                    MonksTokenBar.tokenbar.getCurrentTokens().then(() => {
-                        MonksTokenBar.tokenbar.render(true);
-                    });
-                    MonksTokenBar.refreshTimer = null;
-                }, 100);
-            }
-        }
     }
 
     static async changeGlobalMovement(movement) {
@@ -392,16 +376,4 @@ Hooks.on('preUpdateToken', (scene, data, update, options, userId) => {
             delete update.y;
         }
     }
-});
-
-Hooks.on('canvasReady', () => {
-    MonksTokenBar.refresh();
-});
-
-Hooks.on("createToken", (token) => {
-    MonksTokenBar.refresh();
-});
-
-Hooks.on("deleteToken", (token) => {
-    MonksTokenBar.refresh();
 });
