@@ -599,6 +599,15 @@ Hooks.on('updateToken', (scene, token, data) => {
     }
 });
 
+Hooks.on('updateOwnedItem', (actor, item, data) => {
+    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor._id);
+        if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
+            MonksTokenBar.tokenbar.updateToken(tkn)
+        }
+    }
+});
+
 Hooks.on('updateActor', (actor, data) => {
     if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars") 
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
