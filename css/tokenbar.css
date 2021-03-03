@@ -305,7 +305,8 @@ body #tokenbar-window:first-child{
     flex: 2;
 }
 
-.monks-tokenbar .sheet .items-list .item-name h3, .monks-tokenbar .sheet .items-list .item-name h4 {
+.monks-tokenbar .sheet .items-list .item-name h3, 
+.monks-tokenbar .sheet .items-list .item-name h4 {
     margin: 0;
     white-space: nowrap;
     overflow-x: hidden;

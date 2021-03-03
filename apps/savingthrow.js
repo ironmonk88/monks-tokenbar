@@ -1,6 +1,6 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
-export class SavingThrowApp {
+export class SavingThrowApp extends Application {
     constructor(tokens, options = {}) {
         super(options);
 

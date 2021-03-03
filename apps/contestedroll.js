@@ -1,6 +1,6 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
-export class ContestedRollApp {
+export class ContestedRollApp extends Application {
     constructor(item0, item1, options = {}) {
         super(options);
         this.item0 = item0 || {token: null, request: null};
@@ -142,7 +142,7 @@ export class ContestedRoll {
                 await ContestedRoll.updateContestedRoll([{ actorid: actorid, roll: roll }], message, revealDice && !fastForward);
             }
 
-            if (game.dice3d != undefined && !fastForward) {
+            if (game.dice3d != undefined) { // && !fastForward) {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
                     whisper.push(game.user._id);
@@ -164,12 +164,28 @@ export class ContestedRoll {
 
                 let roll = null;
                 if (game.system.id == 'dnd5e') {
+                    let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'ability')
-                        roll = await actor.rollAbilityTest(request, { fastForward: fastForward, chatMessage: false });
+                        roll = await actor.rollAbilityTest(request, options);
                     else if (requesttype == 'saving')
-                        roll = await actor.rollAbilitySave(request, { fastForward: fastForward, chatMessage: false });
+                        roll = await actor.rollAbilitySave(request, options);
                     else if (requesttype == 'skill')
-                        roll = await actor.rollSkill(request, { fastForward: fastForward, chatMessage: false });
+                        roll = await actor.rollSkill(request, options);
+                }else if (game.system.id == 'tormenta20') {
+                    let opts = request;
+                    if (requesttype == 'ability') {
+                        roll = await actor.rollAtributo(actor, opts, e);
+                    }
+                    else if (requesttype == 'saving' || requesttype == 'skill') {
+                        opts = {
+                            actor: actor,
+                            type: "perícia",
+                            data: actor.data.data.pericias[opts],
+                            name: actor.data.data.pericias[opts].label,
+                            id: opts
+                        };
+                        roll = actor.rollPericia(actor, opts, e);
+                    }
                 } else if (game.system.id == 'pf2e') {
                     let rollfn = null;
                     let opts = request;
@@ -225,9 +241,7 @@ export class ContestedRoll {
                 }
                 else if (game.system.id == 'ose') {
                     let rollfn = null;
-                    let options = {
-                        fastForward: fastForward, chatMessage: false
-                    };
+                    let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'scores') {
                         rollfn = actor.rollCheck;
                     } else if (requesttype == 'saving') {
