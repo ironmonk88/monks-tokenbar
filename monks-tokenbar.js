@@ -339,6 +339,27 @@ export class MonksTokenBar {
             }
         }
     }
+
+    static getRequestName(element, requesttype, request) {
+        let name = '';
+        switch (requesttype) {
+            case 'ability': name = i18n("MonksTokenBar.AbilityCheck"); break;
+            case 'saving': name = i18n("MonksTokenBar.SavingThrow"); break;
+            case 'dice': name = i18n("MonksTokenBar.Roll"); break;
+            default:
+                name = (request != 'death' && request != 'init' ? i18n("MonksTokenBar.Check") : "");
+        }
+        switch (game.i18n.lang) {
+            case "pt-BR":
+            case "es":
+                name = name + ": " + $('option:selected', element).html();
+                break;
+            case "en":
+            default:
+                name = $('option:selected', element).html() + " " + name;
+        }
+        return name;
+    }
 }
 
 Hooks.once('init', async function () {

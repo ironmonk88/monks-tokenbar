@@ -1,6 +1,6 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
-export class SavingThrowApp extends Application {
+export class SavingThrowApp {
     constructor(tokens, options = {}) {
         super(options);
 
@@ -118,23 +118,15 @@ export class SavingThrowApp extends Application {
             });
             SavingThrow.lastRequest = this.request;
 
-            let parts = $('#savingthrow-request', this.element).val().split(':');
+            let parts = $('.request-roll', this.element).val().split(':');
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
             let rollmode = $('#savingthrow-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             
-            let name;
-            switch (game.i18n.lang) {
-                case "pt-BR":
-                case "es":
-                    name = (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check"))) + ": " + $('#savingthrow-request option:selected', this.element).html();
-                    break;
-                case "en":
-                default:
-                    name = $('#savingthrow-request option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : (requesttype == 'dice' ? 'Roll' : (request != 'death' && request != 'init' ? i18n("MonksTokenBar.Check") : ""))));
-            }
+            let name = MonksTokenBar.getRequestName($('.request-roll', this.element), requesttype, request);
+            
             let requestdata = {
                 dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
                 name: name,
@@ -190,7 +182,7 @@ export class SavingThrowApp extends Application {
 
         $('.dialog-buttons.request', html).click($.proxy(this.requestRoll, this));
 
-        $('#savingthrow-request', html).change($.proxy(function (e) {
+        $('.request-roll', html).change($.proxy(function (e) {
             this.request = $(e.currentTarget).val();
         }, this));
         $('#savingthrow-rollmode', html).change($.proxy(function (e) {
@@ -203,10 +195,12 @@ export class SavingThrow {
     static msgcontent = {};
     static lastTokens;
 
-    static _rollAbility(item, request, requesttype, rollmode, fastForward, e) {
+    static _rollAbility(item, request, requesttype, rollmode, ffwd, e) {
         let actor = game.actors.get(item.actorid);
 
-        let returnRoll = function (roll) {
+        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
+
+        let returnRoll = async function(roll) {
             log("Roll", roll, actor);
             if (roll != undefined) {
                 if (roll instanceof Combat) {
@@ -223,9 +217,6 @@ export class SavingThrow {
                         let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                         if (rollmode == 'gmroll' && !game.user.isGM)
                             whisper.push(game.user._id);
-                        const sound = MonksTokenBar.getDiceSound();
-                        if (sound != undefined)
-                            AudioHelper.play({ src: sound });
 
                         //setTimeout(() => {
                         //just confirm that the roll has finished.  Mass rolls aren't saving properly.
@@ -236,6 +227,9 @@ export class SavingThrow {
                             return { id: item.id, reveal: true, userid: game.userId };
                         });
                     }
+                    const sound = MonksTokenBar.getDiceSound();
+                    if (sound != undefined)
+                        AudioHelper.play({ src: sound });
 
                     return { id: item.id, roll: roll, finish: finishroll };
                 }
@@ -249,7 +243,7 @@ export class SavingThrow {
             } else {
                 if (game.system.id == 'dnd5e') {
                     let rollfn = null;
-                    let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true };
+                    let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
                     let context = actor;
                     if (requesttype == 'ability') {
                         rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
@@ -361,9 +355,7 @@ export class SavingThrow {
                 }
                 else if (game.system.id == 'ose') {
                     let rollfn = null;
-                    let options = {
-                        fastForward: fastForward, chatMessage: false
-                    };
+                    let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'scores') {
                         rollfn = actor.rollCheck;
                     } else if (requesttype == 'saving') {
@@ -645,14 +637,14 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         let request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : null) ||
             (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : null) ||
             SavingThrow.lastRequest ||
-            $('#savingthrow-request option:first', html).val();
-        if ($('#savingthrow-request option[value="' + request + '"]').length == 0)
-            request = $('#savingthrow-request option:first', html).val();
+            $('.request-roll option:first', html).val();
+        if ($('.request-roll option[value="' + request + '"]').length == 0)
+            request = $('.request-roll option:first', html).val();
 
         app.request = request;
-        //$('#savingthrow-request', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
+        //$('.request-roll', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
     } //else
-    $('#savingthrow-request', html).val(app.request);
+    $('.request-roll', html).val(app.request);
 
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);

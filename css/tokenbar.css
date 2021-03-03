@@ -293,7 +293,7 @@ body #tokenbar-window:first-child{
 }
 
 .monks-tokenbar .sheet .items-list .item-name {
-    flex: 2;
+    flex: 1;
     margin: 0;
     overflow: hidden;
     font-size: 13px;
@@ -301,8 +301,11 @@ body #tokenbar-window:first-child{
     align-items: center;
 }
 
-.monks-tokenbar .sheet .items-list .item-name h3,
-.monks-tokenbar .sheet .items-list .item-name h4 {
+.chat-message .monks-tokenbar .sheet .items-list .item-name {
+    flex: 2;
+}
+
+.monks-tokenbar .sheet .items-list .item-name h3, .monks-tokenbar .sheet .items-list .item-name h4 {
     margin: 0;
     white-space: nowrap;
     overflow-x: hidden;
@@ -323,7 +326,8 @@ body #tokenbar-window:first-child{
 }
 
 #requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls {
-    flex: 0 0 250px;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
 }
 
 #requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls a{
@@ -396,6 +400,7 @@ body #tokenbar-window:first-child{
     font-weight: 700;
     text-align: left;
     font-size: 16px;
+    min-width:60px;
 }
 
 #requestsavingthrow .items-list.inventory-list {

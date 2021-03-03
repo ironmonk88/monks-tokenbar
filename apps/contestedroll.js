@@ -1,6 +1,6 @@
 import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
 
-export class ContestedRollApp extends Application {
+export class ContestedRollApp {
     constructor(item0, item1, options = {}) {
         super(options);
         this.item0 = item0 || {token: null, request: null};
@@ -44,10 +44,11 @@ export class ContestedRollApp extends Application {
     async request() {
         if (this.item0.token != undefined && this.item1.token != undefined) {
             let actors = [this.item0, this.item1].map((item, index) => {
-                let parts = $('.contested-request[data-type="item' + index + '"]', this.element).val().split(':');
+                let parts = $('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
-                let requestname = $('.contested-request[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
+                let requestname = MonksTokenBar.getRequestName($('.request-roll[data-type="item' + index + '"]', this.element), requesttype, request);
+                //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.actor.id,
                     tokenid: item.token.id,
@@ -105,7 +106,7 @@ export class ContestedRollApp extends Application {
 
         $('.dialog-buttons.request', html).click($.proxy(this.request, this));
 
-        $('.contested-request', html).change($.proxy(function (e) {
+        $('.request-roll', html).change($.proxy(function (e) {
             this[e.target.dataset.type].request = $(e.currentTarget).val();
         }, this));
         $('#contestedroll-rollmode', html).change($.proxy(function (e) {
@@ -115,8 +116,12 @@ export class ContestedRollApp extends Application {
 }
 
 export class ContestedRoll {
-    static async onRollAbility(actorid, message, fastForward = false, e) {
-        let returnRoll = async function (roll) {
+    static async onRollAbility(actorid, message, ffwd = false, e) {
+        let actor = game.actors.get(actorid);
+
+        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
+
+        let returnRoll = async function(roll) {
             log("Roll", roll, actor);
             let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
 
@@ -141,16 +146,14 @@ export class ContestedRoll {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
                     whisper.push(game.user._id);
-                const sound = MonksTokenBar.getDiceSound();
-                if (sound != undefined)
-                    AudioHelper.play({ src: sound });
                 game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                     ContestedRoll.finishRolling(actorid, message);
                 });
             }
+            const sound = MonksTokenBar.getDiceSound();
+            if (sound != undefined)
+                AudioHelper.play({ src: sound });
         }
-
-        let actor = game.actors.get(actorid);
 
         if (actor != undefined) {
             let actors = message.getFlag('monks-tokenbar', 'actors');
@@ -219,6 +222,21 @@ export class ContestedRoll {
                         }
                     } else
                         ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
+                }
+                else if (game.system.id == 'ose') {
+                    let rollfn = null;
+                    let options = {
+                        fastForward: fastForward, chatMessage: false
+                    };
+                    if (requesttype == 'scores') {
+                        rollfn = actor.rollCheck;
+                    } else if (requesttype == 'saving') {
+                        rollfn = actor.rollSave;
+                    }
+                    if (rollfn != undefined) {
+                        rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
+                    }
+                    else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
                 } else
                     ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
 
@@ -324,8 +342,8 @@ Hooks.on('controlToken', (token, delta) => {
 });
 
 Hooks.on("renderContestedRollApp", (app, html) => {
-    $('.contested-request[data-type="item0"]', html).val(app.item0.request);
-    $('.contested-request[data-type="item1"]', html).val(app.item1.request);
+    $('.request-roll[data-type="item0"]', html).val(app.item0.request);
+    $('.request-roll[data-type="item1"]', html).val(app.item1.request);
     $('#contestedroll-rollmode', html).val(app.rollmode);
 });
 
