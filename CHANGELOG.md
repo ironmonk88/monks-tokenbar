@@ -1,3 +1,12 @@
+## Version 1.0.21 - Planning -
+
+Grab player roll if they rolled before the request was up.  This will take the roll and add it to the message like it was rolled properly and remove the message.
+
+## Version 1.0.20 - In Development -
+Fixing contested roll with OSE
+
+Added option to hold down either Ctrl or Alt when clicking the dice rolls for requested rolls to roll with advantage or disadvantage.
+
 ## Version 1.0.19
 Adding Initiative to the requested rolls
 
