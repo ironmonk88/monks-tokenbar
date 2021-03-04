@@ -1,4 +1,4 @@
-## Version 1.0.20 - In Development -
+## Version 1.0.20
 Fixing contested roll with OSE
 
 Added option to hold down either Ctrl or Alt when clicking the dice rolls for requested rolls to roll with advantage or disadvantage.
