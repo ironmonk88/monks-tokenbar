@@ -1,3 +1,6 @@
+## Version 1.0.23
+Fixed an issue with the code to find tools.
+
 ## Version 1.0.22
 Fixed an emergency issue where code is preventing buttons from working
 

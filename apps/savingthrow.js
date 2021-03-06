@@ -46,7 +46,7 @@ export class SavingThrowApp extends Application {
             if (Object.keys(tools).length > 0) {
                 for (let i = 1; i < this.tokens.length; i++) {
                     let token = this.tokens[i];
-                    for (let [k, v] of Objects.entries(tools)) {
+                    for (let [k, v] of Object.entries(tools)) {
                         let tool = token.actor.items.find(t => {
                             return t.type == 'tool' && item.getFlag("core", "sourceId") == k;
                         });
