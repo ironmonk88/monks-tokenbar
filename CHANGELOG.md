@@ -1,3 +1,18 @@
+## Version 1.0.21
+Fixing issue with toolkits not rolling.
+
+Fixing issue with animated token images being updated.
+
+Adding option to grab player rolls that they didn't roll in the chat message.
+
+Fixing issue with repositioning.
+
+Fixed an issue with the private message context menu showing for players that weren't logged in.
+
+Adding perception as default second stat from pathfinder 2e
+
+Fixing issue with the stat being blanked out if the stat returned a 0.  Converting the value to a string instead.
+
 ## Version 1.0.20
 Fixing contested roll with OSE
 

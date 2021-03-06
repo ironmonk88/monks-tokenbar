@@ -35,6 +35,7 @@
 	"MonksTokenBar.RollFailed": "Roll Failed",
 	"MonksTokenBar.Passed": "Passed",
 	"MonksTokenBar.Failed": "Failed",
+	"MonksTokenBar.GrabMessage": "Grab Message Roll",
 
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
 	"MonksTokenBar.NormalMovementLimited": "Movement is currently locked",
@@ -77,6 +78,8 @@
 	"MonksTokenBar.assign-loot.hint": "Only works with the Loot Sheet module, but once the combat is over, convert the fallen enemies to lootable",
 	"MonksTokenBar.popout-tokenbar.name": "Popout TokenBar",
 	"MonksTokenBar.popout-tokenbar.hint": "Put the TokenBar in a dialog window so that you can use the PopOut! module.",
+	"MonksTokenBar.delete-after-grab.name": "Delete message after grab",
+	"MonksTokenBar.delete-after-grab.hint": "Delete the message after grabbing a players message roll for a requested roll.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

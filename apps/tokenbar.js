@@ -92,6 +92,7 @@ export class TokenBar extends Application {
         let actor = token.actor;
 
         let stat1 = getProperty(actor.data.data, setting("stat1-resource"));
+        if (stat1 != undefined) stat1 = stat1.toString();
 
         /*
         stat1 = 10;
@@ -122,6 +123,7 @@ export class TokenBar extends Application {
 		}*/
 
         let stat2 = getProperty(actor.data.data, setting("stat2-resource"));
+        if (stat2 != undefined) stat2 = stat2.toString();
 
         token.unsetFlag("monks-tokenbar", "notified");
 
@@ -204,9 +206,9 @@ export class TokenBar extends Application {
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
-            let thumb = img;
-            if (VideoHelper.hasVideoExtension(img))
-                thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+            let thumb = diff.img;
+            if (VideoHelper.hasVideoExtension(diff.img))
+                thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
             diff.thumb = (thumb?.thumb || thumb);
         }
 
@@ -306,6 +308,11 @@ export class TokenBar extends Application {
                             pos3 = e.clientX;
                             pos4 = e.clientY;
 
+                            if (elmnt.style.bottom != undefined) {
+                                elmnt.style.top = elmnt.offsetTop + "px";
+                                elmnt.style.bottom = null;
+                            }
+
                             document.onmouseup = closeDragElement;
                             document.onmousemove = elementDrag;
                         }
@@ -372,9 +379,21 @@ export class TokenBar extends Application {
             {
                 name: "MonksTokenBar.PrivateMessage",
                 icon: '<i class="fas fa-microphone"></i>',
+                condition: li => {
+                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    let players = game.users.entities
+                        .filter(u =>
+                            !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
+                    );
+                    return players.length > 0;
+                },
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    let players = game.users.entities.filter(u => u.active && !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)).map(u => {
+                    let players = game.users.entities
+                    .filter(u =>
+                        !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
+                    )
+                    .map(u => {
                         return u.name;
                     });
                     $("#chat-message").val('/w ' + players.join(' ') + ' ');

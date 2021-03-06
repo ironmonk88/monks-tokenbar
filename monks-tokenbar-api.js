@@ -53,10 +53,10 @@ export class MonksTokenBarAPI {
      * pass in a token or an array of tokens
      * 
      * */
-    static convertToLootable(tokens, options) {
+    static convertToLootable(tokens, options = {}) {
         let lootables = new LootablesApp(tokens, options);
 
-        if (options.silent === true)
+        if (options?.silent === true)
             lootables.convertToLootable();
         else
             lootables.render(true);

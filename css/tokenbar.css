@@ -592,3 +592,19 @@ body #tokenbar-window:first-child{
     display: none !important;
 }
 
+.grab-message {
+    width: 24px;
+    height: 18px;
+    float: right;
+    font-size: 12px;
+    line-height: 12px;
+    padding: 0px 4px;
+    margin: 0px;
+}
+
+.grabbing .grab-message {
+    border: 1px solid red;
+    border-bottom: 1px solid #ff6400;
+    box-shadow: 0 0 10px #ff6400;
+}
+

@@ -25,7 +25,7 @@ export class ContestedRollApp extends Application {
     }
 
     getData(options) {
-        let opts = MonksTokenBar.requestoptions.filter(o => { return o.id != 'saving' && o.groups != undefined });
+        let opts = MonksTokenBar.requestoptions.filter(o => { return o.id != 'save' && o.groups != undefined });
 
         return {
             item0: this.item0,
@@ -48,7 +48,7 @@ export class ContestedRollApp extends Application {
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
                 let requestname = MonksTokenBar.getRequestName($('.request-roll[data-type="item' + index + '"]', this.element), requesttype, request);
-                //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'saving' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
+                //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'save' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.actor.id,
                     tokenid: item.token.id,
@@ -167,7 +167,7 @@ export class ContestedRoll {
                     let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'ability')
                         roll = await actor.rollAbilityTest(request, options);
-                    else if (requesttype == 'saving')
+                    else if (requesttype == 'save')
                         roll = await actor.rollAbilitySave(request, options);
                     else if (requesttype == 'skill')
                         roll = await actor.rollSkill(request, options);
@@ -176,7 +176,7 @@ export class ContestedRoll {
                     if (requesttype == 'ability') {
                         roll = await actor.rollAtributo(actor, opts, e);
                     }
-                    else if (requesttype == 'saving' || requesttype == 'skill') {
+                    else if (requesttype == 'save' || requesttype == 'skill') {
                         opts = {
                             actor: actor,
                             type: "perícia",
@@ -214,7 +214,7 @@ export class ContestedRoll {
                             });
                         }
                     }
-                    else if (requesttype == 'saving') {
+                    else if (requesttype == 'save') {
                         if (actor.data.data.saves[request]?.roll) {
                             opts = actor.getRollOptions(["all", "saving-throw", request]);
                             rollfn = actor.data.data.saves[request].roll;
@@ -244,7 +244,7 @@ export class ContestedRoll {
                     let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'scores') {
                         rollfn = actor.rollCheck;
-                    } else if (requesttype == 'saving') {
+                    } else if (requesttype == 'save') {
                         rollfn = actor.rollSave;
                     }
                     if (rollfn != undefined) {

@@ -32,14 +32,26 @@ export class SavingThrowApp extends Application {
     getData(options) {
         let requestoptions = this.requestoptions || MonksTokenBar.requestoptions;
 
-        if (this.requestoptions == undefined) {
+        if (this.tokens.length > 0) {
             let tools = {};
-            for (let token of this.tokens) {
-                for (let item of token.actor.items) {
-                    if (item.type == 'tool') {
-                        let sourceID = item.getFlag("core", "sourceId")
-                        //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
-                        tools[sourceID] = item.data.name;
+            //get the first token's tools
+            for (let item of this.tokens[0].actor.items) {
+                if (item.type == 'tool') {
+                    let sourceID = item.getFlag("core", "sourceId") || item.id;
+                    //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
+                    tools[sourceID] = item.data.name;
+                }
+            }
+            //see if the other tokens have these tools
+            if (Object.keys(tools).length > 0) {
+                for (let i = 1; i < this.tokens.length; i++) {
+                    let token = this.tokens[i];
+                    for (let [k, v] of Objects.entries(tools)) {
+                        let tool = token.actor.items.find(t => {
+                            return t.type == 'tool' && item.getFlag("core", "sourceId") == k;
+                        });
+                        if (tool == undefined)
+                            delete tools[k];
                     }
                 }
             }
@@ -248,13 +260,13 @@ export class SavingThrow {
                     if (requesttype == 'ability') {
                         rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
                     }
-                    else if (requesttype == 'saving') {
+                    else if (requesttype == 'save') {
                         rollfn = actor.rollAbilitySave;
                     }
                     else if (requesttype == 'skill') {
                         rollfn = actor.rollSkill;
                     } else if (requesttype == 'tool') {
-                        let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request; });
+                        let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request || i.id == request; });
                         if (item != undefined) {
                             context = item;
                             request = options;
@@ -283,7 +295,7 @@ export class SavingThrow {
                     if (requesttype == 'ability') {
                         rollfn = actor.rollAtributo;
                     }
-                    else if (requesttype == 'saving' || requesttype == 'skill') {
+                    else if (requesttype == 'save' || requesttype == 'skill') {
                         opts = {
                             actor: actor,
                             type: "perícia",
@@ -326,7 +338,7 @@ export class SavingThrow {
                             });
                         }
                     }
-                    else if (requesttype == 'saving') {
+                    else if (requesttype == 'save') {
                         if (actor.data.data.saves[request]?.roll) {
                             opts = actor.getRollOptions(["all", "saving-throw", request]);
                             rollfn = actor.data.data.saves[request].roll;
@@ -358,15 +370,61 @@ export class SavingThrow {
                     let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'scores') {
                         rollfn = actor.rollCheck;
-                    } else if (requesttype == 'saving') {
+                    } else if (requesttype == 'save') {
                         rollfn = actor.rollSave;
                     }
                     if (rollfn != undefined) {
                         return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
                     }
                     else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }
-                else {
+                } else if (game.system.id == 'sfrpg') {
+                    let rollfn = null;
+                    let opts = { event: e };
+                    if (requesttype == 'attribute') {
+                        if (actor.data.data.attributes[request]?.roll) {
+                            opts = actor.getRollOptions(["all", request]);
+                            rollfn = actor.data.data.attributes[request].roll;
+                        } else
+                            rollfn = actor.rollAttribute;
+                    }
+                    else if (requesttype == 'ability') {
+                        rollfn = function (event, abilityName) {
+                            const skl = this.data.data.abilities[abilityName],
+                                flavor = `${CONFIG.SFRPG.abilities[abilityName]} Check`;
+                            return DiceSFRPG.d20Roll({
+                                event: event,
+                                parts: ["@mod"],
+                                data: {
+                                    mod: skl.mod
+                                },
+                                title: flavor,
+                                speaker: ChatMessage.getSpeaker({
+                                    actor: this
+                                }),
+                                rollType: 'ignore'
+                            });
+                        }
+                    }
+                    else if (requesttype == 'save') {
+                        if (actor.data.data.attributes[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "saving-throw", request]);
+                            rollfn = actor.data.data.saves[request].roll;
+                        } else
+                            rollfn = actor.rollSave;
+                    }
+                    else if (requesttype == 'skill') {
+                        if (actor.data.data.skills[request]?.roll) {
+                            opts = actor.getRollOptions(["all", "skill-check", request]);
+                            rollfn = actor.data.data.skills[request].roll;
+                        } else
+                            rollfn = actor.rollSkill;
+                    }
+
+                    if (rollfn != undefined) {
+                        return rollfn.call(actor, request, opts).then((roll) => { return returnRoll(roll); });
+                    } else
+                        ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
+                } else {
                     ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
                 }
             }
@@ -460,22 +518,21 @@ export class SavingThrow {
                         msgtoken.passed = (msgtoken.total >= dc);
 
 
-                    if ($('.item[data-item-id="' + update.id + '"] .item-row .dice-tooltip', content).length == 0)
-                        $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
+                    $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
+                    $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
-                    if ($('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).length == 0) {
-                        $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                            `<div class="dice-total flexrow" style="display:none;">
-                            <div class="dice-result">${msgtoken.total}</div >
-                            <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
-                                <i class="fas fa-check"></i>
-                            </a>
-                            <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
-                                <i class="fas fa-times"></i>
-                            </a>
-                            <div class="dice-text player-only"></div>
-                        </div >`);
-                    }
+                    $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
+                    $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
+                        `<div class="dice-total flexrow" style="display:none;">
+                        <div class="dice-result">${msgtoken.total}</div >
+                        <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
+                            <i class="fas fa-check"></i>
+                        </a>
+                        <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        <div class="dice-text player-only"></div>
+                    </div >`);
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 }
@@ -733,6 +790,10 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //let content = duplicate(message.data.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
+        $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
+    } else if (message.roll != undefined && message.data.type == 5){
+        //check grab this roll
+        $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
     }
 });
 
