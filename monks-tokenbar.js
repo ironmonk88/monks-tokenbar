@@ -460,7 +460,7 @@ Hooks.once('init', async function () {
     MonksTokenBar.init();
     MonksTokenBarAPI.init();
 
-    $('body').on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, null));
+    //$('body').on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, null));
 });
 
 Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
