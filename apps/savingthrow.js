@@ -15,7 +15,7 @@ export class SavingThrowApp extends Application {
         }
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.request = options.request;
-        this.baseoptions = options.requestoptions || MonksTokenBar.requestoptions;
+        this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.requestoptions);
     }
 
     static get defaultOptions() {
@@ -136,7 +136,7 @@ export class SavingThrowApp extends Application {
             let rollmode = $('#savingthrow-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
-            
+
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {

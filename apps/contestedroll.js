@@ -11,6 +11,7 @@ export class ContestedRollApp extends Application {
         this.item1.request = (this.item1.request || 'ability:str');
 
         this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
+        this.requestoptions = (options.requestoptions || MonksTokenBar.requestoptions.filter(o => { return o.id != 'save' && o.groups != undefined }));
     }
 
     static get defaultOptions() {
@@ -25,8 +26,6 @@ export class ContestedRollApp extends Application {
     }
 
     getData(options) {
-        this.requestoptions = MonksTokenBar.requestoptions.filter(o => { return o.id != 'save' && o.groups != undefined });
-
         return {
             item0: this.item0,
             item1: this.item1,
@@ -44,7 +43,7 @@ export class ContestedRollApp extends Application {
     async request() {
         if (this.item0.token != undefined && this.item1.token != undefined) {
             let actors = [this.item0, this.item1].map((item, index) => {
-                let parts = $('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
+                let parts = this['item' + index].request.split(':'); //$('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
                 let requestname = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
@@ -55,7 +54,7 @@ export class ContestedRollApp extends Application {
                     requesttype: requesttype,
                     request: request,
                     requestname: requestname,
-                    icon: (item.token.data.img.endsWith('webm') ? item.token.actor.data.img : item.token.data.img),
+                    icon: (VideoHelper.hasVideoExtension(item.token.data.img) ? item.token.actor.data.img : item.token.data.img),
                     name: item.token.name,
                     passed: 'waiting'
                 };
