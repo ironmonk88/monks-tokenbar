@@ -58,13 +58,13 @@ export class MonksTokenBar {
             MonksTokenBar.requestoptions.push({ id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception } });
         }
         let config;
-				switch (game.system.id) {
-					case "tormenta20":
-						config = CONFIG.T20;
-						break;
-					default:
-						config = CONFIG[game.system.id.toUpperCase()];
-				}
+		switch (game.system.id) {
+			case "tormenta20":
+				config = CONFIG.T20;
+				break;
+			default:
+				config = CONFIG[game.system.id.toUpperCase()];
+		}
         //Ability rolls
         if (config.abilities != undefined) {
             MonksTokenBar.requestoptions.push({ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: config.abilities });
