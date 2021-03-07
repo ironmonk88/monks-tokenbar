@@ -3,6 +3,8 @@ Fixing issue with stacked pathfinder conditions.
 
 Fixing issue with Tormenta20 (Thank you mclemente!)
 
+Fixing issue with request options for requested roll.  This was preventing running the request silently.
+
 ## Version 1.0.23
 Fixed an issue with the code to find tools.
 
