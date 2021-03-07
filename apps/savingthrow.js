@@ -692,7 +692,15 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         //if all the tokens are players, then default to perception
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
+        let hpAttribute;
+        switch (game.system.id) {
+          case "tormenta20":
+            hpAttribute = "data.data.attributes.pv.value";
+            break;
+          default:
+            hpAttribute = "data.data.attributes.hp.value";
+        }
+        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, hpAttribute) == 0).length;
         let request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : null) ||
             (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : null) ||
             SavingThrow.lastRequest ||
