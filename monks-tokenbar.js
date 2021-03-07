@@ -57,31 +57,38 @@ export class MonksTokenBar {
         if (["pf2e"].includes(game.system.id)) {
             MonksTokenBar.requestoptions.push({ id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception } });
         }
-        let config = CONFIG[game.system.id.toUpperCase()];
+        let config;
+				switch (game.system.id) {
+					case "tormenta20":
+						config = CONFIG.T20;
+						break;
+					default:
+						config = CONFIG[game.system.id.toUpperCase()];
+				}
         //Ability rolls
         if (config.abilities != undefined) {
             MonksTokenBar.requestoptions.push({ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: config.abilities });
         }
-        if (config.atributos != undefined) {
+        else if (config.atributos != undefined) {
             MonksTokenBar.requestoptions.push({ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: config.atributos });
         }
-        if (config.scores != undefined) {
+        else if (config.scores != undefined) {
             MonksTokenBar.requestoptions.push({ id: "scores", text: i18n("MonksTokenBar.Ability"), groups: config.scores });
         }
         //Saving Throw
         if (config.saves != undefined) {
             MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves });
         }
-        if (config.savingThrows != undefined) {
+        else if (config.savingThrows != undefined) {
             MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.savingThrows });
         }
-        if (config.resistencias != undefined) {
+        else if (config.resistencias != undefined) {
             MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.resistencias });
         }
-        if (config.saves_long != undefined) {
+        else if (config.saves_long != undefined) {
             MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves_long });
         }
-        if (["dnd5e"].includes(game.system.id)) {
+        else if (["dnd5e"].includes(game.system.id)) {
             MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
         }
 
@@ -89,78 +96,9 @@ export class MonksTokenBar {
         if (config.skills != undefined) {
             MonksTokenBar.requestoptions.push({ id: "skill", text: i18n("MonksTokenBar.Skill"), groups: config.skills });
         }
-        if (config.pericias != undefined) {
+        else if (config.pericias != undefined) {
             MonksTokenBar.requestoptions.push({ id: "skill", text: i18n("MonksTokenBar.Skill"), groups: config.pericias });
         }
-
-        /*
-        switch (game.system.id) {
-            case "pf2e":
-                
-                MonksTokenBar.requestoptions.push({
-                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.PF2E.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.PF2E.saves
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.PF2E.skills
-                });
-                break;
-            case "D35E":
-                MonksTokenBar.requestoptions.push({
-                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.D35E.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.D35E.savingThrows
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.D35E.skills
-                });
-                break;
-            case "tormenta20":
-                MonksTokenBar.requestoptions.push({
-                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.T20.atributos
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.T20.resistencias
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.T20.pericias
-                });
-                break;
-            case "ose":
-                MonksTokenBar.requestoptions.push({
-                    id: "scores", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.OSE.scores
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.OSE.saves_long
-                });
-                break;
-            case "dnd5e":
-                
-                MonksTokenBar.requestoptions.push({
-                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.DND5E.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.DND5E.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.DND5E.skills
-                });
-                break;
-            case "sfrpg":
-                MonksTokenBar.requestoptions.push({
-                    id: "ability", text: i18n("MonksTokenBar.Ability"), groups: CONFIG.SFRPG.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: CONFIG.SFRPG.abilities
-                });
-                MonksTokenBar.requestoptions.push({
-                    id: "skill", text: i18n("MonksTokenBar.Skill"), groups: CONFIG.SFRPG.skills
-                });
-                break;
-        }*/
         MonksTokenBar.requestoptions.push({
             id: "dice", text: "Dice", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
         });
