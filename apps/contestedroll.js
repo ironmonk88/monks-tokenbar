@@ -25,13 +25,13 @@ export class ContestedRollApp extends Application {
     }
 
     getData(options) {
-        let opts = MonksTokenBar.requestoptions.filter(o => { return o.id != 'save' && o.groups != undefined });
+        this.requestoptions = MonksTokenBar.requestoptions.filter(o => { return o.id != 'save' && o.groups != undefined });
 
         return {
             item0: this.item0,
             item1: this.item1,
             rollmode: this.rollmode,
-            options: opts
+            options: this.requestoptions
         };
     }
 
@@ -47,7 +47,7 @@ export class ContestedRollApp extends Application {
                 let parts = $('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
-                let requestname = MonksTokenBar.getRequestName($('.request-roll[data-type="item' + index + '"]', this.element), requesttype, request);
+                let requestname = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
                 //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'save' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.actor.id,

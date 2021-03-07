@@ -49,6 +49,6 @@
     </div>
     <footer class="card-footer gm-only">
         <span class="message-mode">{{modename}}</span><span> {{localize 'MonksTokenBar.GroupDC'}}: <span class="group-dc"></span></span>
-        <button type="button" class="grab-message" title="{{localize 'MonksTokenBar.GrabMessage'}}"><i class="fas fa-hand-sparkles"></i></button>
+        {{#if canGrab}}<button type="button" class="grab-message" title="{{localize 'MonksTokenBar.GrabMessage'}}"><i class="fas fa-hand-sparkles"></i></button>{{/if}}
     </footer>
 </div>

@@ -15,7 +15,7 @@ export class SavingThrowApp extends Application {
         }
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.request = options.request;
-        this.requestoptions = options.requestoptions;
+        this.baseoptions = options.requestoptions || MonksTokenBar.requestoptions;
     }
 
     static get defaultOptions() {
@@ -30,7 +30,7 @@ export class SavingThrowApp extends Application {
     }
 
     getData(options) {
-        let requestoptions = this.requestoptions || MonksTokenBar.requestoptions;
+        this.requestoptions = this.baseoptions;
 
         if (this.tokens.length > 0) {
             let tools = {};
@@ -57,7 +57,7 @@ export class SavingThrowApp extends Application {
             }
 
             if (Object.keys(tools).length > 0) {
-                requestoptions = requestoptions.concat([{ id: 'tool', text: 'Tools', groups: tools }]);
+                this.requestoptions = this.requestoptions.concat([{ id: 'tool', text: 'Tools', groups: tools }]);
             }
         }
 
@@ -65,7 +65,7 @@ export class SavingThrowApp extends Application {
             tokens: this.tokens,
             request: this.request,
             rollmode: this.rollmode,
-            options: requestoptions
+            options: this.requestoptions
         };
     }
 
@@ -130,14 +130,14 @@ export class SavingThrowApp extends Application {
             });
             SavingThrow.lastRequest = this.request;
 
-            let parts = $('.request-roll', this.element).val().split(':');
+            let parts = this.request.split(':'); //$('.request-roll', this.element).val()
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
             let rollmode = $('#savingthrow-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             
-            let name = MonksTokenBar.getRequestName($('.request-roll', this.element), requesttype, request);
+            let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
                 dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
@@ -146,10 +146,12 @@ export class SavingThrowApp extends Application {
                 request: request,
                 rollmode: rollmode,
                 modename: modename,
-                tokens: tokens
+                tokens: tokens,
+                canGrab: game.system.id == 'dnd5e'
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);
             delete requestdata.tokens;
+            delete requestdata.canGrab;
             for (let i = 0; i < tokens.length; i++)
                 requestdata["token" + tokens[i].id] = tokens[i];
 
@@ -359,7 +361,7 @@ export class SavingThrow {
                         else {
                             opts.push("ignore");
                             return new Promise(function (resolve, reject) {
-                                rollfn.call(actor, e, opts, function (roll) { resolve(returnRoll(roll)); });
+                                rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(returnRoll(roll)); } });
                             });
                         }
                     } else
@@ -790,10 +792,12 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //let content = duplicate(message.data.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
-        $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
+        if (game.system.id == 'dnd5e')
+            $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
     } else if (message.roll != undefined && message.data.type == 5){
         //check grab this roll
-        $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
+        if(game.system.id == 'dnd5e')
+            $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
     }
 });
 

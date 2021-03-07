@@ -1,3 +1,8 @@
+## Version 1.0.25
+Fixing issue with stacked pathfinder conditions.
+
+Fixing issue with Tormenta20 (Thank you mclemente!)
+
 ## Version 1.0.23
 Fixed an issue with the code to find tools.
 

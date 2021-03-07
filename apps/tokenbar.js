@@ -185,23 +185,27 @@ export class TokenBar extends Application {
     }
 
     async updateToken(tkn) {
+        let getAttrProperty = function (data, prop) {
+            let value = getProperty(data, prop);
+            return value?.value || value;
+        }
         //is the token different from our token element?
         //need to check the tokens resource bars getProperty(data.data, tkn.token.data.bar2.attribute)
         //and need to check the stat values
         //and need to check the image
         let diff = {};
-        if (tkn?.resource1?.value != getProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
+        if (tkn?.resource1?.value != getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
             diff.resource1 = this.getResourceBar(tkn.token, "bar1");
         }
-        if (tkn?.resource2?.value != getProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
+        if (tkn?.resource2?.value != getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
-        if (tkn.stat1 != getProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
-            diff.stat1 = getProperty(tkn.token.actor.data.data, setting("stat1-resource"));
+        if (tkn.stat1 != getAttrProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
+            diff.stat1 = getAttrProperty(tkn.token.actor.data.data, setting("stat1-resource"));
             diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
-        if (tkn.stat2 != getProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
-            diff.stat2 = getProperty(tkn.token.actor.data.data, setting("stat2-resource"));
+        if (tkn.stat2 != getAttrProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
+            diff.stat2 = getAttrProperty(tkn.token.actor.data.data, setting("stat2-resource"));
             diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
@@ -622,7 +626,7 @@ Hooks.on('updateOwnedItem', (actor, item, data) => {
     if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor._id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
-            MonksTokenBar.tokenbar.updateToken(tkn)
+            setTimeout(function () { MonksTokenBar.tokenbar.updateToken(tkn); }, 100); //delay slightly so the PF2E condition can be rendered properly.
         }
     }
 });

@@ -330,7 +330,7 @@ export class MonksTokenBar {
         }
     }
 
-    static getRequestName(element, requesttype, request) {
+    static getRequestName(requestoptions, requesttype, request) {
         let name = '';
         switch (requesttype) {
             case 'ability': name = i18n("MonksTokenBar.AbilityCheck"); break;
@@ -339,14 +339,19 @@ export class MonksTokenBar {
             default:
                 name = (request != 'death' && request != 'init' ? i18n("MonksTokenBar.Check") : "");
         }
+        let rt = requestoptions.find(o => {
+            return o.id == (requesttype || request);
+        });
+        let req = (rt?.groups && rt?.groups[request]);
+        let flavor = req || rt?.text;
         switch (game.i18n.lang) {
             case "pt-BR":
             case "es":
-                name = name + ": " + $('option:selected', element).html();
+                name = name + ": " + flavor;
                 break;
             case "en":
             default:
-                name = $('option:selected', element).html() + " " + name;
+                name = flavor + " " + name;
         }
         return name;
     }
@@ -373,8 +378,13 @@ export class MonksTokenBar {
     static onClickMessage(message, html) {
         if (MonksTokenBar.grabmessage != undefined) {
             //make sure this message matches the grab message
-            let roll = message.getFlag(game.system.id, 'roll');
-            if (MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'requesttype') == roll.type &&
+            let roll = {};
+            if (game.system.id == 'pf2e') {
+                let [abilityId, type] = message.data.flags.pf2e.context.type.split('-');
+                roll = { type: (type == 'check' ? 'attribute': type), abilityId: abilityId };
+            } else
+                roll = message.getFlag(game.system.id, 'roll');
+            if (roll && MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'requesttype') == roll.type &&
                 MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'request') == (roll.skillId || roll.abilityId)) {
                 let tokenId = message.data.speaker.token;
                 let msgtoken = MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'token' + tokenId);
