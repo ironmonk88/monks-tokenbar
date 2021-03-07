@@ -48,7 +48,7 @@ export class SavingThrowApp extends Application {
                     let token = this.tokens[i];
                     for (let [k, v] of Object.entries(tools)) {
                         let tool = token.actor.items.find(t => {
-                            return t.type == 'tool' && item.getFlag("core", "sourceId") == k;
+                            return t.type == 'tool' && (t.getFlag("core", "sourceId") || t.id) == k;
                         });
                         if (tool == undefined)
                             delete tools[k];
