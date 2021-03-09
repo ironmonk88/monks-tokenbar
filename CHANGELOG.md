@@ -1,3 +1,16 @@
+## Version 1.0.26
+Fixing issues with the API, especially with running the function using silent.
+
+Fixing issues with checking for token changes
+
+Fixing issues with Tormenta 20
+
+Fixing issues with Sandbox
+
+Fixing up the rendering speed
+
+Switching the token to use thumbnails of the images to increase the speed of rendering.
+
 ## Version 1.0.25
 Fixing issue with stacked pathfinder conditions.
 

@@ -56,17 +56,27 @@ body #tokenbar-window:first-child{
     padding-top: 4px;
 }
 
-#tokenbar .bar-controls .token-movement:not(.disabled).active i {
+#tokenbar .bar-controls .token-movement:not(.disabled):hover {
+    filter: drop-shadow( 0 0 5px red);
+}
+
+#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled):hover,
+#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled):hover,
+#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled):hover {
+    filter: none;
+}
+
+#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled) i,
+#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled) i,
+#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled) i {
     color: #bc8c4a;
     border: 1px solid #ff6400;
 }
 
-#tokenbar .token-movement:not(.disabled):not(.active):hover {
-    filter: drop-shadow( 0 0 5px red);
-}
-
-#tokenbar .token-movement:not(.disabled).active:hover i {
-    color:#ffc163;
+#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled):hover i,
+#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled):hover i,
+#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled):hover i {
+    color: #ffc163;
 }
 
 #tokenbar .token-movement.disabled {
@@ -85,6 +95,14 @@ body #tokenbar-window:first-child{
     height: 92px;
     pointer-events: all;
     flex-wrap: nowrap;
+}
+
+#tokenbar.hidectrl .dialog-col {
+    display: none;
+}
+
+#tokenbar.hidexp .assign-xp {
+    visibility: hidden;
 }
 
 #tokenbar-window #token-action-bar {
@@ -218,7 +236,7 @@ body #tokenbar-window:first-child{
     word-break: break-all;
 }
 
-#tokenbar .token .context-items li:nth-child(4) {
+#tokenbar .token .context-items li:nth-child(5) {
     border-top: 2px groove #444; /*#23221d;*/
 }
 
@@ -230,21 +248,31 @@ body #tokenbar-window:first-child{
     position: absolute;
     width: 20px;
     height: 20px;
-    top: 40px;
-    left: 2px;
+    top: 36px;
+    left: 0px;
     color: #ffc163;
     filter: drop-shadow( 0 0 5px black);
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    line-height: 22px;
 }
 
-#tokenbar .token .movement-icon[movement="free"] i:after {
+#tokenbar .token .movement-icon[movement=""],
+#tokenbar[movement="free"] .token[movement="free"] .movement-icon,
+#tokenbar[movement="none"] .token[movement="none"] .movement-icon,
+#tokenbar[movement="combat"] .token[movement="combat"] .movement-icon {
+    display: none;
+}
+
+#tokenbar:not([movement="free"]) .token[movement="free"] .movement-icon i:after {
     content: "\f70c";
 }
 
-#tokenbar .token .movement-icon[movement="none"] i:after {
+#tokenbar:not([movement="none"]) .token[movement="none"] .movement-icon i:after {
     content: "\f21d";
 }
 
-#tokenbar .token .movement-icon[movement="combat"] i:after {
+#tokenbar:not([movement="combat"]) .token[movement="combat"] .movement-icon i:after {
     content: "\f6de";
 }
 

@@ -60,7 +60,7 @@ export class ContestedRollApp extends Application {
                 };
             });
 
-            let rollmode = $('#contestedroll-rollmode', this.element).val();
+            let rollmode = this.rollmode; //$('#contestedroll-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeCR", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             let requestdata = {

@@ -10,6 +10,8 @@ export class MonksTokenBarAPI {
     }
 
     static changeMovement(movement, tokens) {
+        if (!game.user.isGM)
+            return;
         if (!MonksTokenBar.isMovement(movement))
             return;
 
@@ -19,7 +21,12 @@ export class MonksTokenBarAPI {
             MonksTokenBar.changeGlobalMovement(movement);
     }
 
-    static requestRoll(tokens, options) {
+    static requestRoll(tokens, options = {}) {
+        if (!game.user.isGM)
+            return;
+
+        options.rollmode = options.rollmode || 'roll';
+
         let savingthrow = new SavingThrowApp(tokens, options);
         if (options?.silent === true)
             savingthrow.requestRoll();
@@ -27,7 +34,12 @@ export class MonksTokenBarAPI {
             savingthrow.render(true);
     }
 
-    static requestContestedRoll(request0, request1, options) {
+    static requestContestedRoll(request0, request1, options = {}) {
+        if (!game.user.isGM)
+            return;
+
+        options.rollmode = options.rollmode || 'roll';
+
         let contestedroll = new ContestedRollApp(request0, request1, options);
         if (options?.silent === true)
             contestedroll.request();
@@ -40,7 +52,9 @@ export class MonksTokenBarAPI {
     * pass in a token or an array of tokens, 
     *
     * */
-    static assignXP(tokens, options) {
+    static assignXP(tokens, options = {}) {
+        if (!game.user.isGM)
+            return;
         let assignxp = new AssignXPApp(tokens, options);
         if (options?.silent === true)
             assignxp.assign();
@@ -54,6 +68,8 @@ export class MonksTokenBarAPI {
      * 
      * */
     static convertToLootable(tokens, options = {}) {
+        if (!game.user.isGM)
+            return;
         let lootables = new LootablesApp(tokens, options);
 
         if (options?.silent === true)

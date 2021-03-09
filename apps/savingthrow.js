@@ -16,6 +16,7 @@ export class SavingThrowApp extends Application {
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.request = options.request;
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.requestoptions);
+        this.dc = options.dc;
     }
 
     static get defaultOptions() {
@@ -65,6 +66,7 @@ export class SavingThrowApp extends Application {
             tokens: this.tokens,
             request: this.request,
             rollmode: this.rollmode,
+            dc: this.dc, 
             options: this.requestoptions
         };
     }
@@ -133,14 +135,14 @@ export class SavingThrowApp extends Application {
             let parts = this.request.split(':'); //$('.request-roll', this.element).val()
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
-            let rollmode = $('#savingthrow-rollmode', this.element).val();
+            let rollmode = this.rollmode;
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
-                dc: $('#monks-tokenbar-savingdc', this.element).val() || (request == 'death' ? '10' : ''),
+                dc: this.dc || (request == 'death' ? '10' : ''),
                 name: name,
                 requesttype: requesttype,
                 request: request,
@@ -196,6 +198,9 @@ export class SavingThrowApp extends Application {
 
         $('.dialog-buttons.request', html).click($.proxy(this.requestRoll, this));
 
+        $('#monks-tokenbar-savingdc', html).blur($.proxy(function (e) {
+            this.dc = $(e.currentTarget).val();
+        }, this));
         $('.request-roll', html).change($.proxy(function (e) {
             this.request = $(e.currentTarget).val();
         }, this));
@@ -692,9 +697,11 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         //if all the tokens are players, then default to perception
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
-        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : null) ||
-            (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception') : null) ||
+        let allZeroHP = 0;
+        if (game.system.id == "dnd5e")
+            allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
+        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'death' : null) ||
+            (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
             SavingThrow.lastRequest ||
             $('.request-roll option:first', html).val();
         if ($('.request-roll option[value="' + request + '"]').length == 0)
@@ -708,7 +715,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);
 
-    $('.item-control[data-type="monster"]', html).hide();
+    //$('.item-control[data-type="monster"]', html).hide();
 });
 
 Hooks.on("renderChatMessage", (message, html, data) => {

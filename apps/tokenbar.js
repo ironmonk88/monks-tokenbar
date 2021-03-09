@@ -51,29 +51,60 @@ export class TokenBar extends Application {
 	/* -------------------------------------------- */
 
     /** @override */
-	getData(options) {
+    getData(options) {
+        let css = [
+            (game.world.system == "dnd5e" && game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidexp' : null),
+            !game.user.isGM ? "hidectrl" : null
+        ].filter(c => !!c).join(" ");
+        let pos = this.getPos();
         return {
             tokens: this.tokens,
             movement: setting("movement"),
             stat1icon: setting("stat1-icon"),
-            stat2icon: setting("stat2-icon")
+            stat2icon: setting("stat2-icon"),
+            cssClass: css,
+            pos: pos
         };
     }
 
-    show() {
-        $(this.element).removeClass('loading').css({ display: 'flex !important' });
+    //show() {
+        //$(this.element).removeClass('loading').css({ display: 'flex !important' });
+    //}
+
+    getPos() {
+        this.pos = game.user.getFlag("monks-tokenbar", "position");
+
+        if (this.pos == undefined) {
+            let hbpos = $('#hotbar').position();
+            let width = $('#hotbar').width();
+            this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
+            game.user.setFlag("monks-tokenbar", "position", this.pos);
+        }
+
+        let result = '';
+        if (this.pos != undefined) {
+            result = Object.entries(this.pos).filter(k => {
+                return k[1] != null;
+            }).map(k => {
+                return k[0] + ":" + k[1] + 'px';
+            }).join('; ');
+        }
+
+        return result;
     }
 
     setPos() {
-        let pos = game.user.getFlag("monks-tokenbar", "position");
+        this.pos = game.user.getFlag("monks-tokenbar", "position");
 
-        if (pos == undefined) {
+        if (this.pos == undefined) {
             let hbpos = $('#hotbar').position();
             let width = $('#hotbar').width();
-            pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
+            this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
+            game.user.setFlag("monks-tokenbar", "position", this.pos);
         }
 
-        $(this.element).css(pos);
+        log('Setting position', this.pos, this.element);
+        $(this.element).css(this.pos);
 
         return this;
     }
@@ -134,16 +165,17 @@ export class TokenBar extends Application {
         }
 
         let img = (setting("token-pictures") == "actor" && token.actor != undefined ? token.actor.data.img : token.data.img);
-        let thumb = img;
-        if (VideoHelper.hasVideoExtension(img))
-            thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
-        //let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        //let thumb = img;
+        //if (VideoHelper.hasVideoExtension(img))
+        //    thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
 
         return {
             id: token.id,
             token: token,
             img: img,
             thumb: thumb?.thumb || thumb,
+            movement: token.getFlag("monks-tokenbar", "movement"),
             stat1: stat1,
             stat2: stat2,
             statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
@@ -194,10 +226,10 @@ export class TokenBar extends Application {
         //and need to check the stat values
         //and need to check the image
         let diff = {};
-        if (tkn?.resource1?.value != getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
+        if (tkn?.resource1?.value != tkn.token.getBarAttribute('bar1')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
             diff.resource1 = this.getResourceBar(tkn.token, "bar1");
         }
-        if (tkn?.resource2?.value != getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
+        if (tkn?.resource2?.value != tkn.token.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
         if (tkn.stat1 != getAttrProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
@@ -210,10 +242,16 @@ export class TokenBar extends Application {
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
-            let thumb = diff.img;
-            if (VideoHelper.hasVideoExtension(diff.img))
-                thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+            //let thumb = diff.img;
+            //if (VideoHelper.hasVideoExtension(diff.img))
+            //    thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+            let thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+
             diff.thumb = (thumb?.thumb || thumb);
+
+        }
+        if (tkn.movement != tkn.token.getFlag('monks-tokenbar', 'movement')) {
+            diff.movement = tkn.token.getFlag('monks-tokenbar', 'movement');
         }
 
         if (Object.keys(diff).length > 0) {
@@ -368,6 +406,7 @@ export class TokenBar extends Application {
 
                             log(`Setting monks-tokenbar position:`, position);
                             game.user.setFlag('monks-tokenbar', 'position', position);
+                            this.pos = position;
                         }
                     }
                 }
@@ -579,17 +618,21 @@ export class TokenBar extends Application {
     }*/
 }
 
-Hooks.on('renderTokenBar', (app, html) => {
+//Hooks.on('renderTokenBar', (app, html) => {
     //MonksTokenBar.tokenbar.setPos().show();
-    app.setPos().show();
+    //if (!app.ready) {
+    //    app.show(); //setPos().show();
+     //   app.ready = true;
+    //}
 
+    /*
     if (setting('popout-tokenbar') && MonksTokenBar.tokenbar.element[0] != undefined) {
         MonksTokenBar.tokenbar.element[0].style.width = null;
         MonksTokenBar.tokenbar.setPosition();
-    }
+    }*/
     //MonksTokenBar.tokenbar._getTokensByScene();
-    let gMovement = game.settings.get("monks-tokenbar", "movement");
-    $('.token-movement[data-movement="' + gMovement + '"]', html).addClass('active');
+    //let gMovement = game.settings.get("monks-tokenbar", "movement");
+    //$('.token-movement[data-movement="' + gMovement + '"]', html).addClass('active');
 
     //does the scene have an active combat
     //let combats = game.combats.filter(c => {
@@ -597,21 +640,21 @@ Hooks.on('renderTokenBar', (app, html) => {
     //});
 
     //$('.token-movement[data-movement="combat"]', html).toggleClass('disabled', combats.length == 0);
-    $(app.tokens).each(function () {
+    /*$(app.tokens).each(function () {
         let tMovement = this.token.getFlag("monks-tokenbar", "movement");
         if (tMovement != undefined && tMovement != gMovement) {
             $('.token[data-token-id="' + this.id + '"] .movement-icon', html).attr('movement', tMovement);
         }
-    });
+    });*/
 
-    if (game.world.system == "dnd5e") {
-        $('.assign-xp', html).css({ visibility: (game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidden' : 'visible') });
-    } else {
+    //if (game.world.system == "dnd5e") {
+    //    $('.assign-xp', html).css({ visibility: (game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidden' : 'visible') });
+    //} else {
         //$('.dialog-col', html).hide();
-    }
-    $('.dialog-col', html).toggle(game.user.isGM);
+    //}
+    //$('.dialog-col', html).toggle(game.user.isGM);
 
-});
+//});
 
 Hooks.on('updateToken', (scene, token, data) => {
     if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
@@ -644,8 +687,10 @@ Hooks.on('updateActor', (actor, data) => {
                 || getProperty(data.data, tkn.token.data.bar1.attribute) != undefined
                 || getProperty(data.data, tkn.token.data.bar2.attribute) != undefined)
             {*/
-                MonksTokenBar.tokenbar.updateToken(tkn)
+            MonksTokenBar.tokenbar.updateToken(tkn)
             //}
+        } else if (data.permission != undefined) {
+            MonksTokenBar.tokenbar.refresh();
         }
     }
 });
