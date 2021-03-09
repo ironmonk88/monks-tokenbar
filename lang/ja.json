@@ -1,6 +1,6 @@
 {
 	"MonksTokenBar.EditCharacter": "キャラクターシート",
-	"MonksTokenBar.EditToken": "コマの編集",
+	"MonksTokenBar.EditToken": "トークン設定",
 	"MonksTokenBar.TargetToken": "目標に選択",
 	"MonksTokenBar.PrivateMessage": "秘話",
 
@@ -24,7 +24,7 @@
 
 	"MonksTokenBar.Ability": "能力値",
 	"MonksTokenBar.AbilityCheck": "能力値判定",
-	"MonksTokenBar.SavingThrow": "セーヴィング・スロー",
+	"MonksTokenBar.SavingThrow": "セーヴ",
 	"MonksTokenBar.Skill": "技能",
 	"MonksTokenBar.DeathSavingThrow": "死亡セーヴ",
 	"MonksTokenBar.Initiative": "イニシアチブ",
@@ -35,6 +35,7 @@
 	"MonksTokenBar.RollFailed": "判定失敗",
 	"MonksTokenBar.Passed": "成功",
 	"MonksTokenBar.Failed": "失敗",
+	"MonksTokenBar.GrabMessage": "個別のロールを取り込む",
 
 	"MonksTokenBar.CombatTurnMovementLimited": "今はあなたのターンではありません。",
 	"MonksTokenBar.NormalMovementLimited": "現在、GMによって移動が制限されています。",
@@ -74,9 +75,11 @@
 	"MonksTokenBar.change-to-combat.name": "戦闘中の移動モード",
 	"MonksTokenBar.change-to-combat.hint": "戦闘が開始したときに、移動モードを“戦闘ターン”に変更します。",
 	"MonksTokenBar.assign-loot.name": "敵を戦利品に変換する",
-	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵を戦利品に変換します。「Loot Sheet」モジュールが必要です。",
+	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵のシートを戦利品に変換します。「Loot Sheet」モジュールが必要です。",
 	"MonksTokenBar.popout-tokenbar.name": "トークンバーのポップアウト",
 	"MonksTokenBar.popout-tokenbar.hint": "「PopOut!」モジュールが使用できるよう、ダイアログウィンドウにトークンバーを配置します。",
+	"MonksTokenBar.delete-after-grab.name": "取り込み後の個別ロールを削除する",
+	"MonksTokenBar.delete-after-grab.hint": "個別に振られたロールをリクエストした判定に取り込んだあと、その個別ロールのメッセージを削除します。",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
