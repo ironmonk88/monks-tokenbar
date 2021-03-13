@@ -447,3 +447,19 @@ Hooks.on('preUpdateToken', (scene, data, update, options, userId) => {
         }
     }
 });
+
+Hooks.on("getSceneControlButtons", (controls) => {
+    if (game.user.isGM && setting('show-lootable-menu') && game.modules.get("lootsheetnpc5e")?.active) {
+        let tokenControls = controls.find(control => control.name === "token")
+        tokenControls.tools.push({
+            name: "togglelootable",
+            title: "MonksTokenBar.Lootables",
+            icon: "fas fa-dolly-flatbed",
+            onClick: () => {
+                new LootablesApp().render(true);
+            },
+            toggle: false,
+            button: true
+        });
+    }
+});

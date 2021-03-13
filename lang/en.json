@@ -80,6 +80,10 @@
 	"MonksTokenBar.popout-tokenbar.hint": "Put the TokenBar in a dialog window so that you can use the PopOut! module.",
 	"MonksTokenBar.delete-after-grab.name": "Delete message after grab",
 	"MonksTokenBar.delete-after-grab.hint": "Delete the message after grabbing a players message roll for a requested roll.",
+	"MonksTokenBar.show-lootable-menu.name": "Show Lootable Menu",
+	"MonksTokenBar.show-lootable-menu.hint": "Show lootable button on the token menu",
+	"MonksTokenBar.request-roll-sound.name": "Request Roll Sound",
+	"MonksTokenBar.request-roll-sound.hint": "Play a sound when requesting a roll",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

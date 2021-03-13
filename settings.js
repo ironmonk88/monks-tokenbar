@@ -1597,6 +1597,22 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "show-lootable-menu", {
+		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-lootable-menu.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+	game.settings.register(modulename, "request-roll-sound", {
+		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
+		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "popout-tokenbar", {
 		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),
 		hint: game.i18n.localize("MonksTokenBar.popout-tokenbar.hint"),

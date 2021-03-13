@@ -1,3 +1,8 @@
+## Version 1.0.27
+Adding sound effect when a roll has been requested to alert players
+
+Added lootable menu to the token main menu
+
 ## Version 1.0.26
 Fixing issues with the API, especially with running the function using silent.
 

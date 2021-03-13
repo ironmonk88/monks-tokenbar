@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
 
 export class ContestedRollApp extends Application {
     constructor(item0, item1, options = {}) {
@@ -93,6 +93,8 @@ export class ContestedRollApp extends Application {
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
             ChatMessage.create(chatData, {});
+            if (setting('request-roll-sound'))
+                AudioHelper.play({ src: 'modules/monks-tokenbar/sounds/RollRequestAlert.mp3' }, true);
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
