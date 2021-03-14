@@ -178,7 +178,7 @@ export class ContestedRoll {
                     else if (requesttype == 'save' || requesttype == 'skill') {
                         opts = {
                             actor: actor,
-                            type: "per�cia",
+                            type: "perícia",
                             data: actor.data.data.pericias[opts],
                             name: actor.data.data.pericias[opts].label,
                             id: opts
