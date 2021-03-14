@@ -260,7 +260,7 @@ export class SavingThrow {
                 //roll the dice
                 return SavingThrow.rollDice(request).then((roll) => { return returnRoll(roll); });
             } else {
-                if (game.system.id == 'dnd5e') {
+                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e' ) {
                     let rollfn = null;
                     let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
                     let context = actor;
@@ -305,7 +305,7 @@ export class SavingThrow {
                     else if (requesttype == 'save' || requesttype == 'skill') {
                         opts = {
                             actor: actor,
-                            type: "perícia",
+                            type: "perï¿½cia",
                             data: actor.data.data.pericias[opts],
                             name: actor.data.data.pericias[opts].label,
                             id: opts
@@ -698,10 +698,10 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = 0;
-        if (game.system.id == "dnd5e")
+        if (game.system.id == "dnd5e" || game.system.id == "sw5e"  )
             allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
         let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'death' : null) ||
-            (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
+            (allPlayers ? (game.system.id == "dnd5e" || game.system.id == "sw5e"  ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
             SavingThrow.lastRequest ||
             $('.request-roll option:first', html).val();
         if ($('.request-roll option[value="' + request + '"]').length == 0)
@@ -799,11 +799,11 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //let content = duplicate(message.data.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
-        if (game.system.id == 'dnd5e')
+        if (game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
     } else if (message.roll != undefined && message.data.type == 5){
         //check grab this roll
-        if(game.system.id == 'dnd5e')
+        if(game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
     }
 });
