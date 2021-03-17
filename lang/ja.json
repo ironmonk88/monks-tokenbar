@@ -80,6 +80,10 @@
 	"MonksTokenBar.popout-tokenbar.hint": "「PopOut!」モジュールが使用できるよう、ダイアログウィンドウにトークンバーを配置します。",
 	"MonksTokenBar.delete-after-grab.name": "取り込み後の個別ロールを削除する",
 	"MonksTokenBar.delete-after-grab.hint": "個別に振られたロールをリクエストした判定に取り込んだあと、その個別ロールのメッセージを削除します。",
+	"MonksTokenBar.show-lootable-menu.name": "戦利品分配ボタンを表示する",
+	"MonksTokenBar.show-lootable-menu.hint": "基本操作メニューに戦利品分配ボタンを追加します。",
+	"MonksTokenBar.request-roll-sound.name": "判定リクエスト時に音を鳴らす",
+	"MonksTokenBar.request-roll-sound.hint": "判定をリクエストしたときにサウンドを再生します。",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",

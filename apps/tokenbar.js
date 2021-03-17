@@ -119,42 +119,31 @@ export class TokenBar extends Application {
         }
     }
 
+    static processStat (formula, data) {
+        if (formula == undefined)
+            return null;
+
+        let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
+        let result = formula.replace(dataRgx, (match, term) => {
+            let value = getProperty(data, term);
+            return (value === undefined ? match : String(value).trim());
+        });
+
+        if (result == undefined)
+            return null;
+
+        try {
+            result = eval(result);
+        } catch{ }
+
+        return String(result);
+    }
+
     async mapToken(token) {
         let actor = token.actor;
 
-        let stat1 = getProperty(actor.data.data, setting("stat1-resource"));
-        if (stat1 != undefined) stat1 = stat1.toString();
-
-        /*
-        stat1 = 10;
-        if (game.world.system === "pf1") {
-            stat1 = actor.data.data.attributes.ac.normal.total
-        } else {
-            stat1 = (isNaN(parseInt(actor.data.data.attributes.ac.value)) || parseInt(actor.data.data.attributes.ac.value) === 0) ? 10 : parseInt(actor.data.data.attributes.ac.value);
-        }*/
-
-        //let perceptionTitle = "Passive Perception";
-        /*
-        let stat2 = 10;
-		switch (game.world.system) {
-			case "pf1":
-				stat2 = actor.data.data.skills.per.mod;
-				break;
-			case "pf2e":
-				stat2 = stat2 + actor.data.data.attributes.perception.value;
-				break;
-			case "dnd5e":
-				stat2 = actor.data.data?.skills?.prc?.passive || (10 + (actor.data.data?.abilities?.wis?.mod || 0));
-				break;
-			case "tormenta20":
-				stat2 = actor.data.data?.pericias?.per?.value;
-				break;
-			default:
-				stat2 = "";
-		}*/
-
-        let stat2 = getProperty(actor.data.data, setting("stat2-resource"));
-        if (stat2 != undefined) stat2 = stat2.toString();
+        let stat1 = TokenBar.processStat(setting("stat1-resource"), actor.data.data);
+        let stat2 = TokenBar.processStat(setting("stat2-resource"), actor.data.data);
 
         token.unsetFlag("monks-tokenbar", "notified");
 
@@ -232,12 +221,14 @@ export class TokenBar extends Application {
         if (tkn?.resource2?.value != tkn.token.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
-        if (tkn.stat1 != getAttrProperty(tkn.token.actor.data.data, setting("stat1-resource"))) {
-            diff.stat1 = getAttrProperty(tkn.token.actor.data.data, setting("stat1-resource"));
+        let stat1 = TokenBar.processStat(setting("stat1-resource"), tkn.token.actor.data.data);
+        if (tkn.stat1 != stat1) {
+            diff.stat1 = stat1;
             diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
-        if (tkn.stat2 != getAttrProperty(tkn.token.actor.data.data, setting("stat2-resource"))) {
-            diff.stat2 = getAttrProperty(tkn.token.actor.data.data, setting("stat2-resource"));
+        let stat2 = TokenBar.processStat(setting("stat2-resource"), tkn.token.actor.data.data);
+        if (tkn.stat2 != stat2) {
+            diff.stat2 = stat2;
             diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
         }
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {

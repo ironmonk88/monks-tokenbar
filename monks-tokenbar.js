@@ -50,11 +50,7 @@ export class MonksTokenBar {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
         MonksTokenBar.requestoptions = [];
-        if (["dnd5e"].includes(game.system.id)) {
-            MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
-            MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
-        }
-        if (["sw5e"].includes(game.system.id)) {
+        if (["dnd5e", "sw5e"].includes(game.system.id)) {
             MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
             MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
         }
@@ -93,10 +89,7 @@ export class MonksTokenBar {
 			else if (config.saves_long != undefined) {
 				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves_long });
 			}
-			else if (["dnd5e"].includes(game.system.id)) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
-			}
-            else if (["sw5e"].includes(game.system.id)) {
+            else if (["dnd5e", "sw5e"].includes(game.system.id)) {
 				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
 			}
 
@@ -316,14 +309,15 @@ export class MonksTokenBar {
         if (game.user.isGM) {
             if (combat.started == true) {
                 let axpa;
-                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "dnd5e" || (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')))) {
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (!["dnd5e", "sw5e"].includes(game.world.system) || !game.settings.get(game.world.system, 'disableExperienceTracking'))) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
                 }
+                /*
                 if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "sw5e" || (game.world.system === "sw5e" && !game.settings.get('sw5e', 'disableExperienceTracking')))) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
-                }
+                }*/
 
                 if (setting("assign-loot") && game.modules.get("lootsheetnpc5e")?.active) {
                     let lapp = new LootablesApp(combat);

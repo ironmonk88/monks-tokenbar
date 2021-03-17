@@ -1488,8 +1488,6 @@ export const registerSettings = function () {
 			stat2 = "skills.per.mod";
 			break;
 		case "dnd5e":
-			stat2 = "skills.prc.passive";
-			break;
 		case "sw5e":
 			stat2 = "skills.prc.passive";
 			break;
@@ -1497,7 +1495,7 @@ export const registerSettings = function () {
 			stat2 = "pericias.per.value";
 			break;
 		case "pf2e":
-			stat2 = "attributes.perception.value";
+			stat2 = "attributes.perception.value + 10";
 			break;
 		default:
 			stat2 = "";
@@ -1627,7 +1625,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "stat1-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat1-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-icon.hint"),
-		scope: "client",
+		scope: "world",
 		config: true,
 		default: "fa-shield-alt",
 		type: String,
@@ -1638,7 +1636,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "stat1-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat1-resource.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-resource.hint"),
-		scope: "client",
+		scope: "world",
 		config: true,
 		default: stat1,
 		type: String,
@@ -1649,7 +1647,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "stat2-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat2-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-icon.hint"),
-		scope: "client",
+		scope: "world",
 		config: true,
 		default: "fa-eye",
 		type: String,
@@ -1661,7 +1659,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "stat2-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat2-resource.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-resource.hint"),
-		scope: "client",
+		scope: "world",
 		config: true,
 		default: stat2,
 		type: String,
