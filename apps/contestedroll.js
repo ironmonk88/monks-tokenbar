@@ -164,7 +164,7 @@ export class ContestedRoll {
                 let requesttype = msgactor.requesttype;
 
                 let roll = null;
-                if (game.system.id == 'dnd5e') {
+                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e') {
                     let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'ability')
                         roll = await actor.rollAbilityTest(request, options);
@@ -180,7 +180,7 @@ export class ContestedRoll {
                     else if (requesttype == 'save' || requesttype == 'skill') {
                         opts = {
                             actor: actor,
-                            type: "perícia",
+                            type: "perÃ­cia",
                             data: actor.data.data.pericias[opts],
                             name: actor.data.data.pericias[opts].label,
                             id: opts

@@ -53,7 +53,7 @@ export class TokenBar extends Application {
     /** @override */
     getData(options) {
         let css = [
-            (game.world.system == "dnd5e" && game.settings.get('dnd5e', 'disableExperienceTracking') ? 'hidexp' : null),
+            ((game.world.system == "dnd5e" || game.world.system == "sw5e" ) && (game.settings.get(game.world.system, 'disableExperienceTracking')) ? 'hidexp' : null),
             !game.user.isGM ? "hidectrl" : null
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();

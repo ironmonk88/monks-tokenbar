@@ -1490,6 +1490,9 @@ export const registerSettings = function () {
 		case "dnd5e":
 			stat2 = "skills.prc.passive";
 			break;
+		case "sw5e":
+			stat2 = "skills.prc.passive";
+			break;
 		case "tormenta20":
 			stat2 = "pericias.per.value";
 			break;

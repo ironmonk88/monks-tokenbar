@@ -54,6 +54,10 @@ export class MonksTokenBar {
             MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
             MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
         }
+        if (["sw5e"].includes(game.system.id)) {
+            MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
+            MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
+        }
         if (["pf2e"].includes(game.system.id)) {
             MonksTokenBar.requestoptions.push({ id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception } });
         }
@@ -90,6 +94,9 @@ export class MonksTokenBar {
 				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves_long });
 			}
 			else if (["dnd5e"].includes(game.system.id)) {
+				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
+			}
+            else if (["sw5e"].includes(game.system.id)) {
 				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
 			}
 
@@ -310,6 +317,10 @@ export class MonksTokenBar {
             if (combat.started == true) {
                 let axpa;
                 if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "dnd5e" || (game.world.system === "dnd5e" && !game.settings.get('dnd5e', 'disableExperienceTracking')))) {
+                    axpa = new AssignXPApp(combat);
+                    await axpa.render(true);
+                }
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "sw5e" || (game.world.system === "sw5e" && !game.settings.get('sw5e', 'disableExperienceTracking')))) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
                 }
