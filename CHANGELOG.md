@@ -1,3 +1,10 @@
+## Version 1.0.28
+Added option to use a formula with the stats displayed
+
+Added support for Star Wars 5e (Thank you baccalla!)
+
+Added Japanese updates (Thank you as always touge!)
+
 ## Version 1.0.27
 Adding sound effect when a roll has been requested to alert players
 
