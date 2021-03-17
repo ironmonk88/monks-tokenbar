@@ -80,6 +80,10 @@
 	"MonksTokenBar.popout-tokenbar.hint": "将指示物栏置于一个对话框窗口中以使用 PopOut! 模组。",
 	"MonksTokenBar.delete-after-grab.name": "抓取后删除消息",
 	"MonksTokenBar.delete-after-grab.hint": "从抓取了玩家被要求的掷骰的消息的骰子后删除该消息。",
+	"MonksTokenBar.show-lootable-menu.name": "Show Lootable Menu",
+	"MonksTokenBar.show-lootable-menu.hint": "Show lootable button on the token menu",
+	"MonksTokenBar.request-roll-sound.name": "Request Roll Sound",
+	"MonksTokenBar.request-roll-sound.hint": "Play a sound when requesting a roll",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "角色",
