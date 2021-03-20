@@ -25,6 +25,11 @@
 			"lang": "ja",
 			"name": "日本語",
 			"path": "lang/ja.json"
+		},
+		{
+			"lang": "sv",
+			"name": "Svenska",
+			"path": "lang/sv.json"
 		}
 	],
 	"esmodules": [
