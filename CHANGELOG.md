@@ -1,3 +1,8 @@
+## Version 1.0.29 - In Development
+Fixing issues with the formula, and some related spacing issues with any value that overflows
+
+Removing some console logging that didn't really need to be there any more.
+
 ## Version 1.0.28
 Added option to use a formula with the stats displayed
 

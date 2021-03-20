@@ -120,9 +120,10 @@ export class TokenBar extends Application {
     }
 
     static processStat (formula, data) {
-        if (formula == undefined)
+        if (formula == undefined || formula == '')
             return null;
 
+        formula = formula.replaceAll('@', '');
         let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
         let result = formula.replace(dataRgx, (match, term) => {
             let value = getProperty(data, term);
@@ -174,7 +175,7 @@ export class TokenBar extends Application {
     }
 
     async getCurrentTokens() {
-        log('Get current Tokens');
+        //log('Get current Tokens');
         let promises = canvas.tokens.placeables
             .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc'; })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
@@ -246,12 +247,12 @@ export class TokenBar extends Application {
         }
 
         if (Object.keys(diff).length > 0) {
-            log('preUpdateTokenBarToken', tkn, diff);
+            //log('preUpdateTokenBarToken', tkn, diff);
             mergeObject(tkn, diff);
             //let idx = this.tokens.map(function (e) { return e.id; }).indexOf(tkn.id);
             //if (idx != -1)
             //    this.tokens[idx] = this.mapToken(tkn.token);
-            log('updateTokenBarToken', tkn);
+            //log('updateTokenBarToken', tkn);
             this.render();
         }
     }
@@ -395,7 +396,7 @@ export class TokenBar extends Application {
 
                             //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
 
-                            log(`Setting monks-tokenbar position:`, position);
+                            //log(`Setting monks-tokenbar position:`, position);
                             game.user.setFlag('monks-tokenbar', 'position', position);
                             this.pos = position;
                         }

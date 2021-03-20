@@ -151,6 +151,8 @@ body #tokenbar-window:first-child{
     height: 40px;
     justify-content: flex-end;
     background: url(../../../ui/denim075.png) repeat;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 #tokenbar .token .token-stats.hidden{
@@ -166,6 +168,7 @@ body #tokenbar-window:first-child{
     font-weight: bold;
     pointer-events: none;
     flex: 0 0 18px;
+    flex-wrap:nowrap;
 }
 
 #tokenbar .token .token-stat i{
