@@ -1,4 +1,11 @@
-import { ResetPosition } from "./apps/resetposition.js";
+import {ResetPosition} from "./apps/resetposition.js";
+
+export const divideXpOptions = {
+	"no-split": "MonksTokenBar.divide-xp-no-split.name",
+	"equal-split": "MonksTokenBar.divide-xp-equal-split.name",
+	"robin-hood-split": "MonksTokenBar.divide-xp-robin-hood-split.name",
+	"nottingham-split": "MonksTokenBar.divide-xp-nottingham-split.name",
+};
 
 export const registerSettings = function () {
     // Register any custom module settings here
@@ -16,7 +23,7 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 
-	let iconoptions = {
+		let iconoptions = {
 		"fa-500px": "\f26e",
 		"fa-accessible-icon": "\f368",
 		"fa-accusoft": "\f369",
@@ -1501,10 +1508,9 @@ export const registerSettings = function () {
 			stat2 = "";
 	}
 
-	let dividexp = true;
-	if (game.world.system == 'pf2e')
-		dividexp = false;
-	
+	const dividexp = game.world.system === "pf2e" ? "no-split" : "equal-split";
+	console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+dividexp);
+
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
 		hint: game.i18n.localize("MonksTokenBar.notify-on-change.hint"),
@@ -1523,12 +1529,24 @@ export const registerSettings = function () {
 		type: Boolean,
 	});
 
+
 	game.settings.register(modulename, "divide-xp", {
 		name: game.i18n.localize("MonksTokenBar.divide-xp.name"),
 		hint: game.i18n.localize("MonksTokenBar.divide-xp.hint"),
 		scope: "world",
 		config: true,
 		default: dividexp,
+		type: String,
+		choices: divideXpOptions,
+		localize: true
+	});
+
+	game.settings.register(modulename, "send-levelup-whisper", {
+		name: game.i18n.localize("MonksTokenBar.send-levelup-whisper.name"),
+		hint: game.i18n.localize("MonksTokenBar.send-levelup-whisper.hint"),
+		scope: "world",
+		config: true,
+		default: true,
 		type: Boolean,
 	});
 
