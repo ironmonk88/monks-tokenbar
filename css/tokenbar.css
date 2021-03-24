@@ -455,6 +455,10 @@ body #tokenbar-window:first-child{
 .monks-tokenbar .item.disabled .item-name {
     text-decoration: line-through;
 }
+
+.monks-tokenbar #dividexp {
+    width: calc(100% - 2px);
+}
 /*
 .monks-tokenbar.assignxp .sheet.actor .inventory-list .item-controls {
     flex: 0 0 70px;
