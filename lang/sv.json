@@ -73,6 +73,8 @@
 	"MonksTokenBar.stat2-resource.hint": "Ändra resursen som visas för andra attributet",
 	"MonksTokenBar.movement-after-combat.name": "Ställ in rörelse efter strid",
 	"MonksTokenBar.movement-after-combat.hint": "När striden slutar, välj vilken rörelsestyp du vill sätta tillbaka den till",
+	"MonksTokenBar.free-npc-combat.name": "Free all tokens of Active Combatant",
+	"MonksTokenBar.free-npc-combat.hint": "Allow the users who own Active Combatant to move all their tokens in Combat Turn",
 	"MonksTokenBar.change-to-combat.name": "Ändra rörelse för strid",
 	"MonksTokenBar.change-to-combat.hint": "Ändra rörelse för strid vid stridsstart",
 	"MonksTokenBar.assign-loot.name": "Konvertera fiender till lootbara",

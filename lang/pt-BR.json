@@ -80,6 +80,8 @@
 	"MonksTokenBar.stat2-resource.hint": "Muda o segundo recurso mostrado",
 	"MonksTokenBar.movement-after-combat.name": "Definir movimento após o combate",
 	"MonksTokenBar.movement-after-combat.hint": "Quando o combate acaba, seleciona que tipo de movimento será definido.",
+	"MonksTokenBar.free-npc-combat.name": "Free all tokens of Active Combatant",
+	"MonksTokenBar.free-npc-combat.hint": "Allow the users who own Active Combatant to move all their tokens in Combat Turn",
 	"MonksTokenBar.change-to-combat.name": "Mudar movimento para combate",
 	"MonksTokenBar.change-to-combat.hint": "Muda o movimento para combate quando o combate começa",
 	"MonksTokenBar.assign-loot.name": "Converter inimigos em pilháveis",

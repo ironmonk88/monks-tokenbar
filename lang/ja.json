@@ -80,6 +80,8 @@
 	"MonksTokenBar.stat2-resource.hint": "二つめの情報として表示する属性値を設定します。",
 	"MonksTokenBar.movement-after-combat.name": "戦闘後の移動モード",
 	"MonksTokenBar.movement-after-combat.hint": "戦闘終了時に、移動モードをどのタイプに戻すかを設定します。",
+	"MonksTokenBar.free-npc-combat.name": "Free all tokens of Active Combatant",
+	"MonksTokenBar.free-npc-combat.hint": "Allow the users who own Active Combatant to move all their tokens in Combat Turn",
 	"MonksTokenBar.change-to-combat.name": "戦闘中の移動モード",
 	"MonksTokenBar.change-to-combat.hint": "戦闘が開始したときに、移動モードを“戦闘ターン”に変更します。",
 	"MonksTokenBar.assign-loot.name": "敵を戦利品に変換する",
