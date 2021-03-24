@@ -80,6 +80,8 @@
 	"MonksTokenBar.stat2-resource.hint": "Change the resource displayed by the second stat",
 	"MonksTokenBar.movement-after-combat.name": "Set movement after combat",
 	"MonksTokenBar.movement-after-combat.hint": "When combat ends, select what movement type to set it back to",
+	"MonksTokenBar.free-npc-combat.name": "NPC always moveable in combat",
+	"MonksTokenBar.free-npc-combat.hint": "Allow NPC moving freely in combat if movement is Combat Turn",
 	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
 	"MonksTokenBar.change-to-combat.hint": "Change movement to combat when combat starts",
 	"MonksTokenBar.assign-loot.name": "Convert enemies to lootable",
