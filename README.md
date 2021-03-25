@@ -53,6 +53,10 @@ Additionally once an encounter has finished, the dialog will automatically popup
 
 New to 1.0.15 added support for converting npc's to lootable if you have the <a href="https://foundryvtt.com/packages/lootsheetnpc5e/">Lootsheet module</a> installed.  TokenBar will remove all feats of the character that should not be lootable and will save them so that the character can be reverted back from lootable.
 
+### Grab the dice roll
+
+It's a bit of a beta feature and only availabe for DnD5e, but if the player rolls their dice outside of the request.  Like clicking on the character sheet to make the roll.  You can grab the roll and add it to the request by clicking the grab roll button in the bottomright corner, then clicking the roll that the character made.
+
 ## Bug Reporting
 I'm sure there are lots of issues with it.
 Please feel free to contact me on discord if you have any questions or concerns. ironmonk88#4075
