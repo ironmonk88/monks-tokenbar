@@ -7,6 +7,12 @@ Added support for different ways to distribute xp. (Thank you so much Jonas Karl
 
 Swedish translations (Also thank you Jonas, much appreciated)
 
+Adding hooks for dice results
+
+Adding the start for being able to fast forward messages.
+
+Allow NPC'd controlled by a player to move during players turn in combat.  So summoned creatures can be used more effectively.
+
 ## Version 1.0.28
 Added option to use a formula with the stats displayed
 
