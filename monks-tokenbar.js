@@ -272,7 +272,8 @@ export class MonksTokenBar {
                     let curPermission = entry.actor?.data.permission ?? {};
                     let tokPermission = token.actor?.data.permission ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
-                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM);
+                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
+                        && curCombat.turns.every(t => t.tokenId !== token.id);
                 }
                 // prev combatant
                 /*
