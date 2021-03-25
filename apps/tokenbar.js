@@ -127,10 +127,10 @@ export class TokenBar extends Application {
         let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
         let result = formula.replace(dataRgx, (match, term) => {
             let value = getProperty(data, term);
-            return (value === undefined ? match : String(value).trim());
+            return (value == undefined || value == null ? null : String(value).trim());
         });
 
-        if (result == undefined)
+        if (result == undefined || result == 'null')
             return null;
 
         try {

@@ -1509,7 +1509,6 @@ export const registerSettings = function () {
 	}
 
 	const dividexp = game.world.system === "pf2e" ? "no-split" : "equal-split";
-	console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+dividexp);
 
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),

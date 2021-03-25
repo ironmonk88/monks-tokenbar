@@ -3,6 +3,10 @@ Fixing issues with the formula, and some related spacing issues with any value t
 
 Removing some console logging that didn't really need to be there any more.
 
+Added support for different ways to distribute xp. (Thank you so much Jonas Karlsson)
+
+Swedish translations (Also thank you Jonas, much appreciated)
+
 ## Version 1.0.28
 Added option to use a formula with the stats displayed
 

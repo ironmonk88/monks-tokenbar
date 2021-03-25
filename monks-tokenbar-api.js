@@ -28,8 +28,11 @@ export class MonksTokenBarAPI {
         options.rollmode = options.rollmode || 'roll';
 
         let savingthrow = new SavingThrowApp(tokens, options);
-        if (options?.silent === true)
-            savingthrow.requestRoll();
+        if (options?.silent === true) {
+            let msg = savingthrow.requestRoll();
+            if (options.fastForward === true)
+                SavingThrow.onRollAll('', msg);
+        }
         else
             savingthrow.render(true);
     }

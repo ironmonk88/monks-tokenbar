@@ -120,6 +120,7 @@ export class SavingThrowApp extends Application {
     }
 
     async requestRoll() {
+        let msg = null;
         if (this.tokens.length > 0) {
             SavingThrow.lastTokens = this.tokens;
             let tokens = this.tokens.map(t => {
@@ -180,12 +181,14 @@ export class SavingThrowApp extends Application {
             }
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            msg = ChatMessage.create(chatData, {});
             if (setting('request-roll-sound'))
                 AudioHelper.play({ src: 'modules/monks-tokenbar/sounds/RollRequestAlert.mp3' }, true);
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneTokenSelected"));
+
+        return msg;
     }
 
     activateListeners(html) {
@@ -521,6 +524,8 @@ export class SavingThrow {
                         msgtoken.total = update.roll.total;
                         msgtoken.reveal = update.reveal || reveal;
                         tooltip = await update.roll.getTooltip();
+
+                        Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
                     }
 
                     if (dc != '')

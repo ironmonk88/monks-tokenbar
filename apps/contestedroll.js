@@ -298,6 +298,8 @@ export class ContestedRoll {
 
         let tooltip = await roll.getTooltip();
 
+        Hooks.callAll('tokenBarUpdateRoll', this, message, actorid, roll);
+
         ContestedRoll.checkResult(actors);
 
         let content = $(message.data.content);
