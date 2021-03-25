@@ -80,6 +80,8 @@
 	"MonksTokenBar.stat2-resource.hint": "修改属性值 2 显示的资源",
 	"MonksTokenBar.movement-after-combat.name": "在战斗后设置移动方式",
 	"MonksTokenBar.movement-after-combat.hint": "战斗结束时，选择一种移动方式用于还原",
+	"MonksTokenBar.free-npc-combat.name": "解锁当前参战者所有指示物的移动",
+	"MonksTokenBar.free-npc-combat.hint": "在当前参战者的战斗回合内，对所有拥有该参战者的用户，允许他们移动他们所有的指示物而不仅是当前参战者",
 	"MonksTokenBar.change-to-combat.name": "在战斗时改变移动方式",
 	"MonksTokenBar.change-to-combat.hint": "战斗开始时，将移动方式修改为战斗回合",
 	"MonksTokenBar.assign-loot.name": "将敌人转换为战利品",

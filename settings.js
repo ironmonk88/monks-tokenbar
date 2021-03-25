@@ -1584,6 +1584,14 @@ export const registerSettings = function () {
 		type: String,
 		choices: movementoptions,
 	});
+	game.settings.register(modulename, "free-npc-combat", {
+		name: game.i18n.localize("MonksTokenBar.free-npc-combat.name"),
+		hint: game.i18n.localize("MonksTokenBar.free-npc-combat.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "assign-loot", {
 		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
 		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
