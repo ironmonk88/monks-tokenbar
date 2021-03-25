@@ -262,10 +262,19 @@ export class MonksTokenBar {
             //combat movement is only acceptable if the token is the current token.
             //or the previous token
             //let allowPrevMove = game.settings.get("combatdetails", "allow-previous-move");
+
             let curCombat = game.combats.active;
 
             if (curCombat && curCombat.started) {
                 let entry = curCombat.combatant;
+                let allowNpc = false;
+                if (game.settings.get("monks-tokenbar", "free-npc-combat")) {
+                    let curPermission = entry.actor?.data.permission ?? {};
+                    let tokPermission = token.actor?.data.permission ?? {};
+                    let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
+                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
+                        && curCombat.turns.every(t => t.tokenId !== token.id);
+                }
                 // prev combatant
                 /*
                 let prevturn = (curCombat.turn || 0) - 1;
@@ -279,7 +288,7 @@ export class MonksTokenBar {
                     preventry = curCombat.turns[prevturn];
                 }*/
                 log('Blocking movement', entry.name, token.name, entry, token.id, token);
-                return !(entry.tokenId == token.id); // || preventry.tokenId == tokenId);
+                return !(entry.tokenId == token.id || allowNpc); // || preventry.tokenId == tokenId);
             }
 
             return true;
