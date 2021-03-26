@@ -1,4 +1,4 @@
-## Version 1.0.29 - In Development
+## Version 1.0.29
 Fixing issues with the formula, and some related spacing issues with any value that overflows
 
 Removing some console logging that didn't really need to be there any more.
@@ -9,9 +9,7 @@ Swedish translations (Also thank you Jonas, much appreciated)
 
 Adding hooks for dice results
 
-Adding the start for being able to fast forward messages.
-
-Allow NPC'd controlled by a player to move during players turn in combat.  So summoned creatures can be used more effectively.
+Allow NPC's controlled by a player to move during players turn in combat.  So summoned creatures can be used more effectively.  (Thank you hmqgg)
 
 ## Version 1.0.28
 Added option to use a formula with the stats displayed
