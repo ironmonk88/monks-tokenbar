@@ -123,7 +123,8 @@ export class TokenBar extends Application {
         if (formula == undefined || formula == '')
             return null;
 
-        formula = formula.replaceAll('@', '');
+        //formula = formula.replaceAll('@', '');
+        formula = formula.replace(/@/g, '');
         let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
         let result = formula.replace(dataRgx, (match, term) => {
             let value = getProperty(data, term);

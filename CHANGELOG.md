@@ -1,3 +1,6 @@
+## Version 1.0.30
+Fixing issue with replaceAll, changing it back to replace.
+
 ## Version 1.0.29
 Fixing issues with the formula, and some related spacing issues with any value that overflows
 
