@@ -111,12 +111,13 @@ export class TokenBar extends Application {
 
     refresh() {
         var that = this;
-        if (this.refreshTimer == null) {
-            this.refreshTimer = setTimeout(function () {
-                that.getCurrentTokens();
-                that.refreshTimer = null;
-            }, 100);
-        }
+        if (this.refreshTimer != null)
+            clearTimeout(this.refreshTimer);
+
+        this.refreshTimer = setTimeout(function () {
+            that.getCurrentTokens();
+            that.refreshTimer = null;
+        }, 100);
     }
 
     static processStat (formula, data) {
@@ -127,8 +128,12 @@ export class TokenBar extends Application {
         formula = formula.replace(/@/g, '');
         let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
         let result = formula.replace(dataRgx, (match, term) => {
-            let value = getProperty(data, term);
-            return (value == undefined || value == null ? null : String(value).trim());
+            let value = parseInt(term);
+            if (isNaN(value)) {
+                value = getProperty(data, term);
+                return (value == undefined || value == null ? null : String(value).trim());
+            } else
+                return value;
         });
 
         if (result == undefined || result == 'null')

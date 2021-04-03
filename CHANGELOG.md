@@ -1,3 +1,12 @@
+## Version 1.0.31
+Fixing issue with the formula not calculating numerics properly.
+
+Fixing issue, hopefully, with dropping multiple tokens on the board.
+
+Fixing styling issue with the token bar
+
+Adding more logging information
+
 ## Version 1.0.30
 Fixing issue with replaceAll, changing it back to replace.
 

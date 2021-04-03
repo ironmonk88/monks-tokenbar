@@ -264,6 +264,8 @@ export class MonksTokenBar {
             //let allowPrevMove = game.settings.get("combatdetails", "allow-previous-move");
 
             let curCombat = game.combats.active;
+            if (setting('debug'))
+                log('checking on combat ', curCombat, curCombat.started);
 
             if (curCombat && curCombat.started) {
                 let entry = curCombat.combatant;
@@ -287,7 +289,7 @@ export class MonksTokenBar {
                     if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
                     preventry = curCombat.turns[prevturn];
                 }*/
-                log('Blocking movement', entry.name, token.name, entry, token.id, token);
+                log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
                 return !(entry.tokenId == token.id || allowNpc); // || preventry.tokenId == tokenId);
             }
 
@@ -296,9 +298,13 @@ export class MonksTokenBar {
 
         if (!game.user.isGM && token != undefined) {
             let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            if (setting('debug'))
+                log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
                 (movement == MTB_MOVEMENT_TYPE.COMBAT && blockCombat(token))) {
                 //prevent the token from moving
+                if (setting('debug'))
+                    log('blocking movement');
                 if (notify && (!token.getFlag("monks-tokenbar", "notified") || false)) {
                     ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? i18n("MonksTokenBar.CombatTurnMovementLimited") : i18n("MonksTokenBar.NormalMovementLimited"));
                     token.setFlag("monks-tokenbar", "notified", true);

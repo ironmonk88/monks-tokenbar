@@ -147,16 +147,20 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .token .token-stats {
-    flex: 0 0 40px;
-    height: 40px;
+    flex: 1;
     justify-content: flex-end;
     background: url(../../../ui/denim075.png) repeat;
     overflow: hidden;
     white-space: nowrap;
 }
 
-#tokenbar .token .token-stats.hidden{
-    visibility:hidden;
+#tokenbar .token .token-content {
+    flex: 0 0 48px;
+    height: 48px;
+}
+
+#tokenbar .token .token-stats.hidden {
+    visibility: hidden;
 }
 
 #tokenbar .token .token-stat {

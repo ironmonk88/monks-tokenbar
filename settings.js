@@ -1711,5 +1711,11 @@ export const registerSettings = function () {
 		default: "free",
 		type: String,
 	});
+	game.settings.register(modulename, "debug", {
+		scope: "world",
+		config: false,
+		default: false,
+		type: Boolean,
+	});
 
 };
