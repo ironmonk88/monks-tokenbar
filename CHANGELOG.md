@@ -1,3 +1,12 @@
+## Version 1.0.32
+Updated the code to handle different systems better.
+
+Added better error trapping in case a roll doesn't go as expected.
+
+Added a different interface for selecting a requested roll.  Hopefully making it easier to find the right one quickly.
+
+Affed support for PF1, Starfinder, DnD4e, and DnD3e
+
 ## Version 1.0.31
 Fixing issue with the formula not calculating numerics properly.
 

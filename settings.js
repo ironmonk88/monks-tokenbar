@@ -1474,24 +1474,11 @@ export const registerSettings = function () {
 		"fa-zhihu": "\f63f"
 	};
 	
-	let stat1;
+	let stat1 = "attributes.ac.value";
+	let stat2 = "";
 	switch (game.world.system) {
 		case "pf1":
 			stat1 = "attributes.ac.normal.total";
-			break;
-		case "tormenta20":
-			stat1 = "defesa.value";
-			break;
-		case "ose":
-			stat1 = "ac.value";
-			break;
-		default:
-			stat1 = "attributes.ac.value";
-	}
-
-	let stat2;
-	switch (game.world.system) {
-		case "pf1":
 			stat2 = "skills.per.mod";
 			break;
 		case "dnd5e":
@@ -1499,13 +1486,27 @@ export const registerSettings = function () {
 			stat2 = "skills.prc.passive";
 			break;
 		case "tormenta20":
+			stat1 = "defesa.value";
 			stat2 = "pericias.per.value";
 			break;
 		case "pf2e":
 			stat2 = "attributes.perception.value + 10";
 			break;
-		default:
-			stat2 = "";
+		case "ose":
+			stat1 = "ac.value";
+			break;
+		case "sfrpg":
+			stat1 = "attributes.kac.value";
+			stat2 = "attributes.eac.value";
+			break;
+	}
+
+	let icon1 = "fa-shield-alt";
+	let icon2 = "fa-eye";
+	switch (game.world.system) {
+		case "sfrpg":
+			icon2 = "fa-shield-virus";
+			break;
 	}
 
 	const dividexp = game.world.system === "pf2e" ? "no-split" : "equal-split";
@@ -1652,7 +1653,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.stat1-icon.hint"),
 		scope: "world",
 		config: true,
-		default: "fa-shield-alt",
+		default: icon1,
 		type: String,
 		onChange: () => {
 			location.reload();
@@ -1674,7 +1675,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.stat2-icon.hint"),
 		scope: "world",
 		config: true,
-		default: "fa-eye",
+		default: icon2,
 		type: String,
 		//choices: imageoptions,
 		onChange: () => {

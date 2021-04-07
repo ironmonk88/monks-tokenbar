@@ -37,6 +37,7 @@
 	"MonksTokenBar.Failed": "Failed",
 	"MonksTokenBar.GrabMessage": "Grab Message Roll",
 
+	"MonksTokenBar.UnknownError": "An unknown error occured",
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
 	"MonksTokenBar.NormalMovementLimited": "Movement is currently locked",
 	"MonksTokenBar.RequestNoneActorSelected": "Cannot send request if no actors selected",
@@ -45,6 +46,7 @@
 	"MonksTokenBar.TokenNoActorAttrs": "token has no actor to use for additional attributes",
 	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
 	"MonksTokenBar.ActorNoTool": ": Does not have that tool",
+	"MonksTokenBar.UnknownSystem": "You're not using a system that Monk's Tokenbar supports.",
 
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
 	"MonksTokenBar.notify-on-change.hint": "Send a notification to all players when the GM changes the allowable movement",

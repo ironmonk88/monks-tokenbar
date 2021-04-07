@@ -1,0 +1,93 @@
+import { BaseRolls } from "./base-rolls.js"
+import { i18n } from "../monks-tokenbar.js"
+
+export class PF2eRolls extends BaseRolls {
+    constructor() {
+        super();
+
+        this._requestoptions = [
+            { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
+            { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
+            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
+        ].concat(this._requestoptions);
+    }
+
+    static activateHooks() {
+        Hooks.on("preCreateChatMessage", (message, option, userid) => {
+            if (message?.flags?.pf2e?.context != undefined && (message.flags.pf2e.context?.options?.includes("ignore") || message.flags.pf2e.context.type == 'ignore'))
+                return false;
+            else
+                return true;
+        });
+    }
+
+    defaultRequest(app) {
+        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        return (allPlayers ? 'attribute:perception' : null);
+    }
+
+    defaultContested() {
+        return 'ability:str';
+    }
+
+    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+        let rollfn = null;
+        let opts = request;
+        if (requesttype == 'attribute') {
+            if (actor.data.data.attributes[request]?.roll) {
+                opts = actor.getRollOptions(["all", request]);
+                rollfn = actor.data.data.attributes[request].roll;
+            } else
+                rollfn = actor.rollAttribute;
+        }
+        else if (requesttype == 'ability') {
+            rollfn = function (event, abilityName) {
+                const skl = this.data.data.abilities[abilityName],
+                    flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
+                return DicePF2e.d20Roll({
+                    event: event,
+                    parts: ["@mod"],
+                    data: {
+                        mod: skl.mod
+                    },
+                    title: flavor,
+                    speaker: ChatMessage.getSpeaker({
+                        actor: this
+                    }),
+                    rollType: 'ignore'
+                });
+            }
+        }
+        else if (requesttype == 'save') {
+            if (actor.data.data.saves[request]?.roll) {
+                opts = actor.getRollOptions(["all", "saving-throw", request]);
+                rollfn = actor.data.data?.saves[request].roll;
+            } else
+                rollfn = actor.rollSave;
+        }
+        else if (requesttype == 'skill') {
+            if (actor.data.data?.skills[request]?.roll) {
+                opts = actor.getRollOptions(["all", "skill-check", request]);
+                rollfn = actor.data.data.skills[request].roll;
+            } else
+                rollfn = actor.rollSkill;
+        }
+
+        if (rollfn != undefined) {
+            try {
+                if (requesttype == 'ability')
+                    return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                else {
+                    opts.push("ignore");
+                    return new Promise(function (resolve, reject) {
+                        rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(callback(roll)); } });
+                    }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                }
+            } catch
+            {
+                return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };
+            }
+        } else
+            return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+}

@@ -6,6 +6,14 @@ import { ContestedRoll } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
+import { BaseRolls } from "./systems/base-rolls.js";
+import { DnD5eRolls } from "./systems/dnd5e-rolls.js";
+import { PF1Rolls } from "./systems/pf1-rolls.js";
+import { PF2eRolls } from "./systems/pf2e-rolls.js";
+import { Tormenta20Rolls } from "./systems/tormenta20-rolls.js";
+import { OSERolls } from "./systems/ose-rolls.js";
+import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
+
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
 };
@@ -49,14 +57,34 @@ export class MonksTokenBar {
     static ready() {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
-        MonksTokenBar.requestoptions = [];
+        MonksTokenBar.system = new BaseRolls();
+        switch (game.system.id) {
+            case 'dnd5e':
+            case 'sw5e':
+                MonksTokenBar.system = new DnD5eRolls(); break;
+            case 'pf2e':
+                MonksTokenBar.system = new PF2eRolls(); break;
+            case 'pf1':
+                MonksTokenBar.system = new PF1Rolls(); break;
+            case 'tormenta20':
+                MonksTokenBar.system = new Tormenta20Rolls(); break;
+            case 'sfrpg':
+                MonksTokenBar.system = new SFRPGRolls(); break;
+            case 'ose':
+                MonksTokenBar.system = new OSERolls(); break;
+        }
+
+        MonksTokenBar.system.constructor.activateHooks();
+
+        //MonksTokenBar.requestoptions = [];
+        /*
         if (["dnd5e", "sw5e"].includes(game.system.id)) {
-            MonksTokenBar.requestoptions.push({ id: "init", text: i18n("MonksTokenBar.Initiative") });
-            MonksTokenBar.requestoptions.push({ id: "death", text: i18n("MonksTokenBar.DeathSavingThrow") });
+            MonksTokenBar.requestoptions.push({ id: "misc", text: '', groups: { init: i18n("MonksTokenBar.Initiative"), death: i18n("MonksTokenBar.DeathSavingThrow") } });
         }
         if (["pf2e"].includes(game.system.id)) {
             MonksTokenBar.requestoptions.push({ id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception } });
-        }
+        }*/
+        /*
         let config;
 		switch (game.system.id) {
 			case "tormenta20":
@@ -102,8 +130,8 @@ export class MonksTokenBar {
 			}
 		}
         MonksTokenBar.requestoptions.push({
-            id: "dice", text: "Dice", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
-        });
+            id: "dice", text: "Dice", cssclass:"dice-group", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
+        });*/
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
@@ -144,7 +172,7 @@ export class MonksTokenBar {
                     if (data.type == 'savingthrow')
                         SavingThrow.updateMessage(data.response, message, revealDice);
                     else if (data.type == 'contestedroll')
-                        ContestedRoll.updateContestedRoll(data.response, message, revealDice);
+                        ContestedRoll.updateMessage(data.response, message, revealDice);
                 }
             } break;
             case 'finishroll': {
@@ -153,12 +181,16 @@ export class MonksTokenBar {
                     if (data.type == 'savingthrow')
                         SavingThrow.finishRolling(data.response, message);
                     else if (data.type == 'contestedroll')
-                        ContestedRoll.finishRolling(data.actorid, message);
+                        ContestedRoll.finishRolling(data.response, message);
                 }
             } break;
             case 'assignxp': {
                 let message = game.messages.get(data.msgid);
                 AssignXP.onAssignXP(data.actorid, message);
+            } break;
+            case 'assigndeathst': {
+                let message = game.messages.get(data.msgid);
+                SavingThrow.onAssignDeathST(data.tokenid, message);
             } break;
             case 'movementchange': {
                 if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.owner) {
@@ -265,7 +297,7 @@ export class MonksTokenBar {
 
             let curCombat = game.combats.active;
             if (setting('debug'))
-                log('checking on combat ', curCombat, curCombat.started);
+                log('checking on combat ', curCombat, (curCombat && curCombat.started));
 
             if (curCombat && curCombat.started) {
                 let entry = curCombat.combatant;

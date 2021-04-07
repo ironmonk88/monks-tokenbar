@@ -15,7 +15,7 @@ export class SavingThrowApp extends Application {
         }
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.request = options.request;
-        this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.requestoptions);
+        this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
         this.dc = options.dc;
     }
 
@@ -24,8 +24,8 @@ export class SavingThrowApp extends Application {
             id: "requestsavingthrow",
             title: i18n("MonksTokenBar.RequestRoll"),
             template: "./modules/monks-tokenbar/templates/savingthrow.html",
-            width: 400,
-            height: 400,
+            width: 800,
+            height: 500,
             popOut: true
         });
     }
@@ -116,7 +116,8 @@ export class SavingThrowApp extends Application {
         if (idx > -1) {
             this.tokens.splice(idx, 1);
         }
-        this.render(true);
+        $(`li[data-item-id="${id}"]`, this.element).remove();
+        //this.render(true);
     }
 
     async requestRoll() {
@@ -143,7 +144,7 @@ export class SavingThrowApp extends Application {
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
-                dc: this.dc || (request == 'death' ? '10' : ''),
+                dc: this.dc || (request == 'death' && game.system.id == 'dnd5e' ? '10' : ''),
                 name: name,
                 requesttype: requesttype,
                 request: request,
@@ -153,6 +154,7 @@ export class SavingThrowApp extends Application {
                 canGrab: game.system.id == 'dnd5e'
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);
+
             delete requestdata.tokens;
             delete requestdata.canGrab;
             for (let i = 0; i < tokens.length; i++)
@@ -206,8 +208,11 @@ export class SavingThrowApp extends Application {
         $('#monks-tokenbar-savingdc', html).blur($.proxy(function (e) {
             this.dc = $(e.currentTarget).val();
         }, this));
-        $('.request-roll', html).change($.proxy(function (e) {
-            this.request = $(e.currentTarget).val();
+        $('.request-roll .request-option', html).click($.proxy(function (e) {
+            $('.request-roll .request-option.selected', html).removeClass('selected');
+            let ctrl = $(e.currentTarget);
+            this.request = ctrl.attr('value');
+            ctrl.addClass('selected');
         }, this));
         $('#savingthrow-rollmode', html).change($.proxy(function (e) {
             this.rollmode = $(e.currentTarget).val();
@@ -219,53 +224,56 @@ export class SavingThrow {
     static msgcontent = {};
     static lastTokens;
 
-    static _rollAbility(item, request, requesttype, rollmode, ffwd, e) {
-        let actor = game.actors.get(item.actorid);
+    static async rollDice(dice) {
+        let r = new Roll(dice);
+        r.evaluate();
+        return r;
+    }
 
-        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
-
-        let returnRoll = async function(roll) {
-            log("Roll", roll, actor);
-            if (roll != undefined) {
-                if (roll instanceof Combat) {
-                    let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
-                    if (combatant != undefined) {
-                        let initTotal = combatant.actor.data.data.attributes.init.total;
-                        let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
-                        let fakeroll = Roll.fromJSON(jsonRoll);
-                        return { id: item.id, roll: fakeroll, finish: null, reveal: true };
-                    }
-                } else {
-                    let finishroll;
-                    if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
-                        let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                        if (rollmode == 'gmroll' && !game.user.isGM)
-                            whisper.push(game.user._id);
-
-                        //setTimeout(() => {
-                        //just confirm that the roll has finished.  Mass rolls aren't saving properly.
-                        //SavingThrow.finishRolling(item, message);
-                        //}, 3000);
-
-                        finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
-                            return { id: item.id, reveal: true, userid: game.userId };
-                        });
-                    }
-                    const sound = MonksTokenBar.getDiceSound();
-                    if (sound != undefined)
-                        AudioHelper.play({ src: sound });
-
-                    return { id: item.id, roll: roll, finish: finishroll };
+    static async returnRoll (id, roll, actor, rollmode) {
+        log("Roll", roll, actor);
+        if (roll != undefined) {
+            if (roll instanceof Combat) {
+                let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
+                if (combatant != undefined) {
+                    let initTotal = combatant.actor.data.data.attributes.init.total;
+                    let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
+                    let fakeroll = Roll.fromJSON(jsonRoll);
+                    return { id: id, roll: fakeroll, finish: null, reveal: true };
                 }
+            } else {
+                let finishroll;
+                if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
+                    let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                    if (rollmode == 'gmroll' && !game.user.isGM)
+                        whisper.push(game.user._id);
+
+                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+                        return { id: id, reveal: true, userid: game.userId };
+                    });
+                }
+                const sound = MonksTokenBar.getDiceSound();
+                if (sound != undefined)
+                    AudioHelper.play({ src: sound });
+
+                return { id: id, roll: roll, finish: finishroll };
             }
         }
+    }
+
+    static _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+        let actor = game.actors.get(data.actorid);
+        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
 
         if (actor != undefined) {
             if (requesttype == 'dice') {
                 //roll the dice
-                return SavingThrow.rollDice(request).then((roll) => { return returnRoll(roll); });
+                return SavingThrow.rollDice(request).then((roll) => {
+                    return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
+                });
             } else {
-                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e' ) {
+                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
+                    /*
                     let rollfn = null;
                     let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
                     let context = actor;
@@ -297,11 +305,19 @@ export class SavingThrow {
                     }
 
                     if (rollfn != undefined) {
-                        return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
+                        try {
+                            return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
+                        } catch {
+                            return { id: item.id, error: true, msg: 'Unknown Error Occured' };
+                        }
                     } else
-                        ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+                        return { id: item.id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
+                        */
+                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
+                        return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
+                    }, e);
                 }
-                else if (game.system.id == 'tormenta20') {
+                /*else if (game.system.id == 'tormenta20') {
                     let rollfn = null;
                     let opts = request;
                     if (requesttype == 'ability') {
@@ -321,8 +337,8 @@ export class SavingThrow {
                         return rollfn.call(actor, opts, e).then((roll) => { return returnRoll(roll); });
                     }
                     else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }
-                else if (game.system.id == 'pf2e') {
+                }*/
+                /*else if (game.system.id == 'pf2e') {
                     let rollfn = null;
                     let opts = request;
                     if (requesttype == 'attribute') {
@@ -376,8 +392,8 @@ export class SavingThrow {
                         }
                     } else
                         ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }
-                else if (game.system.id == 'ose') {
+                }*/
+                /*else if (game.system.id == 'ose') {
                     let rollfn = null;
                     let options = { fastForward: fastForward, chatMessage: false, event: e };
                     if (requesttype == 'scores') {
@@ -389,7 +405,8 @@ export class SavingThrow {
                         return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
                     }
                     else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-                } else if (game.system.id == 'sfrpg') {
+                }*/
+                /*else if (game.system.id == 'sfrpg') {
                     let rollfn = null;
                     let opts = { event: e };
                     if (requesttype == 'attribute') {
@@ -400,22 +417,37 @@ export class SavingThrow {
                             rollfn = actor.rollAttribute;
                     }
                     else if (requesttype == 'ability') {
-                        rollfn = function (event, abilityName) {
-                            const skl = this.data.data.abilities[abilityName],
-                                flavor = `${CONFIG.SFRPG.abilities[abilityName]} Check`;
-                            return DiceSFRPG.d20Roll({
-                                event: event,
-                                parts: ["@mod"],
-                                data: {
-                                    mod: skl.mod
+                        return new Promise(function (resolve, reject) {
+                            const abl = actor.data.data.abilities[request]
+
+                            let parts = [];
+                            let data = actor.getRollData();
+
+                            //Include ability check bonus only if it's not 0
+                            if (abl.abilityCheckBonus) {
+                                parts.push('@abilityCheckBonus');
+                                data.abilityCheckBonus = abl.abilityCheckBonus;
+                            }
+                            parts.push(`@abilities.${request}.mod`);
+
+                            const rollContext = new SFRPGRollContext(actor);
+
+                            actor.setupRollContexts(rollContext);
+
+                            return game.sfrpg.dice.d20Roll({
+                                event: e,
+                                rollContext: rollContext,
+                                parts: parts,
+                                title: 'removemessage',
+                                flavor: null,
+                                speaker: ChatMessage.getSpeaker({ actor: actor }),
+                                dialogOptions: {
+                                    left: e ? e.clientX - 80 : null,
+                                    top: e ? e.clientY - 80 : null
                                 },
-                                title: flavor,
-                                speaker: ChatMessage.getSpeaker({
-                                    actor: this
-                                }),
-                                rollType: 'ignore'
+                                onClose: function (roll) { resolve(returnRoll(roll)); }
                             });
-                        }
+                        });
                     }
                     else if (requesttype == 'save') {
                         if (actor.data.data.attributes[request]?.roll) {
@@ -436,17 +468,11 @@ export class SavingThrow {
                         return rollfn.call(actor, request, opts).then((roll) => { return returnRoll(roll); });
                     } else
                         ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-                } else {
-                    ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
+                }*/ else {
+                    ui.notifications.warn(i18n("MonksTokenBar.UnknownSystem"));
                 }
             }
         }
-    }
-
-    static async rollDice(dice) {
-        let r = new Roll(dice);
-        r.evaluate();
-        return r;
     }
 
     static async onRollAbility(ids, message, fastForward = false, e) {
@@ -549,6 +575,16 @@ export class SavingThrow {
                     </div >`);
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
+                } else if (update.error === true) {
+                    ui.notifications.warn(msgtoken.name + ': ' + update.msg);
+
+                    $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
+                    $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
+                    $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
+                        `<div class="dice-total flexrow"><div class="dice-result">Error!</div ></div >`);
+                    msgtoken.reveal = true;
+                    msgtoken.error = true;
+                    flags["token" + update.id] = msgtoken;
                 }
 
                 if (update.finish != undefined)
@@ -689,6 +725,44 @@ export class SavingThrow {
         token.control({ releaseOthers: true });
         return canvas.animatePan({ x: token.x, y: token.y });
     }
+
+    static async onAssignDeathST(tokenId, message, e) {
+        if (game.user.isGM) {
+            let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId);
+
+            if (!msgtoken.assigned) {
+                msgtoken = duplicate(msgtoken);
+
+                debugger;
+                let actor = game.actors.get(msgtoken.actorid);
+                let attr = 'data.attributes.death.' + (msgtoken.passed ? 'success' : 'failure');
+                let roll = Roll.fromData(msgtoken.roll);
+                let val = (getProperty(actor.data, attr) || 0) + (roll.dice[0].total == roll.dice[0].options.critical || roll.dice[0].total == roll.dice[0].options.fumble ? 2 : 1);
+                let update = {};
+                update[attr] = val;
+                await actor.update(update);
+
+                msgtoken.assigned = true;
+                await message.setFlag('monks-tokenbar', 'token' + tokenId, msgtoken);
+            }
+        } else {
+            game.socket.emit(
+                MonksTokenBar.SOCKET,
+                {
+                    msgtype: 'assigndeathst',
+                    senderId: game.user._id,
+                    tokenid: tokenId,
+                    msgid: message.id
+                },
+                (resp) => { }
+            );
+
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+            e.cancelBubble = true;
+            e.returnValue = false;
+        }
+    }
 }
 
 /*
@@ -702,22 +776,24 @@ Hooks.on("diceSoNiceRollComplete", (messageid) => {
 Hooks.on("renderSavingThrowApp", (app, html) => {
     if (app.request == undefined) {
         //if all the tokens are players, then default to perception
+        /*
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = 0;
         if (game.system.id == "dnd5e" || game.system.id == "sw5e"  )
             allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
-        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'death' : null) ||
+        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) ||
             (allPlayers ? (game.system.id == "dnd5e" || game.system.id == "sw5e"  ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
             SavingThrow.lastRequest ||
-            $('.request-roll option:first', html).val();
-        if ($('.request-roll option[value="' + request + '"]').length == 0)
-            request = $('.request-roll option:first', html).val();
+            $('.request-roll .request-option:first', html).attr('value');*/
+        let request = MonksTokenBar.system.defaultRequest(app) || SavingThrow.lastRequest || $('.request-roll .request-option:first', html).attr('value');
+        if ($('.request-roll .request-option[value="' + request + '"]', html).length == 0)
+            request = $('.request-roll .request-option:first', html).attr('value');
 
         app.request = request;
-        //$('.request-roll', html).val(allZeroHP == app.tokens.length && allZeroHP != 0 && game.system.id == "dnd5e" ? 'death' : (allPlayers ? (game.system.id == "dnd5e" ? 'skill:prc' : 'attribute:perception' ) : SavingThrow.lastRequest || $('#savingthrow-request option:first', html).val()));
-    } //else
-    $('.request-roll', html).val(app.request);
+    }
+
+    $('.request-roll .request-option[value="' + app.request + '"]', html).addClass('selected');
 
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);
@@ -736,6 +812,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 
         let dc = message.getFlag('monks-tokenbar', 'dc');
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
+        let request = message.getFlag('monks-tokenbar', 'request');
 
         $('.roll-all', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'all', message));
         $('.roll-npc', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'npc', message));
@@ -757,7 +834,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 if (game.user.isGM || actor.owner)
                     $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
-                $('.dice-total', item).toggle(msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
+                $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll'))));
                 if (msgtoken.roll != undefined && msgtoken.roll.class == "Roll") {
                     //log('Chat roll:', msgtoken.roll);
                     let roll = Roll.fromData(msgtoken.roll);
@@ -780,7 +857,15 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                     $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
                     $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
 
-                    $('.dice-text', item).toggle(showroll && msgtoken.passed != undefined).toggleClass('passed', msgtoken.passed === true).toggleClass('failed', msgtoken.passed === false).html(msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
+                    //let dicetext = (request == 'death' && !msgtoken.assigned ? i18n("MonksTokenBar.XPAdd") : (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : ''));
+                    let dicetext = (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
+                    $('.dice-text', item)
+                        .toggle(showroll && msgtoken.passed != undefined)
+                        //.toggleClass('clickable', request == 'death' && !msgtoken.assigned)
+                        .toggleClass('passed', msgtoken.passed === true)
+                        .toggleClass('failed', msgtoken.passed === false)
+                        //.on('click', $.proxy(SavingThrow.onAssignDeathST, this, tokenId, message))
+                        .html(dicetext);
 
                     count++;
                     groupdc += roll.total;
@@ -815,6 +900,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     }
 });
 
+/*
 Hooks.on("init", () => {
     if (game.system.id == "pf2e") {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
@@ -823,5 +909,12 @@ Hooks.on("init", () => {
             else
                 return true;
         });
+    } else if (game.system.id == "sfrpg") {
+        Hooks.on("preCreateChatMessage", (message, option, userid) => {
+            if (message.flavor == 'removemessage')
+                return false;
+            else
+                return true;
+        });
     }
-});
+});*/
