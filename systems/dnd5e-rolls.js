@@ -13,6 +13,14 @@ export class DnD5eRolls extends BaseRolls {
         ].concat(this._requestoptions);
     }
 
+    get _supportedSystem() {
+        return true;
+    }
+
+    get showXP() {
+        return !game.settings.get('dnd5e', 'disableExperienceTracking');
+    }
+
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw

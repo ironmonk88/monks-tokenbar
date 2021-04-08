@@ -35,6 +35,8 @@ export class TokenBar extends Application {
             this.refresh();
         });
 
+        this.buttons = MonksTokenBar.system.getButtons();
+
     }
 
     /* -------------------------------------------- */
@@ -63,13 +65,10 @@ export class TokenBar extends Application {
             stat1icon: setting("stat1-icon"),
             stat2icon: setting("stat2-icon"),
             cssClass: css,
-            pos: pos
+            pos: pos,
+            buttons: this.buttons
         };
     }
-
-    //show() {
-        //$(this.element).removeClass('loading').css({ display: 'flex !important' });
-    //}
 
     getPos() {
         this.pos = game.user.getFlag("monks-tokenbar", "position");
@@ -264,50 +263,6 @@ export class TokenBar extends Application {
     }
 
 	/* -------------------------------------------- */
-
-    /**
-    * Collapse the Hotbar, minimizing its display.
-    * @return {Promise}    A promise which resolves once the collapse animation completes
-    */
-    /*async collapse() {
-        if ( this._collapsed ) return true;
-        const toggle = this.element.find(".bar-toggle");
-        const icon = toggle.children("i");
-        const bar = this.element.find("#token-action-bar");
-        return new Promise(resolve => {
-            bar.slideUp(200, () => {
-            bar.addClass("collapsed");
-            icon.removeClass("fa-caret-down").addClass("fa-caret-up");
-            this._collapsed = true;
-            resolve(true);
-            });
-        });
-    }*/
-
-	/* -------------------------------------------- */
-
-    /**
-    * Expand the Hotbar, displaying it normally.
-    * @return {Promise}    A promise which resolves once the expand animation completes
-    */
-    /*
-    expand() {
-        if ( !this._collapsed ) return true;
-        const toggle = this.element.find(".bar-toggle");
-        const icon = toggle.children("i");
-        const bar = this.element.find("#token-action-bar");
-        return new Promise(resolve => {
-            bar.slideDown(200, () => {
-            bar.css("display", "");
-            bar.removeClass("collapsed");
-            icon.removeClass("fa-caret-up").addClass("fa-caret-down");
-            this._collapsed = false;
-            resolve(true);
-            });
-        });
-    }*/
-
-	/* -------------------------------------------- */
     /*  Event Listeners and Handlers
 	/* -------------------------------------------- */
 
@@ -318,10 +273,17 @@ export class TokenBar extends Application {
         // Macro actions
         //html.find('.bar-toggle').click(this._onToggleBar.bind(this));
         if (game.user.isGM) {
+            for (let group of this.buttons) {
+                for (let button of group) {
+                    if (button.click)
+                        $('#' + button.id).on('click', $.proxy(button.click, this));
+                }
+            }
+            /*
             html.find(".request-roll").click(this._onRequestRoll.bind(this));
             html.find(".contested-roll").click(this._onContestedRoll.bind(this));
             html.find(".assign-xp").click(this._onAssignXP.bind(this));
-            html.find(".token-movement").click(this._onChangeMovement.bind(this));
+            html.find(".token-movement").click(this._onChangeMovement.bind(this));*/
         }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
 
@@ -515,31 +477,31 @@ export class TokenBar extends Application {
     getEntry(id) {
         return this.tokens.find(t => t.id === id);
     }
-
-    async _onRequestRoll(event) {
+    /*
+    static async _onRequestRoll(event) {
         event.preventDefault();
 
         this.savingthrow = new SavingThrowApp().render(true);
     }
 
-    async _onContestedRoll(event) {
+    static async _onContestedRoll(event) {
         event.preventDefault();
 
         this.contestedroll = new ContestedRollApp().render(true);
     }
 
-    async _onAssignXP(event) {
+    static async _onAssignXP(event) {
         event.preventDefault();
 
         new AssignXPApp().render(true);
     }
 
-    async _onChangeMovement(event) {
+    static async _onChangeMovement(event) {
         event.preventDefault();
 
         const btn = event.currentTarget;
         MonksTokenBar.changeGlobalMovement(btn.dataset.movement);
-    }
+    }*/
 
     /* -------------------------------------------- */
 

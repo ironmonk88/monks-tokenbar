@@ -12,6 +12,10 @@ export class Tormenta20Rolls extends BaseRolls {
         ].concat(this._requestoptions);
     }
 
+    get _supportedSystem() {
+        return true;
+    }
+
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         return (allPlayers ? 'skill:per' : null);

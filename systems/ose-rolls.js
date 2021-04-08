@@ -11,6 +11,10 @@ export class OSERolls extends BaseRolls {
         ].concat(this._requestoptions);
     }
 
+    get _supportedSystem() {
+        return true;
+    }
+
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         return (allPlayers ? 'scores:str' : null);

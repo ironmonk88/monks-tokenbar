@@ -1,28 +1,15 @@
 <div id="tokenbar" class="flexrow {{cssClass}}" movement="{{movement}}" style="{{pos}}">
     <div id="tokenbar-controls" class="bar-controls flexrow">
         <div id="tokenbar-move-handle"></div>
-        <div class="flexcol">
-            <div class="token-movement" data-movement="free" title="{{localize 'MonksTokenBar.FreeMovement'}}">
-                <i class="fas fa-running"></i>
+        {{#each buttons}}
+            <div class="flexcol tokenbar-buttons">
+                {{#each this}}
+                <div id="{{this.id}}" title="{{localize this.title}}" class="{{#if this.disabled}}disabled{{/if}} {{#if this.hidden}}hidden{{/if}} {{#if this.active}}active{{/if}}">
+                    <i class="fas {{this.icon}}"></i>
+                </div>
+                {{/each}}
             </div>
-            <div class="token-movement" data-movement="none" title="{{localize 'MonksTokenBar.NoMovement'}}">
-                <i class="fas fa-street-view"></i>
-            </div>
-            <div class="token-movement" data-movement="combat" title="{{localize 'MonksTokenBar.CombatTurn'}}">
-                <i class="fas fa-fist-raised"></i>
-            </div>
-        </div>
-        <div class="flexcol dialog-col">
-            <a class="request-roll" title="{{localize 'MonksTokenBar.RequestRoll'}}">
-                <i class="fas fa-tools"></i>
-            </a>
-            <a class="contested-roll" title="{{localize 'MonksTokenBar.ContestedRoll'}}">
-                <i class="fas fa-people-arrows"></i>
-            </a>
-            <a class="assign-xp" title="{{localize 'MonksTokenBar.AssignXP'}}">
-                <i class="fas fa-book-medical"></i>
-            </a>
-        </div>
+        {{/each}}
     </div>
     <nav id="token-action-bar" class="flexrow">
         <ol class="flexrow token-list">{{#each tokens}}

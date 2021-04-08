@@ -47,7 +47,15 @@ body #tokenbar-window:first-child{
     flex: 0 0 30px;
 }
 
-#tokenbar .bar-controls .token-movement i {
+#tokenbar .bar-controls .tokenbar-buttons{
+    overflow:hidden;
+}
+
+#tokenbar .bar-controls .tokenbar-buttons div.hidden {
+    visibility: hidden;
+}
+
+#tokenbar .bar-controls .tokenbar-buttons div i {
     cursor: pointer;
     border-radius: 6px;
     border: 1px solid transparent;
@@ -56,34 +64,37 @@ body #tokenbar-window:first-child{
     padding-top: 4px;
 }
 
-#tokenbar .bar-controls .token-movement:not(.disabled):hover {
+#tokenbar .bar-controls .tokenbar-buttons div:not(.disabled):hover {
     filter: drop-shadow( 0 0 5px red);
 }
 
-#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled):hover,
-#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled):hover,
-#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled):hover {
+#tokenbar .bar-controls .tokenbar-buttons div.active:hover,
+#tokenbar[movement="free"] #movement-free:not(.disabled):hover,
+#tokenbar[movement="none"] #movement-none:not(.disabled):hover,
+#tokenbar[movement="combat"] #movement-combat:not(.disabled):hover {
     filter: none;
 }
 
-#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled) i,
-#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled) i,
-#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled) i {
+#tokenbar .bar-controls .tokenbar-buttons div.active:not(.disabled) i,
+#tokenbar[movement="free"] #movement-free:not(.disabled) i,
+#tokenbar[movement="none"] #movement-none:not(.disabled) i,
+#tokenbar[movement="combat"] #movement-combat:not(.disabled) i {
     color: #bc8c4a;
     border: 1px solid #ff6400;
 }
 
-#tokenbar[movement="free"] .token-movement[data-movement="free"]:not(.disabled):hover i,
-#tokenbar[movement="none"] .token-movement[data-movement="none"]:not(.disabled):hover i,
-#tokenbar[movement="combat"] .token-movement[data-movement="combat"]:not(.disabled):hover i {
+#tokenbar .bar-controls .tokenbar-buttons div.active:not(.disabled):hover i,
+#tokenbar[movement="free"] #movement-free:not(.disabled):hover i,
+#tokenbar[movement="none"] #movement-none:not(.disabled):hover i,
+#tokenbar[movement="combat"] #movement-combat:not(.disabled):hover i {
     color: #ffc163;
 }
 
-#tokenbar .token-movement.disabled {
+#tokenbar .tokenbar-buttons div.disabled {
     opacity: 0.3;
 }
-#tokenbar .token-movement.disabled i{
-    cursor:default;
+#tokenbar .tokenbar-buttons div.disabled i {
+    cursor: default;
 }
 
 #tokenbar-controls {

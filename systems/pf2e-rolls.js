@@ -12,6 +12,10 @@ export class PF2eRolls extends BaseRolls {
         ].concat(this._requestoptions);
     }
 
+    get _supportedSystem() {
+        return true;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             if (message?.flags?.pf2e?.context != undefined && (message.flags.pf2e.context?.options?.includes("ignore") || message.flags.pf2e.context.type == 'ignore'))

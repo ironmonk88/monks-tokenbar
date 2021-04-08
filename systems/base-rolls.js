@@ -1,4 +1,7 @@
-import { i18n } from "../monks-tokenbar.js"
+import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js"
+import { SavingThrowApp } from "../apps/savingthrow.js";
+import { ContestedRollApp } from "../apps/contestedroll.js";
+import { AssignXPApp } from "../apps/assignxp.js";
 
 export class BaseRolls {
     constructor() {
@@ -6,6 +9,10 @@ export class BaseRolls {
         this._requestoptions = [{
             id: "dice", text: "Dice", cssclass: "dice-group", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
         }]
+    }
+
+    get _supportedSystem() {
+        return false;
     }
 
     static activateHooks() {
@@ -21,6 +28,89 @@ export class BaseRolls {
 
     get config() {
         return this._config;
+    }
+
+    get showXP() {
+        return true;
+    }
+
+    getButtons() {
+        var buttons =
+        [
+            [
+                {
+                    id: 'movement-free',
+                    title: 'MonksTokenBar.FreeMovement',
+                    icon: 'fa-running',
+                    click: (game.user.isGM ?
+                        (event) => {
+                        event.preventDefault();
+                        MonksTokenBar.changeGlobalMovement('free');
+                        } : null)
+                },
+                {
+                    id: 'movement-none',
+                    title: 'MonksTokenBar.NoMovement',
+                    icon: 'fa-street-view',
+                    click: (game.user.isGM ?
+                        (event) => {
+                        event.preventDefault();
+                        MonksTokenBar.changeGlobalMovement('none');
+                        } : null)
+                },
+                {
+                    id: 'movement-combat',
+                    title: 'MonksTokenBar.CombatTurn',
+                    icon: 'fa-fist-raised',
+                    click: (game.user.isGM ? (event) => {
+                        event.preventDefault();
+                        MonksTokenBar.changeGlobalMovement('combat');
+                        } : null)
+                }
+            ]
+        ];
+        if (game.user.isGM && MonksTokenBar.system._supportedSystem) {
+            buttons.push([
+                {
+                    id: 'request-roll',
+                    title: 'MonksTokenBar.RequestRoll',
+                    icon: 'fa-tools',
+                    click: (event) => {
+                        event.preventDefault();
+                        this.savingthrow = new SavingThrowApp().render(true);
+                    }
+                },
+                {
+                    id: 'contested-roll',
+                    title: 'MonksTokenBar.ContestedRoll',
+                    icon: 'fa-people-arrows',
+                    click: (event) => {
+                        event.preventDefault();
+                        this.contestedroll = new ContestedRollApp().render(true);
+                    }
+                },
+                {
+                    id: 'assign-xp',
+                    title: 'MonksTokenBar.AssignXP',
+                    icon: 'fa-book-medical',
+                    hidden: !MonksTokenBar.system.showXP,
+                    click: (event) => {
+                        event.preventDefault();
+                        new AssignXPApp().render(true);
+                    }
+                },
+                {
+                    id: 'request-roll',
+                    title: 'MonksTokenBar.RequestRoll',
+                    icon: 'fa-tools',
+                    click: (event) => {
+                        event.preventDefault();
+                        this.savingthrow = new SavingThrowApp().render(true);
+                    }
+                }
+            ]);
+        }
+        return buttons;
     }
 
     defaultRequest() {

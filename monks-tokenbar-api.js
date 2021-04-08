@@ -9,6 +9,10 @@ export class MonksTokenBarAPI {
         game.MonksTokenBar = MonksTokenBarAPI;
     }
 
+    static TokenBar() {
+        return MonksTokenBar.tokenbar;
+    }
+
     static changeMovement(movement, tokens) {
         if (!game.user.isGM)
             return;

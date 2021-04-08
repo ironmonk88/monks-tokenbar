@@ -12,6 +12,10 @@ export class SFRPGRolls extends BaseRolls {
         ].concat(this._requestoptions);
     }
 
+    get _supportedSystem() {
+        return true;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             log(message);
