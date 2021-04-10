@@ -5,7 +5,9 @@ Added better error trapping in case a roll doesn't go as expected.
 
 Added a different interface for selecting a requested roll.  Hopefully making it easier to find the right one quickly.
 
-Affed support for PF1, Starfinder, DnD4e, and DnD3e
+Added support for PF1, Starfinder, DnD4e, and DnD3e
+
+Added an API to alter the buttons that are shown on the TokenBar.
 
 ## Version 1.0.31
 Fixing issue with the formula not calculating numerics properly.
