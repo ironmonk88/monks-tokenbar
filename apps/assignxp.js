@@ -27,7 +27,7 @@ export class AssignXPApp extends Application {
                     });
 
                     apl.count = apl.count + 1;
-                    apl.levels = apl.levels + (combatant.actor.data.data.details.level.value || combatant.actor.data.data.details.level);
+                    apl.levels = apl.levels + (combatant.actor.data.data.details.level?.value || combatant.actor.data.data.details.level);
                 }
             };
             var calcAPL = 0;
