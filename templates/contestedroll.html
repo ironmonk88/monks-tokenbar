@@ -28,13 +28,13 @@
                                 <select class="request-roll" data-type="item0">
                                     {{#each options}}
                                     {{#if this.groups}}
-                                    <optgroup label="{{this.text}}">
+                                    <optgroup label="{{localize this.text}}">
                                         {{#each this.groups as |name key|}}
-                                        <option value="{{../id}}:{{key}}">{{name}}</option>
+                                        <option value="{{../id}}:{{key}}">{{localize name}}</option>
                                         {{/each}}
                                     </optgroup>
                                     {{else}}
-                                    <option value="{{this.id}}">{{this.text}}</option>
+                                    <option value="{{this.id}}">{{localize this.text}}</option>
                                     {{/if}}
                                     {{/each}}
                                 </select>
@@ -62,13 +62,13 @@
                                 <select class="request-roll" data-type="item1">
                                     {{#each options}}
                                     {{#if this.groups}}
-                                    <optgroup label="{{this.text}}">
+                                    <optgroup label="{{localize this.text}}">
                                         {{#each this.groups as |name key|}}
-                                        <option value="{{../id}}:{{key}}">{{name}}</option>
+                                        <option value="{{../id}}:{{key}}">{{localize name}}</option>
                                         {{/each}}
                                     </optgroup>
                                     {{else}}
-                                    <option value="{{this.id}}">{{this.text}}</option>
+                                    <option value="{{this.id}}">{{localize  this.text}}</option>
                                     {{/if}}
                                     {{/each}}
                                 </select>

@@ -8,6 +8,8 @@ import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
 import { BaseRolls } from "./systems/base-rolls.js";
 import { DnD5eRolls } from "./systems/dnd5e-rolls.js";
+import { DnD4eRolls } from "./systems/dnd4e-rolls.js";
+import { D35eRolls } from "./systems/d35e-rolls.js";
 import { PF1Rolls } from "./systems/pf1-rolls.js";
 import { PF2eRolls } from "./systems/pf2e-rolls.js";
 import { Tormenta20Rolls } from "./systems/tormenta20-rolls.js";
@@ -62,10 +64,14 @@ export class MonksTokenBar {
             case 'dnd5e':
             case 'sw5e':
                 MonksTokenBar.system = new DnD5eRolls(); break;
-            case 'pf2e':
-                MonksTokenBar.system = new PF2eRolls(); break;
+            case 'D35E':
+                MonksTokenBar.system = new D35eRolls(); break;
+            case 'dnd4eBeta':
+                MonksTokenBar.system = new DnD4eRolls(); break;
             case 'pf1':
                 MonksTokenBar.system = new PF1Rolls(); break;
+            case 'pf2e':
+                MonksTokenBar.system = new PF2eRolls(); break;
             case 'tormenta20':
                 MonksTokenBar.system = new Tormenta20Rolls(); break;
             case 'sfrpg':
@@ -75,63 +81,6 @@ export class MonksTokenBar {
         }
 
         MonksTokenBar.system.constructor.activateHooks();
-
-        //MonksTokenBar.requestoptions = [];
-        /*
-        if (["dnd5e", "sw5e"].includes(game.system.id)) {
-            MonksTokenBar.requestoptions.push({ id: "misc", text: '', groups: { init: i18n("MonksTokenBar.Initiative"), death: i18n("MonksTokenBar.DeathSavingThrow") } });
-        }
-        if (["pf2e"].includes(game.system.id)) {
-            MonksTokenBar.requestoptions.push({ id: "attribute", text: "Attributes", groups: { "perception": CONFIG.PF2E.attributes.perception } });
-        }*/
-        /*
-        let config;
-		switch (game.system.id) {
-			case "tormenta20":
-				config = CONFIG.T20;
-				break;
-			default:
-				config = CONFIG[game.system.id.toUpperCase()];
-		}
-		if(config){
-			//Ability rolls
-			if (config.abilities != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: config.abilities });
-			}
-			else if (config.atributos != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: config.atributos });
-			}
-			else if (config.scores != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "scores", text: i18n("MonksTokenBar.Ability"), groups: config.scores });
-			}
-			//Saving Throw
-			if (config.saves != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves });
-			}
-			else if (config.savingThrows != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.savingThrows });
-			}
-			else if (config.resistencias != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.resistencias });
-			}
-			else if (config.saves_long != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.saves_long });
-			}
-            else if (["dnd5e", "sw5e"].includes(game.system.id)) {
-				MonksTokenBar.requestoptions.push({ id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: config.abilities });
-			}
-
-			//Skills
-			if (config.skills != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "skill", text: i18n("MonksTokenBar.Skill"), groups: config.skills });
-			}
-			else if (config.pericias != undefined) {
-				MonksTokenBar.requestoptions.push({ id: "skill", text: i18n("MonksTokenBar.Skill"), groups: config.pericias });
-			}
-		}
-        MonksTokenBar.requestoptions.push({
-            id: "dice", text: "Dice", cssclass:"dice-group", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
-        });*/
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();

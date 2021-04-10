@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n } from "../monks-tokenbar.js"
+import { i18n, log, setting } from "../monks-tokenbar.js"
 
 export class Tormenta20Rolls extends BaseRolls {
     constructor() {
@@ -10,6 +10,11 @@ export class Tormenta20Rolls extends BaseRolls {
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.resistencias },
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.pericias }
         ].concat(this._requestoptions);
+
+        this._defaultSetting = mergeObject(this._defaultSetting, {
+            stat1: "defesa.value",
+            stat2: "pericias.per.value"
+        });
     }
 
     get _supportedSystem() {
@@ -50,5 +55,20 @@ export class Tormenta20Rolls extends BaseRolls {
         }
         else
             return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+
+    async assignXP(msgactor) {
+        let actor = game.actors.get(msgactor.id);
+        await actor.update({
+            "data.attributes.nivel.xp.value": actor.data.data.attributes.nivel.xp.value + msgactor.xp
+        });
+
+        if (setting("send-levelup-whisper") && actor.data.data.attributes.nivel.xp.value >= actor.data.data.attributes.nivel.xp.proximo) {
+            ChatMessage.create({
+                user: game.user._id,
+                content: i18n("MonksTokenBar.Levelup"),
+                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+            }).then(() => { });
+        }
     }
 }

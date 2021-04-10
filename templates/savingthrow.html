@@ -61,11 +61,11 @@
                 <div class="request-roll" style="height: 100%; overflow-y: auto; overflow-x: hidden;line-height: 17px;">
                     {{#each options}}
                     {{#if this.text}}
-                    <div class="request-header">{{this.text}}</div>
+                    <div class="request-header">{{localize this.text}}</div>
                     {{/if}}
                     <div class="request-grid {{this.cssclass}}">
                         {{#each this.groups as |name key|}}
-                        <div class="request-option" value="{{../id}}:{{key}}">{{name}}</div>
+                        <div class="request-option" value="{{../id}}:{{key}}">{{localize name}}</div>
                         {{/each}}
                     </div>
                     {{/each}}

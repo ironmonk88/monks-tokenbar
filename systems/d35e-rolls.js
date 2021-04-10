@@ -1,19 +1,20 @@
 import { BaseRolls } from "./base-rolls.js"
 import { i18n, log, setting } from "../monks-tokenbar.js"
 
-export class DnD5eRolls extends BaseRolls {
+export class D35eRolls extends BaseRolls {
     constructor() {
         super();
 
         this._requestoptions = [
-            { id: "misc", text: '', groups: { init: "MonksTokenBar.Initiative", death: "MonksTokenBar.DeathSavingThrow" } },
-            { id: "ability", text: "MonksTokenBar.Ability", groups: this.config.abilities },
-            { id: "save", text: "MonksTokenBar.SavingThrow", groups: this.config.abilities },
-            { id: "skill", text: "MonksTokenBar.Skill", groups: this.config.skills }
+            { id: "misc", text: '', groups: { init: i18n("MonksTokenBar.Initiative") } },
+            { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
+            { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.savingThrows },
+            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
 
         this._defaultSetting = mergeObject(this._defaultSetting, {
-            stat2: "skills.prc.passive"
+            stat1: "attributes.ac.normal.total",
+            stat2: "skills.spt.value"
         });
     }
 
@@ -22,14 +23,12 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     get showXP() {
-        return !game.settings.get('dnd5e', 'disableExperienceTracking');
+        return !game.settings.get('D35E', 'disableExperienceTracking');
     }
 
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
-        //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
-        return (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
+        return (allPlayers ? 'skill:spt' : null);
     }
 
     defaultContested() {
@@ -41,35 +40,26 @@ export class DnD5eRolls extends BaseRolls {
         let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
         let context = actor;
         if (requesttype == 'ability') {
-            rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
+            rollfn = actor.rollAbilityTest;
         }
         else if (requesttype == 'save') {
-            rollfn = actor.rollAbilitySave;
+            rollfn = actor.rollSavingThrow;
         }
         else if (requesttype == 'skill') {
             rollfn = actor.rollSkill;
-        } else if (requesttype == 'tool') {
-            let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request || i.id == request; });
-            if (item != undefined) {
-                context = item;
-                request = options;
-                rollfn = item.rollToolCheck;
-            } else
-                return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoTool") };
         } else {
-            if (request == 'death') {
-                rollfn = actor.rollDeathSave;
-                request = options;
-            }
-            else if (request == 'init') {
+            if (request == 'init') {
                 rollfn = actor.rollInitiative;
-                request = { createCombatants: false, initiativeOptions: options };
+                request = { createCombatants: false, rerollInitiative: game.user.isGM };
             }
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(context, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                if (requesttype == 'save')
+                    return rollfn.call(context, request, null, null, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                else
+                    return rollfn.call(context, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }

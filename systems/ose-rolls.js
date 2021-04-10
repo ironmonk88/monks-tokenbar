@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n } from "../monks-tokenbar.js"
+import { i18n, log, setting } from "../monks-tokenbar.js"
 
 export class OSERolls extends BaseRolls {
     constructor() {
@@ -9,6 +9,10 @@ export class OSERolls extends BaseRolls {
             { id: "scores", text: i18n("MonksTokenBar.Ability"), groups: this.config.scores },
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves_long }
         ].concat(this._requestoptions);
+
+        this._defaultSetting = mergeObject(this._defaultSetting, {
+            stat1: "ac.value"
+        });
     }
 
     get _supportedSystem() {
@@ -42,5 +46,20 @@ export class OSERolls extends BaseRolls {
         }
         else
             return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+
+    async assignXP(msgactor) {
+        let actor = game.actors.get(msgactor.id);
+        await actor.update({
+            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+        });
+
+        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.next) {
+            ChatMessage.create({
+                user: game.user._id,
+                content: i18n("MonksTokenBar.Levelup"),
+                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+            }).then(() => { });
+        }
     }
 }

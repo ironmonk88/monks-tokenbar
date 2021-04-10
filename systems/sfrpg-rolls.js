@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log } from "../monks-tokenbar.js"
+import { i18n, log, setting } from "../monks-tokenbar.js"
 
 export class SFRPGRolls extends BaseRolls {
     constructor() {
@@ -10,6 +10,13 @@ export class SFRPGRolls extends BaseRolls {
             { id: "saves", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
             { id: "skills", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
+
+        this._defaultSetting = mergeObject(this._defaultSetting, {
+            stat1: "attributes.kac.value",
+            stat2: "attributes.eac.value",
+            icon1: "fa-shield-alt",
+            icon2: "fa-shield-virus"
+        })
     }
 
     get _supportedSystem() {
@@ -178,6 +185,21 @@ export class SFRPGRolls extends BaseRolls {
 			}
         } else
             return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+
+    async assignXP(msgactor) {
+        let actor = game.actors.get(msgactor.id);
+        await actor.update({
+            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+        });
+
+        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+            ChatMessage.create({
+                user: game.user._id,
+                content: i18n("MonksTokenBar.Levelup"),
+                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+            }).then(() => { });
+        }
     }
 }
 

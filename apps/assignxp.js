@@ -53,7 +53,7 @@ export class AssignXPApp extends Application {
             if (entity != undefined && !$.isArray(entity))
                 entity = [entity];
             this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables).filter(t => {
-                return t.actor?.hasPlayerOwner && t.actor?.data.type == 'character'
+                return t.actor?.hasPlayerOwner && (t.actor?.data.type == 'character' || t.actor?.data.type == 'Player Character')
             })).map(t => {
                 return {
                     actor: t.actor,
@@ -222,19 +222,7 @@ export class AssignXP {
             let msgactor = actors.find(a => { return a.id === actorid; });
 
             if (!msgactor.assigned) {
-                let actor = game.actors.get(actorid);
-                await actor.update({
-                    "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
-                });
-
-                if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
-                    ChatMessage.create({
-                        user: game.user._id,
-                        content: i18n("MonksTokenBar.Levelup"),
-                        whisper: ChatMessage.getWhisperRecipients(actor.data.name)
-                    }).then(() =>{});
-                }
-
+                MonksTokenBar.system.assignXP(msgactor);
                 msgactor.assigned = true;
             }
             await message.setFlag('monks-tokenbar', 'actors', actors);

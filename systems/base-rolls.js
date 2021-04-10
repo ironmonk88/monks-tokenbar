@@ -8,7 +8,14 @@ export class BaseRolls {
         this._config = (game.system.id == "tormenta20" ? CONFIG.T20 : CONFIG[game.system.id.toUpperCase()]);
         this._requestoptions = [{
             id: "dice", text: "Dice", cssclass: "dice-group", groups: { "1d2": "1d2", "1d4": "1d4", "1d6": "1d6", "1d8": "1d8", "1d10": "1d10", "1d12": "1d12", "1d20": "1d20", "1d100": "1d100" }
-        }]
+        }];
+
+        this._defaultSetting = {
+            stat1 : "attributes.ac.value",
+            stat2 : "",
+            icon1 : "fa-shield-alt",
+            icon2 : "fa-eye"
+        }
     }
 
     get _supportedSystem() {
@@ -98,15 +105,6 @@ export class BaseRolls {
                         event.preventDefault();
                         new AssignXPApp().render(true);
                     }
-                },
-                {
-                    id: 'request-roll',
-                    title: 'MonksTokenBar.RequestRoll',
-                    icon: 'fa-tools',
-                    click: (event) => {
-                        event.preventDefault();
-                        this.savingthrow = new SavingThrowApp().render(true);
-                    }
                 }
             ]);
         }
@@ -123,5 +121,9 @@ export class BaseRolls {
 
     roll({ id }, callback, e) {
         return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+
+    async assignXP(msgactor) {
+
     }
 }

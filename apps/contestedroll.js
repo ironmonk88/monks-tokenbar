@@ -179,7 +179,7 @@ export class ContestedRoll {
                 //roll the dice
                 return ContestedRoll.rollDice(request).then((roll) => { return returnRoll(roll); });
             } else {
-                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
+                if (MonksTokenBar.system._supportedSystem) { //game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
                     return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
                         return ContestedRoll.returnRoll(data.id, roll, actor, rollmode);
                     }, e);
@@ -541,12 +541,13 @@ export class ContestedRoll {
 }
 
 Hooks.on('controlToken', (token, delta) => {
-    if (game.user.isGM && delta === true && MonksTokenBar.tokenbar.contestedroll != undefined && MonksTokenBar.tokenbar.contestedroll._state != -1) {
-        if (MonksTokenBar.tokenbar.contestedroll.item0.token == undefined)
-            MonksTokenBar.tokenbar.contestedroll.item0.token = token;
-        else if (MonksTokenBar.tokenbar.contestedroll.item1.token == undefined)
-            MonksTokenBar.tokenbar.contestedroll.item1.token = token;
-        MonksTokenBar.tokenbar.contestedroll.render(true);
+    let contestedroll = MonksTokenBar.system.contestedroll;
+    if (game.user.isGM && delta === true && contestedroll != undefined && contestedroll._state != -1) {
+        if (contestedroll.item0.token == undefined)
+            contestedroll.item0.token = token;
+        else if (contestedroll.item1.token == undefined)
+            contestedroll.item1.token = token;
+        contestedroll.render(true);
     }
 });
 

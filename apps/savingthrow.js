@@ -102,7 +102,7 @@ export class SavingThrowApp extends Application {
                 break;
             case 'actor': //toggle the select actor button
                 let tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
-                MonksTokenBar.tokenbar.savingthrow.addToken(tokens);
+                MonksTokenBar.system.savingthrow.addToken(tokens);
                 break;
             case 'clear':
                 this.tokens = [];
@@ -240,6 +240,8 @@ export class SavingThrow {
                     let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
                     let fakeroll = Roll.fromJSON(jsonRoll);
                     return { id: id, roll: fakeroll, finish: null, reveal: true };
+                } else {
+                    log('Actor is not part of combat to roll initiative', actor, roll);
                 }
             } else {
                 let finishroll;
@@ -272,203 +274,12 @@ export class SavingThrow {
                     return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
                 });
             } else {
-                if (game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
-                    /*
-                    let rollfn = null;
-                    let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
-                    let context = actor;
-                    if (requesttype == 'ability') {
-                        rollfn = (actor.getFunction ? actor.getFunction("rollAbilityTest") : actor.rollAbilityTest);
-                    }
-                    else if (requesttype == 'save') {
-                        rollfn = actor.rollAbilitySave;
-                    }
-                    else if (requesttype == 'skill') {
-                        rollfn = actor.rollSkill;
-                    } else if (requesttype == 'tool') {
-                        let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request || i.id == request; });
-                        if (item != undefined) {
-                            context = item;
-                            request = options;
-                            rollfn = item.rollToolCheck;
-                        } else
-                            ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoTool"));
-                    } else {
-                        if (request == 'death') {
-                            rollfn = actor.rollDeathSave;
-                            request = options;
-                        }
-                        else if (request == 'init') {
-                            rollfn = actor.rollInitiative;
-                            request = { createCombatants: false, initiativeOptions: options };
-                        }
-                    }
-
-                    if (rollfn != undefined) {
-                        try {
-                            return rollfn.call(context, request, options).then((roll) => { return returnRoll(roll); });
-                        } catch {
-                            return { id: item.id, error: true, msg: 'Unknown Error Occured' };
-                        }
-                    } else
-                        return { id: item.id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
-                        */
+                if (MonksTokenBar.system._supportedSystem) {//game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
                     return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
                         return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
                     }, e);
                 }
-                /*else if (game.system.id == 'tormenta20') {
-                    let rollfn = null;
-                    let opts = request;
-                    if (requesttype == 'ability') {
-                        rollfn = actor.rollAtributo;
-                    }
-                    else if (requesttype == 'save' || requesttype == 'skill') {
-                        opts = {
-                            actor: actor,
-                            type: "perícia",
-                            data: actor.data.data.pericias[opts],
-                            name: actor.data.data.pericias[opts].label,
-                            id: opts
-                        };
-                        rollfn = actor.rollPericia;
-                    }
-                    if (rollfn != undefined) {
-                        return rollfn.call(actor, opts, e).then((roll) => { return returnRoll(roll); });
-                    }
-                    else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }*/
-                /*else if (game.system.id == 'pf2e') {
-                    let rollfn = null;
-                    let opts = request;
-                    if (requesttype == 'attribute') {
-                        if (actor.data.data.attributes[request]?.roll) {
-                            opts = actor.getRollOptions(["all", request]);
-                            rollfn = actor.data.data.attributes[request].roll;
-                        } else
-                            rollfn = actor.rollAttribute;
-                    }
-                    else if (requesttype == 'ability') {
-                        rollfn = function (event, abilityName) {
-                            const skl = this.data.data.abilities[abilityName],
-                                flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
-                            return DicePF2e.d20Roll({
-                                event: event,
-                                parts: ["@mod"],
-                                data: {
-                                    mod: skl.mod
-                                },
-                                title: flavor,
-                                speaker: ChatMessage.getSpeaker({
-                                    actor: this
-                                }),
-                                rollType: 'ignore'
-                            });
-                        }
-                    }
-                    else if (requesttype == 'save') {
-                        if (actor.data.data.saves[request]?.roll) {
-                            opts = actor.getRollOptions(["all", "saving-throw", request]);
-                            rollfn = actor.data.data.saves[request].roll;
-                        } else
-                            rollfn = actor.rollSave;
-                    }
-                    else if (requesttype == 'skill') {
-                        if (actor.data.data.skills[request]?.roll) {
-                            opts = actor.getRollOptions(["all", "skill-check", request]);
-                            rollfn = actor.data.data.skills[request].roll;
-                        } else
-                            rollfn = actor.rollSkill;
-                    }
-
-                    if (rollfn != undefined) {
-                        if (requesttype == 'ability')
-                            return rollfn.call(actor, e, opts).then((roll) => { return returnRoll(roll); });
-                        else {
-                            opts.push("ignore");
-                            return new Promise(function (resolve, reject) {
-                                rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(returnRoll(roll)); } });
-                            });
-                        }
-                    } else
-                        ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }*/
-                /*else if (game.system.id == 'ose') {
-                    let rollfn = null;
-                    let options = { fastForward: fastForward, chatMessage: false, event: e };
-                    if (requesttype == 'scores') {
-                        rollfn = actor.rollCheck;
-                    } else if (requesttype == 'save') {
-                        rollfn = actor.rollSave;
-                    }
-                    if (rollfn != undefined) {
-                        return rollfn.call(actor, request, options).then((roll) => { return returnRoll(roll); });
-                    }
-                    else ui.notifications.warn(actor.name + ' ' + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }*/
-                /*else if (game.system.id == 'sfrpg') {
-                    let rollfn = null;
-                    let opts = { event: e };
-                    if (requesttype == 'attribute') {
-                        if (actor.data.data.attributes[request]?.roll) {
-                            opts = actor.getRollOptions(["all", request]);
-                            rollfn = actor.data.data.attributes[request].roll;
-                        } else
-                            rollfn = actor.rollAttribute;
-                    }
-                    else if (requesttype == 'ability') {
-                        return new Promise(function (resolve, reject) {
-                            const abl = actor.data.data.abilities[request]
-
-                            let parts = [];
-                            let data = actor.getRollData();
-
-                            //Include ability check bonus only if it's not 0
-                            if (abl.abilityCheckBonus) {
-                                parts.push('@abilityCheckBonus');
-                                data.abilityCheckBonus = abl.abilityCheckBonus;
-                            }
-                            parts.push(`@abilities.${request}.mod`);
-
-                            const rollContext = new SFRPGRollContext(actor);
-
-                            actor.setupRollContexts(rollContext);
-
-                            return game.sfrpg.dice.d20Roll({
-                                event: e,
-                                rollContext: rollContext,
-                                parts: parts,
-                                title: 'removemessage',
-                                flavor: null,
-                                speaker: ChatMessage.getSpeaker({ actor: actor }),
-                                dialogOptions: {
-                                    left: e ? e.clientX - 80 : null,
-                                    top: e ? e.clientY - 80 : null
-                                },
-                                onClose: function (roll) { resolve(returnRoll(roll)); }
-                            });
-                        });
-                    }
-                    else if (requesttype == 'save') {
-                        if (actor.data.data.attributes[request]?.roll) {
-                            opts = actor.getRollOptions(["all", "saving-throw", request]);
-                            rollfn = actor.data.data.saves[request].roll;
-                        } else
-                            rollfn = actor.rollSave;
-                    }
-                    else if (requesttype == 'skill') {
-                        if (actor.data.data.skills[request]?.roll) {
-                            opts = actor.getRollOptions(["all", "skill-check", request]);
-                            rollfn = actor.data.data.skills[request].roll;
-                        } else
-                            rollfn = actor.rollSkill;
-                    }
-
-                    if (rollfn != undefined) {
-                        return rollfn.call(actor, request, opts).then((roll) => { return returnRoll(roll); });
-                    } else
-                        ui.notifications.warn(actor.name + i18n("MonksTokenBar.ActorNoRollFunction"));
-                }*/ else {
+                else {
                     ui.notifications.warn(i18n("MonksTokenBar.UnknownSystem"));
                 }
             }

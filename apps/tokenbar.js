@@ -182,7 +182,7 @@ export class TokenBar extends Application {
     async getCurrentTokens() {
         //log('Get current Tokens');
         let promises = canvas.tokens.placeables
-            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && t.actor?.data.type != 'npc'; })
+            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && (t.actor?.data.type != 'npc' || t.data.disposition == 1); })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => { return this.mapToken(t); });
 

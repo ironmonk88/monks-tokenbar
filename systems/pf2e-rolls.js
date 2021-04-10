@@ -1,15 +1,20 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n } from "../monks-tokenbar.js"
+import { i18n, log, setting } from "../monks-tokenbar.js"
 
 export class PF2eRolls extends BaseRolls {
     constructor() {
         super();
 
         this._requestoptions = [
+            { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: CONFIG.PF2E.attributes.perception } },
             { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
+
+        this._defaultSetting = mergeObject(this._defaultSetting, {
+            stat2: "attributes.perception.value + 10"
+        });
     }
 
     get _supportedSystem() {
@@ -93,5 +98,20 @@ export class PF2eRolls extends BaseRolls {
             }
         } else
             return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
+    }
+
+    async assignXP(msgactor) {
+        let actor = game.actors.get(msgactor.id);
+        await actor.update({
+            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+        });
+
+        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+            ChatMessage.create({
+                user: game.user._id,
+                content: i18n("MonksTokenBar.Levelup"),
+                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+            }).then(() => { });
+        }
     }
 }

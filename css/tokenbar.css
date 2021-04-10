@@ -324,6 +324,10 @@ body #tokenbar-window:first-child{
     display: none;
 }
 
+.monks-tokenbar .sheet{
+    border:0px !important;
+}
+
 .monks-tokenbar .sheet .items-list {
     list-style: none;
     margin: 0;
