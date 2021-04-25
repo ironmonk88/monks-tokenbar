@@ -464,3 +464,26 @@ Hooks.on("getSceneControlButtons", (controls) => {
         });
     }
 });
+
+Hooks.on("renderSettingsConfig", (app, html, data) => {
+    let btn = $('<button>')
+        .addClass('file-picker')
+        .attr('type', 'button')
+        .attr('data-type', "imagevideo")
+        .attr('data-target', "img")
+        .attr('title', "Browse Files")
+        .attr('tabindex', "-1")
+        .html('<i class="fas fa-file-import fa-fw"></i>')
+        .click(function (event) {
+            const fp = new FilePicker({
+                type: "audio",
+                current: $(event.currentTarget).prev().val(),
+                callback: path => {
+                    $(event.currentTarget).prev().val(path);
+                }
+            });
+            return fp.browse();
+        });
+
+    btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
+});

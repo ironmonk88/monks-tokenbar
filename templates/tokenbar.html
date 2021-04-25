@@ -20,6 +20,7 @@
                 </div>
                 <div class="token-content">
                     <div class="movement-icon" movement="{{this.movement}}"><i class="fas"></i></div>
+                    <div class="inspiration-icon" inspiration="{{#if this.inspiration}}true{{/if}}" title="{{localize 'MonksTokenBar.Inspiration'}}"><i class="fas fa-crown"></i></div>
                     {{#if this.thumb}}
                     <img class="token-icon" src="{{this.thumb}}" />
                     {{/if}}

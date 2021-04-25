@@ -184,8 +184,8 @@ export class SavingThrowApp extends Application {
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
             msg = ChatMessage.create(chatData, {});
-            if (setting('request-roll-sound'))
-                AudioHelper.play({ src: 'modules/monks-tokenbar/sounds/RollRequestAlert.mp3' }, true);
+            if (setting('request-roll-sound-file') != '')
+                AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneTokenSelected"));

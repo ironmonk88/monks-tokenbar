@@ -163,7 +163,11 @@ export class TokenBar extends Application {
         //let thumb = img;
         //if (VideoHelper.hasVideoExtension(img))
         //    thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
-        let thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        let thumb = 'icons/svg/mystery-man.svg';
+        try {
+            thumb = await ImageHelper.createThumbnail(img, { width: 48, height: 48 });
+        } catch {
+        }
 
         return {
             id: token.id,
@@ -242,7 +246,11 @@ export class TokenBar extends Application {
             //let thumb = diff.img;
             //if (VideoHelper.hasVideoExtension(diff.img))
             //    thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
-            let thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+            let thumb = 'icons/svg/mystery-man.svg';
+            try {
+                thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+            } catch {
+            }
 
             diff.thumb = (thumb?.thumb || thumb);
 
@@ -250,6 +258,9 @@ export class TokenBar extends Application {
         if (tkn.movement != tkn.token.getFlag('monks-tokenbar', 'movement')) {
             diff.movement = tkn.token.getFlag('monks-tokenbar', 'movement');
         }
+
+        if (tkn.inspiration != (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration')))
+            diff.inspiration = (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration'));
 
         if (Object.keys(diff).length > 0) {
             //log('preUpdateTokenBarToken', tkn, diff);
@@ -617,7 +628,7 @@ export class TokenBar extends Application {
 //});
 
 Hooks.on('updateToken', (scene, token, data) => {
-    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
+    if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token._id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
             MonksTokenBar.tokenbar.updateToken(tkn)
@@ -626,7 +637,7 @@ Hooks.on('updateToken', (scene, token, data) => {
 });
 
 Hooks.on('updateOwnedItem', (actor, item, data) => {
-    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
+    if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor._id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
             setTimeout(function () { MonksTokenBar.tokenbar.updateToken(tkn); }, 100); //delay slightly so the PF2E condition can be rendered properly.
@@ -635,7 +646,7 @@ Hooks.on('updateOwnedItem', (actor, item, data) => {
 });
 
 Hooks.on('updateActor', (actor, data) => {
-    if (game.user.isGM && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars") 
+    if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars") 
         let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
         if (tkn != undefined) {
             /*if (data?.attributes?.ac != undefined

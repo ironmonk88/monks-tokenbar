@@ -177,7 +177,7 @@ export class LootablesApp extends Application {
             // If using Combat Utility Belt, need to remove any of its condition overlays
             // before we can add the chest icon overlay.
             if (game.modules.get("combat-utility-belt")?.active) {
-                await game.cub.removeAllConditions(token);
+                await game.cub.removeAllConditions(token.actor);
             }
 
             await token.token.update({

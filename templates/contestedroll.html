@@ -11,6 +11,10 @@
                         <option value="selfroll">{{localize 'MonksTokenBar.SelfRoll'}}</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>{{localize 'MonksTokenBar.HideNPCName'}}</label>
+                    <input id="contestedroll-hidenpc" type="checkbox" {{#if hidenpcname}}checked{{/if}} />
+                </div>
                 <div class="form-group sheet">
                     <ol class="items-list inventory-list">
                         <li class="items-header flexrow">
@@ -25,7 +29,7 @@
                                         {{item0.token.name}}
                                     </h4>
                                 </div>
-                                <select class="request-roll" data-type="item0">
+                                <select class="request-roll" data-type="item0" style="flex:0 0 150px;">
                                     {{#each options}}
                                     {{#if this.groups}}
                                     <optgroup label="{{localize this.text}}">
@@ -59,7 +63,7 @@
                                         {{item1.token.name}}
                                     </h4>
                                 </div>
-                                <select class="request-roll" data-type="item1">
+                                <select class="request-roll" data-type="item1" style="flex:0 0 150px;">
                                     {{#each options}}
                                     {{#if this.groups}}
                                     <optgroup label="{{localize this.text}}">

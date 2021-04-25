@@ -1,3 +1,18 @@
+## Version 1.0.34
+Fixed issue with removing conditions using CUB
+
+Added option for GM to hear the next round sound
+
+Adding support to hide the NPC's name from the players on the contested roll chat message.
+
+Adding support to hide an NPC from the players on the contested roll chat message if they are currently hidden.
+
+Fixed an issue where broken image files were causing an error and preventing the token bar from loading.  Thank you Shade Ninja for catching that.
+
+Fixed an issue where players TokenBars weren't updating the resource bars or displayed stats.
+
+Added support for changing the sound played when requesting a roll
+
 ## Version 1.0.32
 Updated the code to handle different systems better.
 

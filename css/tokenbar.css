@@ -4,6 +4,7 @@
     /*height: 92px;*/
     pointer-events: none;
     flex-wrap: nowrap;
+    display:flex !important;
 }
 
 #tokenbar-window #tokenbar {
@@ -267,7 +268,7 @@ body #tokenbar-window:first-child{
     position: absolute;
     width: 20px;
     height: 20px;
-    top: 36px;
+    bottom: 28px;
     left: 0px;
     color: #ffc163;
     filter: drop-shadow( 0 0 5px black);
@@ -295,8 +296,25 @@ body #tokenbar-window:first-child{
     content: "\f6de";
 }
 
-/*-----------------------------Dialog Styles-------------------------------------*/
+#tokenbar .token .inspiration-icon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    bottom: 28px;
+    right: 0px;
+    color: #ffc163;
+    filter: drop-shadow( 0 0 5px black);
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    line-height: 22px;
+    display:none;
+    font-size: 10px;
+}
 
+#tokenbar .token .inspiration-icon[inspiration="true"] {
+    display:inline-block;
+}
+/*-----------------------------Dialog Styles-------------------------------------*/
 .monks-tokenbar .dialog-buttons {
     flex: 0 0 32px;
 }
@@ -365,6 +383,22 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar .sheet .items-list .item-name h4 .request-name{
     font-weight:normal;
+}
+
+.contested-roll header .request-name{
+    text-align:center;
+}
+
+.contested-roll header .request-name:not(:last-child) {
+    position: relative;
+}
+
+.contested-roll header .request-name:not(:last-child):after{
+    content:'vs';
+    position:absolute;
+    right:-5px;
+    top:0px;
+    font-size:10px;
 }
 
 .monks-tokenbar .sheet .items-list .item-controls {

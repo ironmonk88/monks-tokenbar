@@ -12,6 +12,7 @@ export class ContestedRollApp extends Application {
 
         this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
+        this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
     }
 
     static get defaultOptions() {
@@ -20,8 +21,8 @@ export class ContestedRollApp extends Application {
             id: "contestedroll",
             title: i18n("MonksTokenBar.ContestedRoll"),
             template: "./modules/monks-tokenbar/templates/contestedroll.html",
-            width: 400,
-            height: 250,
+            width: 450,
+            height: 280,
             top: top,
             popOut: true
         });
@@ -32,7 +33,8 @@ export class ContestedRollApp extends Application {
             item0: this.item0,
             item1: this.item1,
             rollmode: this.rollmode,
-            options: this.requestoptions
+            options: this.requestoptions,
+            hidenpcname: this.hidenpcname
         };
     }
 
@@ -58,12 +60,16 @@ export class ContestedRollApp extends Application {
                     requestname: requestname,
                     icon: (VideoHelper.hasVideoExtension(item.token.data.img) ? item.token.actor.data.img : item.token.data.img),
                     name: item.token.name,
+                    showname: item.token.actor.hasPlayerOwner || this.hidenpcname !== true,
+                    showtoken: item.token.actor.hasPlayerOwner || item.token.data.hidden !== true,
+                    npc: item.token.actor.hasPlayerOwner,
                     passed: 'waiting'
                 };
             });
 
             let rollmode = this.rollmode; //$('#contestedroll-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeCR", rollmode);
+            game.user.setFlag("monks-tokenbar", "lastmodeHideNPCName", this.hidenpcname);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
             let requestdata = {
                 rollmode: rollmode,
@@ -101,8 +107,8 @@ export class ContestedRollApp extends Application {
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
             ChatMessage.create(chatData, {});
-            if (setting('request-roll-sound'))
-                AudioHelper.play({ src: 'modules/monks-tokenbar/sounds/RollRequestAlert.mp3' }, true);
+            if (setting('request-roll-sound-file') != '')
+                AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
@@ -114,6 +120,10 @@ export class ContestedRollApp extends Application {
         $('.item-delete', html).click($.proxy(this.removeToken, this));
 
         $('.dialog-buttons.request', html).click($.proxy(this.request, this));
+
+        $('#contestedroll-hidenpc', html).change($.proxy(function (e) {
+            this.hidenpcname = $(e.currentTarget).is(':checked');
+        }, this));
 
         $('.request-roll', html).change($.proxy(function (e) {
             this[e.target.dataset.type].request = $(e.currentTarget).val();
@@ -541,13 +551,15 @@ export class ContestedRoll {
 }
 
 Hooks.on('controlToken', (token, delta) => {
-    let contestedroll = MonksTokenBar.system.contestedroll;
-    if (game.user.isGM && delta === true && contestedroll != undefined && contestedroll._state != -1) {
-        if (contestedroll.item0.token == undefined)
-            contestedroll.item0.token = token;
-        else if (contestedroll.item1.token == undefined)
-            contestedroll.item1.token = token;
-        contestedroll.render(true);
+    if (MonksTokenBar && MonksTokenBar.system) {
+        let contestedroll = MonksTokenBar.system.contestedroll;
+        if (game.user.isGM && delta === true && contestedroll != undefined && contestedroll._state != -1) {
+            if (contestedroll.item0.token == undefined)
+                contestedroll.item0.token = token;
+            else if (contestedroll.item1.token == undefined)
+                contestedroll.item1.token = token;
+            contestedroll.render(true);
+        }
     }
 });
 

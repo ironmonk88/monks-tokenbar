@@ -21,6 +21,8 @@
 	"MonksTokenBar.ContestedRoll": "Contested Roll",
 	"MonksTokenBar.AssignXP": "Assign XP",
 	"MonksTokenBar.Lootables": "Convert Lootables",
+	"MonksTokenBar.HideNPCName": "Hide NPC Names",
+	"MonksTokenBar.Inspiration": "Inspiration",
 
 	"MonksTokenBar.Attribute": "Attribute",
 	"MonksTokenBar.Ability": "Ability",
@@ -99,6 +101,8 @@
 	"MonksTokenBar.request-roll-sound.hint": "Play a sound when requesting a roll",
 	"MonksTokenBar.send-levelup-whisper.name": "Whisper player on levelup",
 	"MonksTokenBar.send-levelup-whisper.hint": "Whisper player on actor levelup",
+	"MonksTokenBar.show-inspiration.name": "Show Inspiration",
+	"MonksTokenBar.show-inspiration.hint": "Show an icon on the token if the token has inspiration",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

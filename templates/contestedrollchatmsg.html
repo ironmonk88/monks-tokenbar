@@ -1,6 +1,7 @@
 <div class="monks-tokenbar contested-roll chat-card item-card">
-    <header class="card-header flexrow">
+    <header class="card-header flexcol">
         <h3 class="item-name">{{localize 'MonksTokenBar.ContestedRoll'}}</h3>
+        <div class="flexrow">{{#each tokens}}<div class="request-name">{{this.requestname}}</div>{{/each}}</div>
     </header>
     <div class="message-content" style="margin:5px 0px;">
         <div class="card-content"></div>
@@ -12,15 +13,14 @@
 
                 <ol class="item-list">
                     {{#each tokens}}
-                    <li class="item flexrow " data-item-id="{{this.id}}" style="display:none;">
+                    <li class="item flexrow {{#unless this.showtoken}}gm-only{{/unless}}" data-item-id="{{this.id}}" style="display:none;">
                         <div class="dice-roll flexcol">
                             <div class="item-row flexrow">
                                 <div class="item-name flexrow">
                                     <div class="item-image" style="background-image: url('{{this.icon}}')">
                                     </div>
                                     <h4>
-                                        <div>{{this.name}}</div>
-                                        <div class="request-name">{{this.requestname}}</div>
+                                        <div><span {{#unless this.showname}}class="gm-only"{{/unless}}>{{this.name}}</span></div>
                                     </h4>
                                 </div>
 

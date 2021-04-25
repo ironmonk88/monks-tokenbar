@@ -190,13 +190,29 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "show-inspiration", {
+		name: game.i18n.localize("MonksTokenBar.show-inspiration.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-inspiration.hint"),
+		scope: "client",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "request-roll-sound", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
 		scope: "world",
-		config: true,
+		config: false,
 		default: true,
 		type: Boolean,
+	});
+	game.settings.register(modulename, "request-roll-sound-file", {
+		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
+		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
+		scope: "client",
+		config: true,
+		default: "modules/monks-tokenbar/sounds/RollRequestAlert.ogg",
+		type: String,
 	});
 	game.settings.register(modulename, "popout-tokenbar", {
 		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),
