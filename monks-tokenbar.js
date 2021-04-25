@@ -54,6 +54,15 @@ export class MonksTokenBar {
         Token.prototype._canDrag = function (user, event) {
             return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
         };
+
+        /*
+        let oldView = Scene.prototype.view;
+        Scene.prototype.view = async function () {
+            if (MonksTokenBar.tokenbar) {
+                $('#token-action-bar').addClass('closed');
+            }
+            return oldView.call(this);
+        }*/
     }
 
     static ready() {

@@ -107,6 +107,8 @@ body #tokenbar-window:first-child{
     height: 92px;
     pointer-events: all;
     flex-wrap: nowrap;
+    /*overflow: hidden;
+    transition: height 0.4s linear;*/
 }
 
 #tokenbar.hidectrl .dialog-col {
@@ -152,10 +154,15 @@ body #tokenbar-window:first-child{
     box-shadow: 0 0 5px #000 inset;
     cursor: pointer;
     justify-content: flex-end;
+    transition: width 0.4s linear;
 }
 
-#tokenbar .token .token-details{
-    width:25px;
+/*#tokenbar #token-action-bar.closed {
+    height: 0px;
+}*/
+
+#tokenbar .token .token-details {
+    width: 25px;
 }
 
 #tokenbar .token .token-stats {

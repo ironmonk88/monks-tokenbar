@@ -25,6 +25,7 @@ export class TokenBar extends Application {
 
         Hooks.on('canvasReady', () => {
             this.refresh();
+            $('#token-action-bar #token-action-bar', this.element).removeClass('closed');
         });
 
         Hooks.on("createToken", (token) => {
