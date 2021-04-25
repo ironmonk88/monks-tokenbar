@@ -1,8 +1,6 @@
 ## Version 1.0.34
 Fixed issue with removing conditions using CUB
 
-Added option for GM to hear the next round sound
-
 Adding support to hide the NPC's name from the players on the contested roll chat message.
 
 Adding support to hide an NPC from the players on the contested roll chat message if they are currently hidden.
