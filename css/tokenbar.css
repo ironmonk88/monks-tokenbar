@@ -398,14 +398,29 @@ body #tokenbar-window:first-child{
 
 .contested-roll header .request-name:not(:last-child) {
     position: relative;
+    padding-right: 8px;
 }
 
-.contested-roll header .request-name:not(:last-child):after{
-    content:'vs';
-    position:absolute;
-    right:-5px;
-    top:0px;
-    font-size:10px;
+.contested-roll header .request-name:not(:first-child) {
+    padding-left: 8px;
+}
+
+.contested-roll header .request-name:not(:last-child):after {
+    content: 'vs';
+    position: absolute;
+    right: -5px;
+    top: 0px;
+    font-size: 10px;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.contested-roll header .request-name:first-child {
+    text-align: right;
+}
+
+.contested-roll header .request-name:last-child {
+    text-align:left;
 }
 
 .monks-tokenbar .sheet .items-list .item-controls {
