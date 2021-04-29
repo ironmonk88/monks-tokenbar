@@ -22,6 +22,7 @@
 	"MonksTokenBar.AssignXP": "経験値分配",
 	"MonksTokenBar.Lootables": "戦利品分配",
 
+	"MonksTokenBar.Attribute": "属性",
 	"MonksTokenBar.Ability": "能力値",
 	"MonksTokenBar.AbilityCheck": "能力値判定",
 	"MonksTokenBar.SavingThrow": "セーヴ",
@@ -36,7 +37,8 @@
 	"MonksTokenBar.Passed": "成功",
 	"MonksTokenBar.Failed": "失敗",
 	"MonksTokenBar.GrabMessage": "個別のロールを取り込む",
-	
+
+	"MonksTokenBar.UnknownError": "不明なエラーが発生しました。",
 	"MonksTokenBar.CombatTurnMovementLimited": "今はあなたのターンではありません。",
 	"MonksTokenBar.NormalMovementLimited": "現在、GMによって移動が制限されています。",
 	"MonksTokenBar.RequestNoneActorSelected": "選択されたアクターがない場合、リクエストを送信できません。",
@@ -45,6 +47,7 @@
 	"MonksTokenBar.TokenNoActorAttrs": "トークンには、追加属性を使用するアクターがありません。",
 	"MonksTokenBar.ActorNoRollFunction": "：ロールする関数が見つかりませんでした。",
 	"MonksTokenBar.ActorNoTool": "：そのツールを所持していません。",
+	"MonksTokenBar.UnknownSystem": "Monk's Tokenbarはこのゲームシステムに対応していません。",
 
 	"MonksTokenBar.notify-on-change.name": "移動モードの変更を通知する",
 	"MonksTokenBar.notify-on-change.hint": "GMが移動モードの設定を変更したとき、すべてのプレイヤーに通知を送ります。",
