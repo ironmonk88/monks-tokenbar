@@ -21,6 +21,8 @@
 	"MonksTokenBar.ContestedRoll": "対抗判定",
 	"MonksTokenBar.AssignXP": "経験値分配",
 	"MonksTokenBar.Lootables": "戦利品分配",
+	"MonksTokenBar.HideNPCName": "NPC名を隠す",
+	"MonksTokenBar.Inspiration": "インスピレーション",
 
 	"MonksTokenBar.Attribute": "属性",
 	"MonksTokenBar.Ability": "能力値",
@@ -99,6 +101,8 @@
 	"MonksTokenBar.request-roll-sound.hint": "判定をリクエストしたときにサウンドを再生します。",
 	"MonksTokenBar.send-levelup-whisper.name": "レベルアップをプレイヤーに告知する",
 	"MonksTokenBar.send-levelup-whisper.hint": "アクターがレベルアップしたとき、秘話でプレイヤーにそれを教えます。",
+	"MonksTokenBar.show-inspiration.name": "インスピレーションを表示する",
+	"MonksTokenBar.show-inspiration.hint": "インスピレーションを所持しているコマにアイコンを表示します。",
 	
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
