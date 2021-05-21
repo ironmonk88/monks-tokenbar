@@ -772,3 +772,12 @@ body #tokenbar-window:first-child{
     box-shadow: 0 0 10px #ff6400;
 }
 
+#assignexperience.dual {
+    margin-left: 10px;
+    transform: translateX(50%);
+}
+
+#lootables.dual {
+    transform: translateX(-50%);
+    margin-right: 10px;
+}

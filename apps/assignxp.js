@@ -91,7 +91,7 @@ export class AssignXPApp extends Application {
         if(xp !== undefined)
             this.xp = xp;
 
-        let sortedByLevel = $(this.actors).filter(a => !a.disabled).toArray().sort(function (a, b) {
+        let sortedByLevel = this.actors.filter(a => !a.disabled).sort(function (a, b) {
             const foo = a.actor.data.data.details;
             const bar = b.actor.data.data.details;
             return (foo.level + (foo.xp.value / foo.xp.max)) - (bar.level + (bar.xp.value / bar.xp.max));
@@ -102,15 +102,15 @@ export class AssignXPApp extends Application {
                 sortedByLevel.forEach(x => x.xp =  this.xp);
                 break;
             case 'equal-split':
-                sortedByLevel.forEach(x => x.xp = this.xp / sortedByLevel.length);
+                sortedByLevel.forEach(x => x.xp = parseInt(this.xp / sortedByLevel.length));
                 break;
             case 'robin-hood-split':
                 // Take from the rich and give to the poor...
-                distributeXp(sortedByLevel, this.xp / sortedByLevel.length, 0.5, 1.5);
+                distributeXp(sortedByLevel, parseInt(this.xp / sortedByLevel.length), 0.5, 1.5);
                 break;
             case 'nottingham-split':
                 // Take from the poor and give to the rich...
-                distributeXp(sortedByLevel, this.xp / sortedByLevel.length, 1.5, 0.5);
+                distributeXp(sortedByLevel, parseInt(this.xp / sortedByLevel.length), 1.5, 0.5);
                 break;
         }
 

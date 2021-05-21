@@ -330,11 +330,14 @@ export class MonksTokenBar {
 
                     if (axpa != undefined) {
                         setTimeout(function () {
+                            $(axpa.element).addClass('dual');
+                            $(lapp.element).addClass('dual');
+                            /*
                             axpa.position.left += 204;
                             axpa.render();
                             lapp.position.left -= 204;
-                            lapp.render();
-                        }, 100);
+                            lapp.render();*/
+                        }, 200);
                     }
                 }
             }
@@ -361,7 +364,7 @@ export class MonksTokenBar {
             return o.id == (requesttype || request);
         });
         let req = (rt?.groups && rt?.groups[request]);
-        let flavor = req || rt?.text;
+        let flavor = i18n(req || rt?.text);
         switch (game.i18n.lang) {
             case "pt-BR":
             case "es":

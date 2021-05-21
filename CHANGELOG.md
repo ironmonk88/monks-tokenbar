@@ -1,3 +1,10 @@
+## Version 1.0.35
+Fixing assign XP issue where actors wern't being assigned XP correctly
+
+Fixing issue where having both XP and lootable windows popping up at the same time were overlapping or one was pushed against the left side of the screen
+
+Fixing an issue where Pathfinder wasn't getting the correct flavor text for requested rolls
+
 ## Version 1.0.34
 Fixed issue with removing conditions using CUB
 
