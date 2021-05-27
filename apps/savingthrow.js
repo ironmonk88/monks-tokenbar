@@ -162,13 +162,13 @@ export class SavingThrowApp extends Application {
 
             log('create chat request');
             let chatData = {
-                user: game.user._id,
+                user: game.user.id,
                 content: html
             };
             if (requestdata.rollmode == 'selfroll')
-                chatData.whisper = [game.user._id];
+                chatData.whisper = [game.user.id];
             else if (requestdata.rollmode == 'blindroll') {
-                chatData.whisper = [game.user._id];
+                chatData.whisper = [game.user.id];
                 for (let i = 0; i < this.tokens.length; i++) {
                     let token = this.tokens[i];
                     if (token.actor != undefined) {
@@ -248,7 +248,7 @@ export class SavingThrow {
                 if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
                     let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                     if (rollmode == 'gmroll' && !game.user.isGM)
-                        whisper.push(game.user._id);
+                        whisper.push(game.user.id);
 
                     finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                         return { id: id, reveal: true, userid: game.userId };
@@ -318,7 +318,7 @@ export class SavingThrow {
                     {
                         msgtype: 'rollability',
                         type: 'savingthrow',
-                        senderId: game.user._id,
+                        senderId: game.user.id,
                         msgid: message.id,
                         response: responses
                     },
@@ -424,7 +424,7 @@ export class SavingThrow {
                     {
                         msgtype: 'finishroll',
                         type: 'savingthrow',
-                        senderId: game.user._id,
+                        senderId: game.user.id,
                         response: response,
                         msgid: message.id
                     }
@@ -561,7 +561,7 @@ export class SavingThrow {
                 MonksTokenBar.SOCKET,
                 {
                     msgtype: 'assigndeathst',
-                    senderId: game.user._id,
+                    senderId: game.user.id,
                     tokenid: tokenId,
                     msgid: message.id
                 },
@@ -642,7 +642,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
 
-                if (game.user.isGM || actor.owner)
+                if (game.user.isGM || actor.isOwner)
                     $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll'))));

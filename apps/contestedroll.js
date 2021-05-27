@@ -86,13 +86,13 @@ export class ContestedRollApp extends Application {
 
             log('create chat request');
             let chatData = {
-                user: game.user._id,
+                user: game.user.id,
                 content: html
             };
             if (rollmode == 'selfroll')
-                chatData.whisper = [game.user._id];
+                chatData.whisper = [game.user.id];
             else if (rollmode == 'blindroll') {
-                chatData.whisper = [game.user._id];
+                chatData.whisper = [game.user.id];
                 for (let item of [this.item0, this.item1]) {
                     if (item.token.actor != undefined) {
                         for (var key in item.token.actor.data.permission) {
@@ -142,7 +142,7 @@ export class ContestedRoll {
                 {
                     msgtype: 'rollability',
                     type: 'contestedroll',
-                    senderId: game.user._id,
+                    senderId: game.user.id,
                     response: [{ actorid: actorid, roll: roll }],
                     msgid: message.id
                 },
@@ -166,7 +166,7 @@ export class ContestedRoll {
             if (game.dice3d != undefined && roll instanceof Roll) { // && !fastForward) {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
-                    whisper.push(game.user._id);
+                    whisper.push(game.user.id);
 
                 finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
@@ -334,7 +334,7 @@ export class ContestedRoll {
                     {
                         msgtype: 'rollability',
                         type: 'contestedroll',
-                        senderId: game.user._id,
+                        senderId: game.user.id,
                         msgid: message.id,
                         response: responses
                     },
@@ -462,7 +462,7 @@ export class ContestedRoll {
                     {
                         msgtype: 'finishroll',
                         type: 'contestedroll',
-                        senderId: game.user._id,
+                        senderId: game.user.id,
                         response: response,
                         msgid: message.id
                     }
@@ -592,7 +592,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
 
-                if (game.user.isGM || actor.owner)
+                if (game.user.isGM || actor.isOwner)
                     $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll'))));

@@ -152,7 +152,7 @@ export class TokenBar extends Application {
         let stat1 = TokenBar.processStat(setting("stat1-resource"), actor.data.data);
         let stat2 = TokenBar.processStat(setting("stat2-resource"), actor.data.data);
 
-        token.unsetFlag("monks-tokenbar", "notified");
+        token.document.unsetFlag("monks-tokenbar", "notified");
 
         let resources = [{}, {}];
         if (game.settings.get("monks-tokenbar", "show-resource-bars")) {
@@ -175,7 +175,7 @@ export class TokenBar extends Application {
             token: token,
             img: img,
             thumb: thumb?.thumb || thumb,
-            movement: token.getFlag("monks-tokenbar", "movement"),
+            movement: token.document.getFlag("monks-tokenbar", "movement"),
             stat1: stat1,
             stat2: stat2,
             statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
@@ -187,7 +187,7 @@ export class TokenBar extends Application {
     async getCurrentTokens() {
         //log('Get current Tokens');
         let promises = canvas.tokens.placeables
-            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.owner) && (t.actor?.data.type != 'npc' || t.data.disposition == 1); })
+            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.isOwner) && (t.actor?.data.type != 'npc' || t.data.disposition == 1); })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => { return this.mapToken(t); });
 
@@ -200,7 +200,7 @@ export class TokenBar extends Application {
     getResourceBar(token, bar) {
         let resource = {};
         if (token.data.displayBars > 0) {
-            const attr = token.getBarAttribute(bar);
+            const attr = token.document.getBarAttribute(bar);
 
             if (attr != undefined && attr.type == "bar") {
                 const val = Number(attr.value);
@@ -226,10 +226,10 @@ export class TokenBar extends Application {
         //and need to check the stat values
         //and need to check the image
         let diff = {};
-        if (tkn?.resource1?.value != tkn.token.getBarAttribute('bar1')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
+        if (tkn?.resource1?.value != tkn.token.document.getBarAttribute('bar1')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
             diff.resource1 = this.getResourceBar(tkn.token, "bar1");
         }
-        if (tkn?.resource2?.value != tkn.token.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
+        if (tkn?.resource2?.value != tkn.token.document.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
         let stat1 = TokenBar.processStat(setting("stat1-resource"), tkn.token.actor.data.data);
@@ -256,8 +256,8 @@ export class TokenBar extends Application {
             diff.thumb = (thumb?.thumb || thumb);
 
         }
-        if (tkn.movement != tkn.token.getFlag('monks-tokenbar', 'movement')) {
-            diff.movement = tkn.token.getFlag('monks-tokenbar', 'movement');
+        if (tkn.movement != tkn.token.document.getFlag('monks-tokenbar', 'movement')) {
+            diff.movement = tkn.token.document.getFlag('monks-tokenbar', 'movement');
         }
 
         if (tkn.inspiration != (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration')))
@@ -396,7 +396,7 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-microphone"></i>',
                 condition: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    let players = game.users.entities
+                    let players = game.users.contents
                         .filter(u =>
                             !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
                     );
@@ -628,9 +628,10 @@ export class TokenBar extends Application {
 
 //});
 
-Hooks.on('updateToken', (scene, token, data) => {
+Hooks.on('updateToken', (document, data, options) => {
+    let token = document._object;
     if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
-        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token._id);
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token.id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
             MonksTokenBar.tokenbar.updateToken(tkn)
         }
@@ -639,7 +640,7 @@ Hooks.on('updateToken', (scene, token, data) => {
 
 Hooks.on('updateOwnedItem', (actor, item, data) => {
     if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
-        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor._id);
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor.id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
             setTimeout(function () { MonksTokenBar.tokenbar.updateToken(tkn); }, 100); //delay slightly so the PF2E condition can be rendered properly.
         }
@@ -648,7 +649,7 @@ Hooks.on('updateOwnedItem', (actor, item, data) => {
 
 Hooks.on('updateActor', (actor, data) => {
     if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars") 
-        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor._id == actor._id);
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.actor.id == actor.id);
         if (tkn != undefined) {
             /*if (data?.attributes?.ac != undefined
                 || data?.skills?.prc != undefined

@@ -171,7 +171,7 @@ export class LootablesApp extends Application {
             let permissions = {};
             Object.assign(permissions, token.actor.data.permission);
             lootingUsers.forEach(user => {
-                permissions[user.data._id] = 2;
+                permissions[user.id] = 2;
             });
 
             // If using Combat Utility Belt, need to remove any of its condition overlays
@@ -198,7 +198,7 @@ export class LootablesApp extends Application {
     }
 
     static async revertLootable(app) {
-        let actor = app.token.actor;//game.actors.get(app.object._id);
+        let actor = app.token.actor;
 
         log('Reverting lootable', actor);
 
@@ -237,7 +237,7 @@ export class LootablesApp extends Application {
         let permissions = {};
         Object.assign(permissions, actor.data.permission);
         lootingUsers.forEach(user => {
-            permissions[user.data._id] = 0;
+            permissions[user.id] = 0;
         });
         await app.token.update({
             "overlayEffect": null,

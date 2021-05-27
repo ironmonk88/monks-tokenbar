@@ -57,7 +57,6 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .bar-controls .tokenbar-buttons div i {
-    cursor: pointer;
     border-radius: 6px;
     border: 1px solid transparent;
     width: 24px;
@@ -65,14 +64,18 @@ body #tokenbar-window:first-child{
     padding-top: 4px;
 }
 
-#tokenbar .bar-controls .tokenbar-buttons div:not(.disabled):hover {
+#tokenbar:not(.hidectrl) .bar-controls .tokenbar-buttons div i {
+    cursor: pointer;
+}
+
+#tokenbar:not(.hidectrl) .bar-controls .tokenbar-buttons div:not(.disabled):hover {
     filter: drop-shadow( 0 0 5px red);
 }
 
-#tokenbar .bar-controls .tokenbar-buttons div.active:hover,
-#tokenbar[movement="free"] #movement-free:not(.disabled):hover,
-#tokenbar[movement="none"] #movement-none:not(.disabled):hover,
-#tokenbar[movement="combat"] #movement-combat:not(.disabled):hover {
+#tokenbar:not(.hidectrl) .bar-controls .tokenbar-buttons div.active:hover,
+#tokenbar[movement="free"]:not(.hidectrl) #movement-free:not(.disabled):hover,
+#tokenbar[movement="none"]:not(.hidectrl) #movement-none:not(.disabled):hover,
+#tokenbar[movement="combat"]:not(.hidectrl) #movement-combat:not(.disabled):hover {
     filter: none;
 }
 
@@ -84,10 +87,10 @@ body #tokenbar-window:first-child{
     border: 1px solid #ff6400;
 }
 
-#tokenbar .bar-controls .tokenbar-buttons div.active:not(.disabled):hover i,
-#tokenbar[movement="free"] #movement-free:not(.disabled):hover i,
-#tokenbar[movement="none"] #movement-none:not(.disabled):hover i,
-#tokenbar[movement="combat"] #movement-combat:not(.disabled):hover i {
+#tokenbar:not(.hidectrl) .bar-controls .tokenbar-buttons div.active:not(.disabled):hover i,
+#tokenbar[movement="free"]:not(.hidectrl) #movement-free:not(.disabled):hover i,
+#tokenbar[movement="none"]:not(.hidectrl) #movement-none:not(.disabled):hover i,
+#tokenbar[movement="combat"]:not(.hidectrl) #movement-combat:not(.disabled):hover i {
     color: #ffc163;
 }
 

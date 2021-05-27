@@ -178,7 +178,7 @@ export class AssignXPApp extends Application {
 
             log('create chat request');
             let chatData = {
-                user: game.user._id,
+                user: game.user.id,
                 content: html
             };
 
@@ -232,7 +232,7 @@ export class AssignXP {
               MonksTokenBar.SOCKET,
               {
                   msgtype: 'assignxp',
-                  senderId: game.user._id,
+                  senderId: game.user.id,
                   actorid: actorid,
                   msgid: message.id
               },
@@ -273,7 +273,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let actorData = actors.find(a => { return a.id == actorId; });
             let actor = game.actors.get(actorId);
 
-            let assign = !actorData.assigned && (game.user.isGM || actor.owner);
+            let assign = !actorData.assigned && (game.user.isGM || actor.isOwner);
             $('.add-xp', item).toggle(assign).click($.proxy(AssignXP.onAssignXP, this, actorId, message));
         }
     }

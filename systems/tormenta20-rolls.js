@@ -65,7 +65,7 @@ export class Tormenta20Rolls extends BaseRolls {
 
         if (setting("send-levelup-whisper") && actor.data.data.attributes.nivel.xp.value >= actor.data.data.attributes.nivel.xp.proximo) {
             ChatMessage.create({
-                user: game.user._id,
+                user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
                 whisper: ChatMessage.getWhisperRecipients(actor.data.name)
             }).then(() => { });

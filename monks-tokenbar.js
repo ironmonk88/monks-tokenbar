@@ -187,8 +187,8 @@ export class MonksTokenBar {
         if (MonksTokenBar.tokenbar != undefined) {
             let tokenbar = MonksTokenBar.tokenbar;
             for (let i = 0; i < tokenbar.tokens.length; i++) {
-                await tokenbar.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
-                tokenbar.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
+                await tokenbar.tokens[i].token.document.setFlag("monks-tokenbar", "movement", null);
+                tokenbar.tokens[i].token.document.unsetFlag("monks-tokenbar", "notified");
             };
             tokenbar.render(true);
         }
@@ -238,7 +238,7 @@ export class MonksTokenBar {
                 MonksTokenBar.SOCKET,
                 {
                     msgtype: 'movementchange',
-                    senderId: game.user._id,
+                    senderId: game.user.id,
                     msg: msg,
                     tokenid: token?.id
                 },
@@ -265,7 +265,7 @@ export class MonksTokenBar {
                     let tokPermission = token.actor?.data.permission ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
-                        && curCombat.turns.every(t => t.tokenId !== token.id);
+                        && curCombat.turns.every(t => { return isNewerVersion(game.data.version, "0.7.9") ? t._token.id !== token.id : t.tokenId !== token.id; });
                 }
                 // prev combatant
                 /*
@@ -280,7 +280,7 @@ export class MonksTokenBar {
                     preventry = curCombat.turns[prevturn];
                 }*/
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !(entry.tokenId == token.id || allowNpc); // || preventry.tokenId == tokenId);
+                return !((isNewerVersion(game.data.version, "0.7.9") ? entry._token.id == token.id : entry.tokenId == token.id) || allowNpc); // || preventry.tokenId == tokenId);
             }
 
             return true;
@@ -438,7 +438,7 @@ Hooks.on("updateCombat", function (combat, delta) {
     if (game.user.isGM) {
         if (MonksTokenBar.tokenbar) {
             $(MonksTokenBar.tokenbar.tokens).each(function () {
-                this.token.unsetFlag("monks-tokenbar", "nofified");
+                this.token.document.unsetFlag("monks-tokenbar", "nofified");
             });
         }
 
@@ -450,9 +450,9 @@ Hooks.on("updateCombat", function (combat, delta) {
 
 Hooks.on("ready", MonksTokenBar.ready);
 
-Hooks.on('preUpdateToken', (scene, data, update, options, userId) => {
+Hooks.on('preUpdateToken', (document, update, options, userId) => {
     if ((update.x != undefined || update.y != undefined) && !game.user.isGM) {
-        let token = canvas.tokens.get(data._id);
+        let token = document._object;
         let allow = MonksTokenBar.allowMovement(token);
         if (!allow) {
             delete update.x;

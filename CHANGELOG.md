@@ -1,3 +1,6 @@
+## Version 1.0.36
+Support for 0.8.x
+
 ## Version 1.0.35
 Fixing assign XP issue where actors wern't being assigned XP correctly
 
