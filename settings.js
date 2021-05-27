@@ -12,6 +12,8 @@ export const registerSettings = function () {
     // Register any custom module settings here
 	let modulename = "monks-tokenbar";
 
+	const debouncedReload = foundry.utils.debounce(function () { window.location.reload(); }, 100);
+
 	let imageoptions = {
 		'token': game.i18n.localize("MonksTokenBar.token-pictures.token"),
 		'actor': game.i18n.localize("MonksTokenBar.token-pictures.actor"),
@@ -229,9 +231,7 @@ export const registerSettings = function () {
 		config: true,
 		default: icon1, //MonksTokenBar.system._defaultSetting.icon1,
 		type: String,
-		onChange: () => {
-			location.reload();
-		}
+		onChange: debouncedReload
 	});
 	game.settings.register(modulename, "stat1-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat1-resource.name"),
@@ -240,9 +240,7 @@ export const registerSettings = function () {
 		config: true,
 		default: stat1, //MonksTokenBar.system._defaultSetting.stat1,
 		type: String,
-		onChange: () => {
-			location.reload();
-		}
+		onChange: debouncedReload
 	});
 	game.settings.register(modulename, "stat2-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat2-icon.name"),
@@ -252,9 +250,7 @@ export const registerSettings = function () {
 		default: icon2, //MonksTokenBar.system._defaultSetting.icon2,
 		type: String,
 		//choices: imageoptions,
-		onChange: () => {
-			location.reload();
-		}
+		onChange: debouncedReload
 	});
 	game.settings.register(modulename, "stat2-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat2-resource.name"),
@@ -263,9 +259,7 @@ export const registerSettings = function () {
 		config: true,
 		default: stat2, //MonksTokenBar.system._defaultSetting.stat2,
 		type: String,
-		onChange: () => {
-			location.reload();
-		}
+		onChange: debouncedReload
 	});
 	game.settings.registerMenu(modulename, 'resetPosition', {
 		name: 'Reset Position',

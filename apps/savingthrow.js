@@ -704,7 +704,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //await message.update({ "content": content });
         if (game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
-    } else if (message.roll != undefined && message.data.type == 5){
+    } else if (message._roll != undefined && message.data.type == 5){
         //check grab this roll
         if(game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));

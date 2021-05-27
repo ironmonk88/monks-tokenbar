@@ -265,7 +265,7 @@ export class MonksTokenBar {
                     let tokPermission = token.actor?.data.permission ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
-                        && curCombat.turns.every(t => { return isNewerVersion(game.data.version, "0.7.9") ? t._token.id !== token.id : t.tokenId !== token.id; });
+                        && curCombat.turns.every(t => { return t._token.id !== token.id; });
                 }
                 // prev combatant
                 /*
@@ -280,7 +280,7 @@ export class MonksTokenBar {
                     preventry = curCombat.turns[prevturn];
                 }*/
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !((isNewerVersion(game.data.version, "0.7.9") ? entry._token.id == token.id : entry.tokenId == token.id) || allowNpc); // || preventry.tokenId == tokenId);
+                return !(entry._token.id == token.id || allowNpc); // || preventry.tokenId == tokenId);
             }
 
             return true;
