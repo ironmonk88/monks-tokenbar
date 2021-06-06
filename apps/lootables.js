@@ -6,7 +6,11 @@ export class LootablesApp extends Application {
 
         this.usecr = false;
         if (entity != undefined && entity instanceof Combat) {
-            this.tokens = entity.combatants.filter(a => { return a.token?.disposition != 1 }).map(a => { return { actor: a.actor, token: a.actor.token, gold: null }; });
+            this.tokens = entity.combatants.filter(c => {
+                return c.actor?.token && c.token?.data.disposition != 1
+            }).map(c => {
+                return { actor: c.actor, token: c.token, gold: null };
+            });
         } else {
             this.tokens = entity || canvas.tokens.controlled.filter(t => t.actor != undefined && t.actor.data.type !== 'character');
             if (this.tokens != undefined && !$.isArray(this.tokens))
@@ -56,7 +60,7 @@ export class LootablesApp extends Application {
     };
 
     calcGold() {
-        let lootingUsers = game.users.entries.filter(user => { return user.role >= 1 && user.role <= 2 });
+        let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
         this.usecr = $('#assign-gold-by-cr').is(':checked');
         for (let token of this.tokens) {
             let hasGold = false;

@@ -1,3 +1,12 @@
+## Version 1.0.40
+Fixing issue with lootables calculating gold
+
+Fixing issue with lootables finding correct combatants
+
+Fixing issue with assigning xp dialog
+
+Fixing issue with xp going to Wildshape form
+
 ## Version 1.0.38
 Updated the code to switch from using game.world.system to game.system.id because game.world.system no longer works with 0.8.x
 

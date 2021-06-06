@@ -19,15 +19,16 @@ export class AssignXPApp extends Application {
 
             //get the actors
             for (let combatant of entity.combatants) {
-                if (combatant.token?.disposition == 1 && combatant.actor) {
+                if (combatant.token?.data.disposition == 1 && combatant.actor) {
+                    let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag('dnd5e', 'originalActor')) : combatant.actor);
                     this.actors.push({
-                        actor: combatant.actor,
+                        actor: actor,
                         disabled: false,
                         xp: 0
                     });
 
                     apl.count = apl.count + 1;
-                    apl.levels = apl.levels + (combatant.actor.data.data.details.level?.value || combatant.actor.data.data.details.level);
+                    apl.levels = apl.levels + (actor.data.data.details.level?.value || actor.data.data.details.level);
                 }
             };
             var calcAPL = 0;
@@ -37,7 +38,7 @@ export class AssignXPApp extends Application {
             //get the monster xp
             let combatxp = 0;
             for (let combatant of entity.combatants) {
-                if (combatant.token?.disposition != 1) {
+                if (combatant.token?.data.disposition != 1) {
                     if (game.system.id == 'pf2e') {
                         let monstLevel = parseInt(combatant?.actor.data.data.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
@@ -55,8 +56,9 @@ export class AssignXPApp extends Application {
             this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables).filter(t => {
                 return t.actor?.hasPlayerOwner && (t.actor?.data.type == 'character' || t.actor?.data.type == 'Player Character')
             })).map(t => {
+                let actor = (t.actor.isPolymorphed ? game.actors.find(a => a.id == t.actor.getFlag('dnd5e', 'originalActor')) : t.actor);
                 return {
-                    actor: t.actor,
+                    actor: actor,
                     disabled: false,
                     xp: 0
                 };
