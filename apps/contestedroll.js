@@ -3,6 +3,8 @@ import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
 export class ContestedRollApp extends Application {
     constructor(item0, item1, options = {}) {
         super(options);
+        this.opts = options;
+
         this.item0 = item0 || {token: null, request: null};
         this.item0.token = (this.item0.token || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null));
         this.item0.request = (this.item0.request || MonksTokenBar.system.defaultContested());
@@ -54,6 +56,7 @@ export class ContestedRollApp extends Application {
                 //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'save' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.id,
+                    uuid: item.token.uuid,
                     actorid: item.token.actor.id,
                     requesttype: requesttype,
                     request: request,
@@ -75,7 +78,8 @@ export class ContestedRollApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: game.system.id == 'dnd5e'
+                canGrab: game.system.id == 'dnd5e',
+                options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/contestedrollchatmsg.html", requestdata);
 

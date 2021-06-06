@@ -1,3 +1,23 @@
+## Version 1.0.38
+Updated the code to switch from using game.world.system to game.system.id because game.world.system no longer works with 0.8.x
+
+Added uuid and request options to the chat message created by tokenbar
+
+Fixed issues with lootables
+
+Fixed issue with Initiative calls not working
+
+Removing the chat messages when rolling for initiative
+
+Updated PF2E so that request messages aren't shown.
+
+## Version 1.0.37
+Added support so that options used to request the saving throw are added to the chat message
+
+Added token uuid to the chat message
+
+Updated the saving throw API to use strings of token names, making it easier to request a roll in a macro.  A little more accessible if you don't know how to code.
+
 ## Version 1.0.36
 Support for 0.8.x
 

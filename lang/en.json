@@ -50,6 +50,7 @@
 	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
 	"MonksTokenBar.ActorNoTool": ": Does not have that tool",
 	"MonksTokenBar.UnknownSystem": "You're not using a system that Monk's Tokenbar supports.",
+	"MonksTokenBar.ActorNotCombatant": "Actor is not part of combat to roll initiative",
 
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
 	"MonksTokenBar.notify-on-change.hint": "Send a notification to all players when the GM changes the allowable movement",

@@ -81,7 +81,7 @@ export class LootablesApp extends Application {
 
     async convertToLootable() {
         // Limit selection to Players and Trusted Players
-        let lootingUsers = game.users.entries.filter(user => { return user.role >= 1 && user.role <= 2 });
+        let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
 
         for (let token of this.tokens) {
             if (token.disabled === true)
@@ -107,7 +107,7 @@ export class LootablesApp extends Application {
             };
 
             if (token.actor.data?.flags?.core?.sheetClass != 'dnd5e.LootSheet5eNPC')
-                newActorData.flags['monks-tokenbar'].oldsheetClass = token.actor.data?.flags?.core?.sheetClass;
+                newActorData.flags['monks-tokenbar'].oldsheetClass = token.actor.data?.flags?.core?.sheetClass; //token.actor._getSheetClass();
 
             // Remove items that shouldn't be lootable
             let oldItems = [];
@@ -116,14 +116,14 @@ export class LootablesApp extends Application {
                     // Weapons are fine, unless they're natural
                     let result = false;
                     if (item.type == 'weapon') {
-                        result =  item.data.weaponType != 'natural';
+                        result =  item.data.data.weaponType != 'natural';
                     }
                     // Equipment's fine, unless it's natural armor
                     else if (item.type == 'equipment') {
-                        if (!item.data.armor)
+                        if (!item.data.data.armor)
                             result = true;
                         else
-                            result = item.data.armor.type != 'natural';
+                            result = item.data.data.armor.type != 'natural';
                     }else
                         result = !(['class', 'spell', 'feat'].includes(item.type));
 
@@ -165,13 +165,21 @@ export class LootablesApp extends Application {
                     newActorData['data.currency'].gp.value = token.gold;
             }
 
+            token.actor._sheet = null;
+
             await token.actor.update(newActorData);
+
+            let itemIds = newItems.map(i => i.id);
+            for (let item of token.actor.data.items) {
+                if (!itemIds.includes(item.id))
+                    token.actor.data.items.delete(item.id);
+            }
 
             // Update permissions to level 2, so players can loot
             let permissions = {};
             Object.assign(permissions, token.actor.data.permission);
             lootingUsers.forEach(user => {
-                permissions[user.id] = 2;
+                permissions[user.id] = CONST.ENTITY_PERMISSIONS.OBSERVER;
             });
 
             // If using Combat Utility Belt, need to remove any of its condition overlays
@@ -228,12 +236,12 @@ export class LootablesApp extends Application {
             actorData.flags["monks-tokenbar"].olditems = [];
         }
 
-        actor.update(actorData).then((token) => {
+        await actor.update(actorData); /*.then((token) => {
             //if (app._state === Application.RENDER_STATES.CLOSED)
             //    token.actor.sheet.render(true);
-        });
+        });*/
 
-        let lootingUsers = game.users.entries.filter(user => { return user.role >= 1 && user.role <= 2 });
+        let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
         let permissions = {};
         Object.assign(permissions, actor.data.permission);
         lootingUsers.forEach(user => {
@@ -245,6 +253,8 @@ export class LootablesApp extends Application {
                 "permission": permissions
             }
         });
+
+        actor._sheet = null;
 
         let waitClose = 40;
         while (app._state !== Application.RENDER_STATES.CLOSED && waitClose-- > 0) {

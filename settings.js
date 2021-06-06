@@ -28,7 +28,7 @@ export const registerSettings = function () {
 
 	let stat1 = "attributes.ac.value";
 	let stat2 = "";
-	switch (game.world.system) {
+	switch (game.system.id) {
 		case "pf1":
 			stat1 = "attributes.ac.normal.total";
 			stat2 = "skills.per.mod";
@@ -63,13 +63,13 @@ export const registerSettings = function () {
 
 	let icon1 = "fa-shield-alt";
 	let icon2 = "fa-eye";
-	switch (game.world.system) {
+	switch (game.system.id) {
 		case "sfrpg":
 			icon2 = "fa-shield-virus";
 			break;
 	}
 
-	const dividexp = game.world.system === "pf2e" ? "no-split" : "equal-split";
+	const dividexp = (game.system.id === "pf2e" ? "no-split" : "equal-split");
 
 	game.settings.register(modulename, "notify-on-change", {
 		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),

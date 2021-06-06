@@ -314,12 +314,12 @@ export class MonksTokenBar {
         if (game.user.isGM) {
             if (combat.started == true) {
                 let axpa;
-                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (!["dnd5e", "sw5e"].includes(game.world.system) || !game.settings.get(game.world.system, 'disableExperienceTracking'))) {
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (!["dnd5e", "sw5e"].includes(game.system.id) || !game.settings.get(game.system.id, 'disableExperienceTracking'))) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
                 }
                 /*
-                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.world.system !== "sw5e" || (game.world.system === "sw5e" && !game.settings.get('sw5e', 'disableExperienceTracking')))) {
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (game.system.id !== "sw5e" || (game.system.id === "sw5e" && !game.settings.get('sw5e', 'disableExperienceTracking')))) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
                 }*/

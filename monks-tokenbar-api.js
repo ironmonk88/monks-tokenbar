@@ -31,7 +31,19 @@ export class MonksTokenBarAPI {
 
         options.rollmode = options.rollmode || 'roll';
 
-        let savingthrow = new SavingThrowApp(tokens, options);
+        if (typeof tokens == 'string')
+            tokens = tokens.split(',').map(function (item) { return item.trim(); });
+
+        let useTokens = tokens.map(t => {
+            if (typeof t == 'string') {
+                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
+            } else if (!(t instanceof Token))
+                t = null;
+
+            return t;
+        }).filter(c => !!c);
+
+        let savingthrow = new SavingThrowApp(useTokens, options);
         if (options?.silent === true) {
             let msg = savingthrow.requestRoll();
             if (options.fastForward === true)

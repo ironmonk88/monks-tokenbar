@@ -4,6 +4,8 @@ export class SavingThrowApp extends Application {
     constructor(tokens, options = {}) {
         super(options);
 
+        this.opts = options;
+
         if (tokens != undefined && !$.isArray(tokens))
             tokens = [tokens];
         this.tokens = (tokens || canvas.tokens.controlled.filter(t => t.actor != undefined));
@@ -127,6 +129,7 @@ export class SavingThrowApp extends Application {
             let tokens = this.tokens.map(t => {
                 return {
                     id: t.id,
+                    uuid: t.document.uuid,
                     actorid: t.actor.id,
                     icon: (t.data.img.endsWith('webm') ? t.actor.data.img : t.data.img),
                     name: t.name
@@ -151,7 +154,8 @@ export class SavingThrowApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: game.system.id == 'dnd5e'
+                canGrab: game.system.id == 'dnd5e',
+                options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);
 
@@ -242,9 +246,15 @@ export class SavingThrow {
                     return { id: id, roll: fakeroll, finish: null, reveal: true };
                 } else {
                     log('Actor is not part of combat to roll initiative', actor, roll);
+                    ui.notifications.warn(i18n("MonksTokenBar.ActorNotCombatant"));
                 }
             } else {
                 let finishroll;
+                if (roll instanceof ChatMessage) {
+                    let msg = roll;
+                    roll = msg.roll;
+                    msg.delete();
+                }
                 if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
                     let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                     if (rollmode == 'gmroll' && !game.user.isGM)
@@ -665,8 +675,8 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                     //    $('.dice-tooltip', item).empty().append(tooltip);
                     //}
                     $('.dice-tooltip', item).toggleClass('noshow', !showroll);
-                    $('.result-passed', item).toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
-                    $('.result-failed', item).toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
+                    $('.result-passed', item).toggle(request != 'init').toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
+                    $('.result-failed', item).toggle(request != 'init').toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
 
                     //let dicetext = (request == 'death' && !msgtoken.assigned ? i18n("MonksTokenBar.XPAdd") : (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : ''));
                     let dicetext = (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
@@ -693,7 +703,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         };
 
         //calculate the group DC
-        if (count > 0)
+        if (count > 0 && request != 'init')
             $('.group-dc', html).html(parseInt(groupdc / count));
 
         //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));

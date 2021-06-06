@@ -10,7 +10,7 @@ export class AssignXPApp extends Application {
         this.dividexp = options?.dividexp ? options?.dividexp : setting("divide-xp");
         this.divideXpOptions = divideXpOptions
 
-        if (game.world.system == 'pf2e')
+        if (game.system.id == 'pf2e')
             this.xpchart = [10, 15, 20, 30, 40, 60, 80, 120, 160];
 
         if (entity != undefined && entity instanceof Combat) {
@@ -38,7 +38,7 @@ export class AssignXPApp extends Application {
             let combatxp = 0;
             for (let combatant of entity.combatants) {
                 if (combatant.token?.disposition != 1) {
-                    if (game.world.system == 'pf2e') {
+                    if (game.system.id == 'pf2e') {
                         let monstLevel = parseInt(combatant?.actor.data.data.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;

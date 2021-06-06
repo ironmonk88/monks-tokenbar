@@ -21,6 +21,15 @@ export class DnD5eRolls extends BaseRolls {
         return true;
     }
 
+    static activateHooks() {
+        Hooks.on("preCreateChatMessage", (message, option, userid) => {
+            if (message.getFlag('monks-tokenbar', 'ignore') === true)
+                return false;
+            else
+                return true;
+        });
+    }
+
     get showXP() {
         return !game.settings.get('dnd5e', 'disableExperienceTracking');
     }
@@ -63,7 +72,8 @@ export class DnD5eRolls extends BaseRolls {
             }
             else if (request == 'init') {
                 rollfn = actor.rollInitiative;
-                request = { createCombatants: false, initiativeOptions: options };
+                options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true }} };
+                request = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
             }
         }
 
