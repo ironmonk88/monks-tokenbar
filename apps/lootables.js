@@ -173,11 +173,21 @@ export class LootablesApp extends Application {
 
             await token.actor.update(newActorData);
 
+            let oldIds = oldItems.map(i => i.id);
+            if (oldIds.length > 0) {
+                for (let id of oldIds) {
+                    let item = token.actor.items.find(i => i.id == id);
+                    if (item)
+                        await item.delete();
+                }
+                //await Item.deleteDocuments(oldIds, {parent: token.actor});
+            }
+            /*
             let itemIds = newItems.map(i => i.id);
             for (let item of token.actor.data.items) {
                 if (!itemIds.includes(item.id))
                     token.actor.data.items.delete(item.id);
-            }
+            }*/
 
             // Update permissions to level 2, so players can loot
             let permissions = {};
@@ -192,8 +202,10 @@ export class LootablesApp extends Application {
                 await game.cub.removeAllConditions(token.actor);
             }
 
-            await token.token.update({
+            let oldAlpha = token.token.data.alpha;
+            await token.token.document.update({
                 "overlayEffect": 'icons/svg/chest.svg',
+                "alpha": 0.6,
                 "actorData": {
                     "actor": {
                         "flags": {
@@ -203,7 +215,8 @@ export class LootablesApp extends Application {
                         }
                     },
                     "permission": permissions
-                }
+                },
+                "flags.monks-tokenbar.alpha": oldAlpha
             });
         }
         this.close();
@@ -231,15 +244,19 @@ export class LootablesApp extends Application {
             }
         };
 
+        let newItems = [];
         if (actor.getFlag('monks-tokenbar', 'olditems')?.length) {
             actorData.items = duplicate(actor.data.items);
             for (let olditem of actor.getFlag('monks-tokenbar', 'olditems')) {
                 if (actorData.items.findIndex(i => { return i._id == olditem._id; }) < 0)
-                    actorData.items.push(olditem);
+                    newItems.push(olditem);
             }
+
             actorData.flags["monks-tokenbar"].olditems = [];
         }
 
+        if (newItems.length > 0)
+            await Item.create(newItems, { parent: actor });
         await actor.update(actorData); /*.then((token) => {
             //if (app._state === Application.RENDER_STATES.CLOSED)
             //    token.actor.sheet.render(true);
@@ -253,6 +270,7 @@ export class LootablesApp extends Application {
         });
         await app.token.update({
             "overlayEffect": null,
+            "alpha": app.token.getFlag('monks-tokenbar', 'alpha'),
             "actorData": {
                 "permission": permissions
             }

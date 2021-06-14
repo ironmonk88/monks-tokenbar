@@ -104,7 +104,10 @@ export class SavingThrowApp extends Application {
                 break;
             case 'actor': //toggle the select actor button
                 let tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
-                MonksTokenBar.system.savingthrow.addToken(tokens);
+                if (tokens.length == 0)
+                    ui.notifications.error('No tokens are currently selected');
+                else
+                    MonksTokenBar.system.savingthrow.addToken(tokens);
                 break;
             case 'clear':
                 this.tokens = [];

@@ -452,7 +452,7 @@ Hooks.on("ready", MonksTokenBar.ready);
 
 Hooks.on('preUpdateToken', (document, update, options, userId) => {
     if ((update.x != undefined || update.y != undefined) && !game.user.isGM) {
-        let token = document._object;
+        let token = document.object;
         let allow = MonksTokenBar.allowMovement(token);
         if (!allow) {
             delete update.x;

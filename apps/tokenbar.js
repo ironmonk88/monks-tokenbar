@@ -629,9 +629,9 @@ export class TokenBar extends Application {
 //});
 
 Hooks.on('updateToken', (document, data, options) => {
-    let token = document._object;
+    //let token = document.object;
     if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) { //&& game.settings.get("monks-tokenbar", "show-resource-bars")
-        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == token.id);
+        let tkn = MonksTokenBar.tokenbar.tokens.find(t => t.token.id == document.id);
         if (tkn != undefined) { // && (data.bar1 != undefined || data.bar2 != undefined)) {
             MonksTokenBar.tokenbar.updateToken(tkn)
         }

@@ -1,3 +1,13 @@
+## Version 1.0.41
+
+Fixing issues with lootables not removing the items properly.
+
+Added alpha to tokens that are lootable
+
+Added notification if requesting a roll and you press the Add+ button and now tokens have been selected
+
+fixed an issue in the code where I referred to a token id instead of a document id
+
 ## Version 1.0.40
 Fixing issue with lootables calculating gold
 
