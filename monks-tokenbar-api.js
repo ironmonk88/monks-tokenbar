@@ -19,8 +19,20 @@ export class MonksTokenBarAPI {
         if (!MonksTokenBar.isMovement(movement))
             return;
 
-        if (tokens != undefined) {
-            MonksTokenBar.changeTokenMovement(movement, tokens);
+        if (typeof tokens == 'string')
+            tokens = tokens.split(',').map(function (item) { return item.trim(); });
+
+        let useTokens = tokens.map(t => {
+            if (typeof t == 'string') {
+                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
+            } else if (!(t instanceof Token))
+                t = null;
+
+            return t;
+        }).filter(c => !!c);
+
+        if (useTokens != undefined) {
+            MonksTokenBar.changeTokenMovement(movement, useTokens);
         }else
             MonksTokenBar.changeGlobalMovement(movement);
     }

@@ -1,3 +1,9 @@
+## Version 1.0.42
+
+Added support for Monk's Active Token Triggers
+
+Added support for the API function to change movement status using token name
+
 ## Version 1.0.41
 
 Fixing issues with lootables not removing the items properly.

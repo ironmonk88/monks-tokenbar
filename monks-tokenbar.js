@@ -1,7 +1,7 @@
 ﻿import { registerSettings } from "./settings.js";
 import { TokenBar } from "./apps/tokenbar.js";
 import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
-import { SavingThrow } from "./apps/savingthrow.js";
+import { SavingThrow, SavingThrowApp } from "./apps/savingthrow.js";
 import { ContestedRoll } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
@@ -90,6 +90,95 @@ export class MonksTokenBar {
         }
 
         MonksTokenBar.system.constructor.activateHooks();
+
+        if (game.modules.get("monks-active-tiles")?.active) {
+            game.MonksActiveTiles.triggerActions['setmovement'] = {
+                name: 'Set Movement',
+                stop: true,
+                ctrls: [
+                    {
+                        id: "entity",
+                        name: "Select Entity",
+                        type: "select",
+                        subtype: "entity",
+                        restrict: (entity) => { return (entity instanceof Token); }
+                    },
+                    {
+                        id: "movement",
+                        name: "Allow Movement",
+                        type: "checkbox"
+                    }
+                ],
+                fn: async (tile, token, action) => {
+                    let entity;
+                    if (action.data.entity.id == 'token')
+                        entity = token;
+                    else
+                        entity = await fromUuid(action.data.entity.id);
+
+                    MonksTokenBar.changeTokenMovement((action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE), entity);
+                }
+            };
+            game.MonksActiveTiles.triggerActions['requestroll'] = {
+                name: 'Request Roll',
+                ctrls: [
+                    {
+                        id: "entity",
+                        name: "Select Entity",
+                        type: "select",
+                        subtype: "entity",
+                        restrict: (entity) => { return (entity instanceof Token); }
+                    },
+                    {
+                        id: "request",
+                        name: "Request",
+                        list: () => { return MonksTokenBar.system._requestoptions; },
+                        type: "list"
+                    },
+                    {
+                        id: "dc",
+                        name: "DC",
+                        type: "text"
+                    },
+                    {
+                        id: "rollmode",
+                        name: "Roll Mode",
+                        list: "rollmode",
+                        type: "list"
+                    },
+                    {
+                        id: "dialog",
+                        name: "Show Dialog",
+                        type: "checkbox"
+                    }
+                ],
+                values: {
+                    'rollmode': {
+                        "roll": i18n('MonksTokenBar.PublicRoll'),
+                        "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
+                        "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
+                        "selfroll": i18n('MonksTokenBar.SelfRoll')
+                    }
+                },
+                fn: async (tile, token, action) => {
+                    let entity;
+                    if (action.data.entity.id == 'token')
+                        entity = token;
+                    else if (action.data.entity.id == 'players') {
+                        entity = canvas.tokens.placeables.filter(t => {
+                            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+                        });
+                    } else
+                        entity = await fromUuid(action.data.entity.id);
+
+                    let savingthrow = new SavingThrowApp(entity, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
+                    if (action.data.dialog !== true)
+                        savingthrow.requestRoll();
+                    else
+                        savingthrow.render(true);
+                }
+            };
+        }
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
@@ -214,7 +303,7 @@ export class MonksTokenBar {
                 await token.setFlag("monks-tokenbar", "movement", newMove);
                 await token.unsetFlag("monks-tokenbar", "notified");
 
-                let dispMove = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+                let dispMove = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
                 MonksTokenBar.displayNotification(dispMove, token);
 
                 /*if (MonksTokenBar.tokenbar != undefined) {
