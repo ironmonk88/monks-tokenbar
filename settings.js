@@ -135,6 +135,14 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean
 	});
+	game.settings.register(modulename, "allow-after-movement", {
+		name: game.i18n.localize("MonksTokenBar.allow-after-movement.name"),
+		hint: game.i18n.localize("MonksTokenBar.allow-after-movement.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean
+	});
 	game.settings.register(modulename, "movement-after-combat", {
 		name: game.i18n.localize("MonksTokenBar.movement-after-combat.name"),
 		hint: game.i18n.localize("MonksTokenBar.movement-after-combat.hint"),
@@ -143,6 +151,14 @@ export const registerSettings = function () {
 		default: "free",
 		type: String,
 		choices: movementoptions,
+	});
+	game.settings.register(modulename, "show-on-tracker", {
+		name: game.i18n.localize("MonksTokenBar.show-on-tracker.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-on-tracker.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean
 	});
 	game.settings.register(modulename, "free-npc-combat", {
 		name: game.i18n.localize("MonksTokenBar.free-npc-combat.name"),

@@ -4,6 +4,14 @@ Added support for Monk's Active Token Triggers
 
 Added support for the API function to change movement status using token name
 
+Fixed lootables issue
+
+Fixed issue setting individual token movement
+
+Added option to allow previous token in combat to continue moving to "clean up" while the turn moves on.
+
+Added option to show a movement button on the Combat Tracker, so you can easily give a player movement when it's not their turn.
+
 ## Version 1.0.41
 
 Fixing issues with lootables not removing the items properly.

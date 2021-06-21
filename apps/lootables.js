@@ -203,7 +203,7 @@ export class LootablesApp extends Application {
             }
 
             let oldAlpha = token.token.data.alpha;
-            await token.token.document.update({
+            await token.token.update({
                 "overlayEffect": 'icons/svg/chest.svg',
                 "alpha": 0.6,
                 "actorData": {

@@ -476,7 +476,7 @@ export class TokenBar extends Application {
 
             //Highlight the current movement if different from the global
             const entry = MonksTokenBar?.tokenbar.tokens.find(t => t.id === target[0].dataset.tokenId);
-            let movement = entry?.token.getFlag("monks-tokenbar", "movement");
+            let movement = entry?.token.document.getFlag("monks-tokenbar", "movement");
             let html = $("#context-menu");
             if (movement != undefined) {
                 $('i[data-movement="' + movement + '"]', html).parent().addClass('selected');

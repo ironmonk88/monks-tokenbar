@@ -117,6 +117,10 @@ export class MonksTokenBar {
                         entity = await fromUuid(action.data.entity.id);
 
                     MonksTokenBar.changeTokenMovement((action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE), entity);
+                },
+                content: (trigger, action) => {
+
+                    return trigger.name + ' of ' + action.data.entity.name + ' to ' + (action.data.movement ? i18n("MonksTokenBar.FreeMovement") : i18n("MonksTokenBar.NoMovement"));
                 }
             };
             game.MonksActiveTiles.triggerActions['requestroll'] = {
@@ -298,10 +302,10 @@ export class MonksTokenBar {
 
         let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
         for (let token of tokens) {
-            let oldMove = token.getFlag("monks-tokenbar", "movement");
+            let oldMove = token.document.getFlag("monks-tokenbar", "movement");
             if (newMove != oldMove) {
-                await token.setFlag("monks-tokenbar", "movement", newMove);
-                await token.unsetFlag("monks-tokenbar", "notified");
+                await token.document.setFlag("monks-tokenbar", "movement", newMove);
+                await token.document.unsetFlag("monks-tokenbar", "notified");
 
                 let dispMove = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
                 MonksTokenBar.displayNotification(dispMove, token);
@@ -356,27 +360,16 @@ export class MonksTokenBar {
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
                         && curCombat.turns.every(t => { return t._token.id !== token.id; });
                 }
-                // prev combatant
-                /*
-                let prevturn = (curCombat.turn || 0) - 1;
-                if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
-                let preventry = curCombat.turns[prevturn];
 
-                //find the next one that hasn't been defeated
-                while (preventry.defeated && preventry != curCombat.turn) {
-                    prevturn--;
-                    if (prevturn == -1) prevturn = (curCombat.turns.length - 1);
-                    preventry = curCombat.turns[prevturn];
-                }*/
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !(entry._token.id == token.id || allowNpc); // || preventry.tokenId == tokenId);
+                return !(entry._token.id == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
             }
 
             return true;
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
@@ -509,6 +502,15 @@ export class MonksTokenBar {
             }
         }
     }
+
+    static toggleMovement(combatant, event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        let movement = (combatant.token.getFlag('monks-tokenbar', 'movement') == MTB_MOVEMENT_TYPE.FREE ? MTB_MOVEMENT_TYPE.COMBAT : MTB_MOVEMENT_TYPE.FREE);
+        this.changeTokenMovement(movement, combatant.token.object);
+        $(event.currentTarget).toggleClass('active', movement);
+    }
 }
 
 Hooks.once('init', async function () {
@@ -587,4 +589,24 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         });
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
+});
+
+Hooks.on("renderCombatTracker", (app, html, data) => {
+    if (setting("show-on-tracker") && game.user.isGM) {
+        $('.combatant', html).each(function () {
+            let id = this.dataset.combatantId;
+            let combatant = app.viewed.combatants.find(c => c.id == id);
+            if (combatant && combatant.hasPlayerOwner) {
+                $($('<a>')
+                    .addClass('combatant-control')
+                    .toggleClass('active', combatant.token.getFlag('monks-tokenbar', 'movement') == MTB_MOVEMENT_TYPE.FREE)
+                    .attr('title', 'Allow Movement')
+                    .attr('data-control', 'toggleMovement')
+                    .html('<i class="fas fa-running"></i>')
+                    .click(MonksTokenBar.toggleMovement.bind(MonksTokenBar, combatant))
+                ).insertBefore($('.token-effects', this));
+            }
+        })
+
+    }
 });

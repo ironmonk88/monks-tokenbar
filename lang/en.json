@@ -104,6 +104,10 @@
 	"MonksTokenBar.send-levelup-whisper.hint": "Whisper player on actor levelup",
 	"MonksTokenBar.show-inspiration.name": "Show Inspiration",
 	"MonksTokenBar.show-inspiration.hint": "Show an icon on the token if the token has inspiration",
+	"MonksTokenBar.allow-after-movement.name": "Allow movement after turn",
+	"MonksTokenBar.allow-after-movement.hint": "Allow player to move token after turn, to 'clean up'",
+	"MonksTokenBar.show-on-tracker.name": "Show on tracker",
+	"MonksTokenBar.show-on-tracker.hint": "Show movement button on the Combat Tracker",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
