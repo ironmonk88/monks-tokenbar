@@ -37,7 +37,7 @@ export class MonksTokenBarAPI {
             MonksTokenBar.changeGlobalMovement(movement);
     }
 
-    static requestRoll(tokens, options = {}) {
+    static async requestRoll(tokens, options = {}) {
         if (!game.user.isGM)
             return;
 
@@ -57,7 +57,7 @@ export class MonksTokenBarAPI {
 
         let savingthrow = new SavingThrowApp(useTokens, options);
         if (options?.silent === true) {
-            let msg = savingthrow.requestRoll();
+            let msg = await savingthrow.requestRoll();
             if (options.fastForward === true)
                 SavingThrow.onRollAll('', msg);
         }

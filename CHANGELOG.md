@@ -1,3 +1,9 @@
+## Version 1.0.43
+
+Fixed some minor issues with Active Token Trigger support
+
+Added option to bypass the dialog and roll silently.
+
 ## Version 1.0.42
 
 Added support for Monk's Active Token Triggers

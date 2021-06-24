@@ -151,8 +151,13 @@ export class MonksTokenBar {
                         type: "list"
                     },
                     {
-                        id: "dialog",
-                        name: "Show Dialog",
+                        id: "silent",
+                        name: "Bypass Dialog",
+                        type: "checkbox"
+                    },
+                    {
+                        id: "fastforward",
+                        name: "Auto Roll",
                         type: "checkbox"
                     }
                 ],
@@ -166,6 +171,9 @@ export class MonksTokenBar {
                 },
                 fn: async (tile, token, action) => {
                     let entity;
+                    if (!action.data.entity.id)
+                        return;
+
                     if (action.data.entity.id == 'token')
                         entity = token;
                     else if (action.data.entity.id == 'players') {
@@ -176,8 +184,11 @@ export class MonksTokenBar {
                         entity = await fromUuid(action.data.entity.id);
 
                     let savingthrow = new SavingThrowApp(entity, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
-                    if (action.data.dialog !== true)
-                        savingthrow.requestRoll();
+                    if (action.data.silent === true) {
+                        let msg = await savingthrow.requestRoll();
+                        if (action.data.fastforward === true)
+                            SavingThrow.onRollAll('', msg);
+                    }
                     else
                         savingthrow.render(true);
                 }
