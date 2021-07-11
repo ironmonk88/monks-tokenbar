@@ -733,12 +733,12 @@ body #tokenbar-window:first-child{
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.result-passed.selected,
-.monks-tokenbar li.item .dice-roll .dice-total .dice-result.success{
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.success .total{
     color: #468847;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.result-failed.selected,
-.monks-tokenbar li.item .dice-roll .dice-total .dice-result.fail {
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.fail .total {
     color: #b94a48;
 }
 
