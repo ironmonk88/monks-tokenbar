@@ -54,7 +54,7 @@ export class PF2eRolls extends BaseRolls {
             rollfn = function (event, abilityName) {
                 const skl = this.data.data.abilities[abilityName],
                     flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
-                return DicePF2e.d20Roll({
+                return game.pf2e.Dice.d20Roll({
                     event: event,
                     parts: ["@mod"],
                     data: {
@@ -93,7 +93,7 @@ export class PF2eRolls extends BaseRolls {
                         rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(callback(roll)); } });
                     }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 }
-            } catch
+            } catch(err)
             {
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };
             }

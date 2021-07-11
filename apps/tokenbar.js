@@ -187,7 +187,11 @@ export class TokenBar extends Application {
     async getCurrentTokens() {
         //log('Get current Tokens');
         let promises = canvas.tokens.placeables
-            .filter(t => { return t.actor != undefined && t.actor?.hasPlayerOwner && (game.user.isGM || t.actor?.isOwner) && (t.actor?.data.type != 'npc' || t.data.disposition == 1); })
+            .filter(t => {
+                return t.actor != undefined && (game.user.isGM || t.actor?.isOwner) &&
+                    ((t.actor?.hasPlayerOwner && (t.actor?.data.type != 'npc' || t.data.disposition == 1) && t.document.getFlag('monks-tokenbar', 'include') !== false)
+                        || t.document.getFlag('monks-tokenbar', 'include') === true);
+            })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => { return this.mapToken(t); });
 
@@ -663,6 +667,14 @@ Hooks.on('updateActor', (actor, data) => {
             MonksTokenBar.tokenbar.updateToken(tkn)
             //}
         } else if (data.permission != undefined) {
+            MonksTokenBar.tokenbar.refresh();
+        }
+    }
+});
+
+Hooks.on('updateToken', (document, data, options) => {
+    if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) && MonksTokenBar.tokenbar != undefined) {
+        if (data?.flags && data?.flags["monks-tokenbar"]?.include != undefined) {
             MonksTokenBar.tokenbar.refresh();
         }
     }

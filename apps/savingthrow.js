@@ -322,7 +322,7 @@ export class SavingThrow {
             }
         };
 
-        Promise.all(promises).then(response => {
+        return Promise.all(promises).then(response => {
             log('roll all finished', response);
             if (!game.user.isGM) {
                 let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
@@ -347,9 +347,19 @@ export class SavingThrow {
             } else {
                 const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
                 SavingThrow.updateMessage(response, message, revealDice);
+
+                let dc = message.getFlag('monks-tokenbar', 'dc');
+                if (dc != '') {
+                    dc = parseInt(dc);
+                    let result = true;
+                    for (let roll of response) {
+                        result = result && (roll.roll.total >= dc);
+                    }
+
+                    return result;
+                }
             }
         });
-        
     }
 
     static async updateMessage(updates, message, reveal = true) {
@@ -388,7 +398,7 @@ export class SavingThrow {
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
                         `<div class="dice-total flexrow" style="display:none;">
-                        <div class="dice-result">${msgtoken.total}</div >
+                        <div class="dice-result ${(msgtoken.reveal ? 'reveal' : '')}"><span class="smoke-screen">...</span><span class="total">${msgtoken.total}</span></div >
                         <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
                             <i class="fas fa-check"></i>
                         </a>
@@ -400,12 +410,14 @@ export class SavingThrow {
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 } else if (update.error === true) {
+                    let actor = game.actors.get(msgtoken.actorid);
+
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow"><div class="dice-result">Error!</div ></div >`);
+                        `<div class="dice-total flexrow" style="display:none;"><div class="dice-result">Error!</div ></div >`);
                     msgtoken.reveal = true;
                     msgtoken.error = true;
                     flags["token" + update.id] = msgtoken;
@@ -512,7 +524,7 @@ export class SavingThrow {
                 return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
             }).map(a => a.id);
 
-            SavingThrow.onRollAbility(ids, message, true, e);
+            return SavingThrow.onRollAbility(ids, message, true, e);
 
             /*
             for (let msgactor of actors) {
@@ -532,7 +544,7 @@ export class SavingThrow {
         let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + tokenid)); //actors.find(a => { return a.id == actorid; });
 
         if (msgtoken.passed === success)
-            delete msgtoken.passed;
+            msgtoken.passed = null;
         else
             msgtoken.passed = success;
 
@@ -658,21 +670,27 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                 if (game.user.isGM || actor.isOwner)
                     $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
-                $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll'))));
-                if (msgtoken.roll != undefined && msgtoken.roll.class == "Roll") {
+                $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
+                if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
                     //log('Chat roll:', msgtoken.roll);
                     let roll = Roll.fromData(msgtoken.roll);
                     let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
-                    $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.owner));
-                    if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM)) {
-                        $('.dice-result', item).html(!msgtoken.reveal ? '...' : '-');
-                    } else {
+                    $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal); //|| (rollmode == 'blindroll' && actor.owner)
+
+                    if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
+                        $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
+
+                    let critpass = roll.dice[0].total >= roll.dice[0].options.critical;
+                    let critfail = roll.dice[0].total <= roll.dice[0].options.fumble;
+
+                    if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll'){
                         $('.dice-result', item)
-                            .toggleClass('success', roll.dice[0].total >= roll.dice[0].options.critical)
-                            .toggleClass('fail', roll.dice[0].total <= roll.dice[0].options.fumble);
+                            .toggleClass('success', critpass)
+                            .toggleClass('fail', critfail);
                     }
+
                     if (!msgtoken.reveal && game.user.isGM)
-                        $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken.id], message));
+                        $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken], message));
                     //if (showroll && msgactor.reveal && $('.dice-tooltip', item).is(':empty')) {
                     //    let tooltip = await roll.getTooltip();
                     //    $('.dice-tooltip', item).empty().append(tooltip);
@@ -682,7 +700,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                     $('.result-failed', item).toggle(request != 'init').toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
 
                     //let dicetext = (request == 'death' && !msgtoken.assigned ? i18n("MonksTokenBar.XPAdd") : (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : ''));
-                    let dicetext = (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : '');
+                    let dicetext = (msgtoken.passed === true ? '<i class="fas fa-check"></i>' : msgtoken.passed === false ? '<i class="fas fa-times"></i>' : ''); //i18n("MonksTokenBar.Passed")
                     $('.dice-text', item)
                         .toggle(showroll && msgtoken.passed != undefined)
                         //.toggleClass('clickable', request == 'death' && !msgtoken.assigned)

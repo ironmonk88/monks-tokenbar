@@ -59,6 +59,10 @@ export const registerSettings = function () {
 			stat1 = "attributes.kac.value";
 			stat2 = "attributes.eac.value";
 			break;
+		case "swade":
+			stat1 = "stats.toughness.value";
+			stat2 = "";
+			break;
 	}
 
 	let icon1 = "fa-shield-alt";

@@ -59,7 +59,7 @@ export class MonksTokenBarAPI {
         if (options?.silent === true) {
             let msg = await savingthrow.requestRoll();
             if (options.fastForward === true)
-                SavingThrow.onRollAll('', msg);
+                SavingThrow.onRollAll('all', msg);
         }
         else
             savingthrow.render(true);

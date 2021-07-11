@@ -15,6 +15,7 @@ import { PF2eRolls } from "./systems/pf2e-rolls.js";
 import { Tormenta20Rolls } from "./systems/tormenta20-rolls.js";
 import { OSERolls } from "./systems/ose-rolls.js";
 import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
+import { SwadeRolls } from "./systems/swade-rolls.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -87,6 +88,8 @@ export class MonksTokenBar {
                 MonksTokenBar.system = new SFRPGRolls(); break;
             case 'ose':
                 MonksTokenBar.system = new OSERolls(); break;
+            case 'swade':
+                MonksTokenBar.system = new SwadeRolls(); break;
         }
 
         MonksTokenBar.system.constructor.activateHooks();
@@ -159,6 +162,12 @@ export class MonksTokenBar {
                         id: "fastforward",
                         name: "Auto Roll",
                         type: "checkbox"
+                    },
+                    {
+                        id: "checkdc",
+                        name: "Stop remaining actions",
+                        list: "stop",
+                        type: "list"
                     }
                 ],
                 values: {
@@ -167,6 +176,11 @@ export class MonksTokenBar {
                         "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
                         "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
                         "selfroll": i18n('MonksTokenBar.SelfRoll')
+                    },
+                    'stop': {
+                        "none": "Never",
+                        "fail": "on Fail",
+                        "success": "on Success"
                     }
                 },
                 fn: async (tile, token, action) => {
@@ -183,14 +197,26 @@ export class MonksTokenBar {
                     } else
                         entity = await fromUuid(action.data.entity.id);
 
+                    if (!entity)
+                        return;
+
                     let savingthrow = new SavingThrowApp(entity, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
                     if (action.data.silent === true) {
                         let msg = await savingthrow.requestRoll();
-                        if (action.data.fastforward === true)
-                            SavingThrow.onRollAll('', msg);
+                        if (action.data.fastforward === true) {
+                            let result = await SavingThrow.onRollAll('all', msg);
+                            return (action.data.checkdc == 'success' ? !result : (action.data.checkdc == 'fail' ? result : null));
+                        }
                     }
                     else
                         savingthrow.render(true);
+                },
+                content: (trigger, action) => {
+                    let parts = action.data?.request.split(':');
+                    let requesttype = (parts.length > 1 ? parts[0] : '');
+                    let request = (parts.length > 1 ? parts[1] : parts[0]);
+                    let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+                    return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.checkdc == 'fail' ? ", stop on fail" : (action.data?.checkdc == 'success' ? ", stop on success" : ''));
                 }
             };
         }
@@ -619,5 +645,19 @@ Hooks.on("renderCombatTracker", (app, html, data) => {
             }
         })
 
+    }
+});
+
+Hooks.on("renderTokenConfig", (app, html, data) => {
+    if (game.user.isGM) {
+        let include = app.object.getFlag('monks-tokenbar', 'include') ||
+            (app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
+        $('<div>')
+            .addClass('form-group')
+            .append($('<label>').html('Show on Tokenbar'))
+            .append($('<input>').attr('type', 'checkbox').attr('name', 'flags.monks-tokenbar.include').attr('data-dtype', 'Boolean').prop('checked', include))
+            .insertAfter($('[name="disposition"]', html).parent());
+
+        app.setPosition();
     }
 });

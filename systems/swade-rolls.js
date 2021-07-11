@@ -1,19 +1,21 @@
 import { BaseRolls } from "./base-rolls.js"
 import { i18n, log, setting } from "../monks-tokenbar.js"
 
-export class PF1Rolls extends BaseRolls {
+export class SwadeRolls extends BaseRolls {
     constructor() {
         super();
 
+        let attributes = {};
+        for (let [k, v] of Object.entries(this.config.attributes))
+            attributes[k] = v.long;
+
         this._requestoptions = [
-            { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
-            { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.savingThrows },
-            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
+            { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: attributes }
         ].concat(this._requestoptions);
 
         this._defaultSetting = mergeObject(this._defaultSetting, {
-            stat1: "attributes.ac.normal.total",
-            stat2: "skills.per.mod"
+            stat1: "stats.toughness.value"//,
+            //stat2: "skills.per.mod"
         });
     }
 
@@ -21,46 +23,55 @@ export class PF1Rolls extends BaseRolls {
         return true;
     }
 
+    get showXP() {
+        return false;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             log(message);
-            /*
-            if (message?.flags?.pf2e?.context != undefined && (message.flags.pf2e.context?.options?.includes("ignore") || message.flags.pf2e.context.type == 'ignore'))
-                return false;
-            else
-                return true;*/
         });
     }
 
-    defaultRequest(app) {
+    /*defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         return (allPlayers ? 'skill:per' : null);
-    }
+    }*/
 
+    /*
     defaultContested() {
         return 'ability:str';
-    }
+    }*/
 
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = { event: e, skipPrompt: fastForward, chatMessage: false };
+        let opts = { event: e, chatMessage: false };
         if (requesttype == 'ability') {
-            rollfn = actor.rollAbilityTest;
-        }
-        else if (requesttype == 'save') {
-            rollfn = actor.rollSavingThrow;
+            rollfn = actor.rollAttribute;
         }
         else if (requesttype == 'skill') {
             rollfn = actor.rollSkill;
+        } else {
+            if (request == 'init') {
+                rollfn = actor.rollInitiative;
+                options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true } } };
+                request = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
+            }
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, request, opts)
-                    .then((roll) => { return callback(roll); })
-                    .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-            } catch(err)
-            {
+                if (fastForward) {
+                    opts.suppressChat = true;
+                    return new Promise(function (resolve, reject) {
+                        resolve(rollfn.call(actor, { event: e, options: opts }));
+                    }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                } else {
+                    return rollfn.call(actor, request, opts)
+                        .then((roll) => { return callback(roll); })
+                        .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                }
+            } catch (err) {
                 log('Error:', err);
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };
             }
@@ -68,6 +79,7 @@ export class PF1Rolls extends BaseRolls {
             return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
     }
 
+    /*
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
@@ -81,5 +93,5 @@ export class PF1Rolls extends BaseRolls {
                 whisper: ChatMessage.getWhisperRecipients(actor.data.name)
             }).then(() => { });
         }
-    }
+    }*/
 }

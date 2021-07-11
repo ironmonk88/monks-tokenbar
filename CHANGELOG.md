@@ -1,3 +1,21 @@
+## Version 1.0.44
+
+Allow saving throw to return a value if the request passes or fails.  This is for integration with Monk's Active Tiles.
+
+Added option to stop remaining actions if the saving throw passes of fails.
+
+Updated display name for action to better describe what the request is regarding.
+
+Fixed an issue with the API when requesting a saving throw.
+
+Adding SWADE support.
+
+Added option to bypass chat messages in PF1.
+
+Fixed issues with rolls in PF2.
+
+Updated support for SFRPG to pypass chat messages.
+
 ## Version 1.0.43
 
 Fixed some minor issues with Active Token Trigger support

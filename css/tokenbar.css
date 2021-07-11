@@ -692,6 +692,18 @@ body #tokenbar-window:first-child{
     order: 0;
 }
 
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.reveal .smoke-screen {
+    display:none;
+}
+
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result .total {
+    display: none;
+}
+
+.monks-tokenbar li.item .dice-roll .dice-total .dice-result.reveal .total {
+    display: block;
+}
+
 .monks-tokenbar.assignxp li.item .dice-roll .dice-total a {
     font-size: 12px;
 }

@@ -47,6 +47,7 @@ export class SFRPGRolls extends BaseRolls {
     }
 
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+        /*
         let rollfn = null;
         let opts = { event: e };
 
@@ -80,6 +81,7 @@ export class SFRPGRolls extends BaseRolls {
                 title: title,
                 flavor: null,
                 speaker: speaker,
+                chatMessage: options.chatMessage,
                 dialogOptions: {
                     left: e ? e.clientX - 80 : null,
                     top: e ? e.clientY - 80 : null,
@@ -89,94 +91,6 @@ export class SFRPGRolls extends BaseRolls {
             });
         }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
 
-        /*
-        if (requesttype == 'ability') {
-            rollfn = new Promise(function (resolve, reject) {
-                const abl = actor.data.data.abilities[request]
-
-                let parts = [];
-                let data = actor.getRollData();
-
-                //Include ability check bonus only if it's not 0
-                if (abl.abilityCheckBonus) {
-                    parts.push('@abilityCheckBonus');
-                    data.abilityCheckBonus = abl.abilityCheckBonus;
-                }
-                parts.push(`@abilities.${request}.mod`);
-
-                const rollContext = new SFRPGRollContext(actor, data);
-                actor.setupRollContexts(rollContext);
-
-                return game.sfrpg.dice.d20Roll({
-                    event: e,
-                    rollContext: rollContext,
-                    parts: parts,
-                    title: 'removemessage',
-                    flavor: null,
-                    speaker: ChatMessage.getSpeaker({ actor: actor }),
-                    dialogOptions: {
-                        left: e ? e.clientX - 80 : null,
-                        top: e ? e.clientY - 80 : null
-                    },
-                    onClose: function (roll) { resolve(callback(roll)); }
-                });
-            }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-        }
-        else if (requesttype == 'save') {
-            rollfn = new Promise(function (resolve, reject) {
-                const save = actor.data.data.attributes[request]
-
-                let parts = [];
-                let data = actor.getRollData();
-
-                parts.push(`@attributes.${request}.bonus`);
-
-                const rollContext = new SFRPGRollContext(actor, data);
-                actor.setupRollContexts(rollContext);
-
-                return game.sfrpg.dice.d20Roll({
-                    event: e,
-                    rollContext: rollContext,
-                    parts: parts,
-                    title: 'removemessage',
-                    flavor: null,
-                    speaker: ChatMessage.getSpeaker({ actor: actor }),
-                    dialogOptions: {
-                        left: e ? e.clientX - 80 : null,
-                        top: e ? e.clientY - 80 : null
-                    },
-                    onClose: function (roll) { resolve(callback(roll)); }
-                });
-            }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-        }
-        else if (requesttype == 'skill') {
-            rollfn = new Promise(function (resolve, reject) {
-                const skl = actor.data.data.skills[request];
-
-                let parts = [];
-                let data = actor.getRollData();
-
-                parts.push(`@skills.${request}.mod`);
-
-                const rollContext = new SFRPGRollContext(actor, data);
-                actor.setupRollContexts(rollContext);
-
-                return game.sfrpg.dice.d20Roll({
-                    event: e,
-                    rollContext: rollContext,
-                    parts: parts,
-                    title: 'removemessage',
-                    flavor: null,
-                    speaker: ChatMessage.getSpeaker({ actor: actor }),
-                    dialogOptions: {
-                        left: e ? e.clientX - 80 : null,
-                        top: e ? e.clientY - 80 : null
-                    },
-                    onClose: function (roll) { resolve(callback(roll)); }
-                });
-            }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-        }*/
-
         if (rollfn != undefined) {
             try {
                 return rollfn.catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
@@ -185,6 +99,32 @@ export class SFRPGRolls extends BaseRolls {
 			}
         } else
             return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
+            */
+
+        let rollfn = null;
+        let options = { fastForward: fastForward, chatMessage: false, event: e };
+        let context = actor;
+        if (requesttype == 'abilities') {
+            rollfn = actor.rollAbility;
+        }
+        else if (requesttype == 'saves') {
+            rollfn = actor.rollSave;
+        }
+        else if (requesttype == 'skills') {
+            rollfn = actor.rollSkill;
+        }
+
+        if (rollfn != undefined) {
+            try {
+                return new Promise(function (resolve, reject) {
+                    options.onClose = function (roll) { resolve(callback(roll)); };
+                    rollfn.call(context, request, options);
+                }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+            } catch{
+                return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
+            }
+        } else
+            return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoRollFunction") };
     }
 
     async assignXP(msgactor) {

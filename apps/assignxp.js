@@ -93,10 +93,26 @@ export class AssignXPApp extends Application {
         if(xp !== undefined)
             this.xp = xp;
 
+        let getLevel = function (actor) {
+            let levels = 0;
+            if (actor.data.data?.classes) {
+                levels = Object.values(actor.data.data?.classes).reduce((a, b) => {
+                    return a + (b?.levels || b?.level || 0);
+                }, 0);
+            } else {
+                levels = actor.data.data.details?.level?.value || combatant?.actor.data.data.details?.level || 0;
+            }
+
+            return levels;
+        }
+
         let sortedByLevel = this.actors.filter(a => !a.disabled).sort(function (a, b) {
             const foo = a.actor.data.data.details;
             const bar = b.actor.data.data.details;
-            return (foo.level + (foo.xp.value / foo.xp.max)) - (bar.level + (bar.xp.value / bar.xp.max));
+
+            let value = (getLevel(a.actor) + (foo.xp.value / foo.xp.max)) - (getLevel(b.actor) + (bar.xp.value / bar.xp.max));
+            log(a.actor.name, b.actor.name, value);
+            return value;
         });
         sortedByLevel.forEach(x => x.xp = 0);
         switch (this.dividexp) {
