@@ -14,7 +14,13 @@ Added option to bypass chat messages in PF1.
 
 Fixed issues with rolls in PF2.
 
-Updated support for SFRPG to pypass chat messages.
+Updated support for SFRPG to bypass chat messages.
+
+Fixed an issue with distributing XP by levels.
+
+Addedd option to select or deselt tokens from the token bar.
+
+Changed how the saving throws display the dice value... which I'm nervous about 'cause it could go wrong.
 
 ## Version 1.0.43
 

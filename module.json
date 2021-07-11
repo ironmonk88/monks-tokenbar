@@ -49,5 +49,5 @@
 	"bugs": "https://github.com/ironmonk88/monks-tokenbar/issues",
 	"allowBugReporter": true,
 	"minimumCoreVersion": "0.8.0",
-	"compatibleCoreVersion": "0.8.7"
+	"compatibleCoreVersion": "0.8.8"
 }
