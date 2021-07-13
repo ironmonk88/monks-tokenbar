@@ -16,6 +16,7 @@ import { Tormenta20Rolls } from "./systems/tormenta20-rolls.js";
 import { OSERolls } from "./systems/ose-rolls.js";
 import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
 import { SwadeRolls } from "./systems/swade-rolls.js";
+import { SW5eRolls } from "./systems/sw5e-rolls.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -72,8 +73,9 @@ export class MonksTokenBar {
         MonksTokenBar.system = new BaseRolls();
         switch (game.system.id) {
             case 'dnd5e':
-            case 'sw5e':
                 MonksTokenBar.system = new DnD5eRolls(); break;
+            case 'sw5e':
+                MonksTokenBar.system = new SW5eRolls(); break;
             case 'D35E':
                 MonksTokenBar.system = new D35eRolls(); break;
             case 'dnd4eBeta':

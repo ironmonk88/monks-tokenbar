@@ -20,7 +20,14 @@ export class AssignXPApp extends Application {
             //get the actors
             for (let combatant of entity.combatants) {
                 if (combatant.token?.data.disposition == 1 && combatant.actor) {
-                    let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag('dnd5e', 'originalActor')) : combatant.actor);
+                    let actor = combatant.actor;
+                    if (combatant.actor.isPolymorphed) {
+                        if (game.system.id == 'dnd5e') {
+                            actor = game.actors.find(a => a.id == combatant.actor.getFlag('dnd5e', 'originalActor'));
+                        }else if (game.system.id == 'sw5e') {
+                            actor = game.actors.find(a => a.id == combatant.actor.getFlag('sw5e', 'originalActor'));
+                        }
+                    }
                     this.actors.push({
                         actor: actor,
                         disabled: false,
@@ -56,7 +63,14 @@ export class AssignXPApp extends Application {
             this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables).filter(t => {
                 return t.actor?.hasPlayerOwner && (t.actor?.data.type == 'character' || t.actor?.data.type == 'Player Character')
             })).map(t => {
-                let actor = (t.actor.isPolymorphed ? game.actors.find(a => a.id == t.actor.getFlag('dnd5e', 'originalActor')) : t.actor);
+                let actor = t.actor;
+                if (t.actor.isPolymorphed) {
+                    if (game.system.id == 'dnd5e') {
+                        actor = game.actors.find(a => a.id == t.actor.getFlag('dnd5e', 'originalActor'));
+                    }else if (game.system.id == 'sw5e') {
+                        actor = game.actors.find(a => a.id == t.actor.getFlag('sw5e', 'originalActor'));
+                    }
+                }
                 return {
                     actor: actor,
                     disabled: false,

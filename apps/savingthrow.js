@@ -150,14 +150,14 @@ export class SavingThrowApp extends Application {
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
-                dc: this.dc || (request == 'death' && game.system.id == 'dnd5e' ? '10' : ''),
+                dc: this.dc || (request == 'death' && ((game.system.id == 'dnd5e') || (game.system.id == 'sw5e')) ? '10' : ''),
                 name: name,
                 requesttype: requesttype,
                 request: request,
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: game.system.id == 'dnd5e',
+                canGrab: ((game.system.id == 'dnd5e') || (game.system.id == 'sw5e')),
                 options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);
