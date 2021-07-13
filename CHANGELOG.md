@@ -1,3 +1,7 @@
+## Version 1.0.45
+
+Fixing issues with finding the proper tokens for the Tokenbar.
+
 ## Version 1.0.44
 
 Allow saving throw to return a value if the request passes or fails.  This is for integration with Monk's Active Tiles.
@@ -18,7 +22,7 @@ Updated support for SFRPG to bypass chat messages.
 
 Fixed an issue with distributing XP by levels.
 
-Addedd option to select or deselt tokens from the token bar.
+Addedd option to select or deselect tokens from the token bar.
 
 Changed how the saving throws display the dice value... which I'm nervous about 'cause it could go wrong.
 

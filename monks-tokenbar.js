@@ -650,12 +650,16 @@ Hooks.on("renderCombatTracker", (app, html, data) => {
 
 Hooks.on("renderTokenConfig", (app, html, data) => {
     if (game.user.isGM) {
-        let include = app.object.getFlag('monks-tokenbar', 'include') ||
-            (app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
+        let include = app.object.getFlag('monks-tokenbar', 'include') || 'default';
+        include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+            //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
         $('<div>')
             .addClass('form-group')
             .append($('<label>').html('Show on Tokenbar'))
-            .append($('<input>').attr('type', 'checkbox').attr('name', 'flags.monks-tokenbar.include').attr('data-dtype', 'Boolean').prop('checked', include))
+            .append($('<select>').attr('name', 'flags.monks-tokenbar.include')
+                .append($('<option>').attr('value', 'default').html('Default').prop('selected', include == 'default'))
+                .append($('<option>').attr('value', 'include').html('Include').prop('selected', include == 'include'))
+                .append($('<option>').attr('value', 'exclude').html('Exclude').prop('selected', include == 'exclude')))
             .insertAfter($('[name="disposition"]', html).parent());
 
         app.setPosition();

@@ -188,9 +188,12 @@ export class TokenBar extends Application {
         //log('Get current Tokens');
         let promises = canvas.tokens.placeables
             .filter(t => {
-                return t.actor != undefined && (game.user.isGM || t.actor?.isOwner) &&
-                    ((t.actor?.hasPlayerOwner && (t.actor?.data.type != 'npc' || t.data.disposition == 1) && t.document.getFlag('monks-tokenbar', 'include') !== false)
-                        || t.document.getFlag('monks-tokenbar', 'include') === true);
+                let include = t.document.getFlag('monks-tokenbar', 'include');
+                include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+
+                return t.actor != undefined &&
+                    (game.user.isGM || t.actor?.isOwner) &&
+                    ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include');
             })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => { return this.mapToken(t); });
