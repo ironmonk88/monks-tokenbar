@@ -78,7 +78,7 @@ export class ContestedRollApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: ((game.system.id == 'dnd5e') || (game.system.id == 'sw5e')),
+                canGrab: ['dnd5e','sw5e'].includes(game.system.id),
                 options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/contestedrollchatmsg.html", requestdata);
