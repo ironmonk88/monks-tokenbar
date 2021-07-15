@@ -65,6 +65,10 @@ export class TokenBar extends Application {
             movement: setting("movement"),
             stat1icon: setting("stat1-icon"),
             stat2icon: setting("stat2-icon"),
+            stat3icon: setting("stat3-icon"),
+            stat4icon: setting("stat4-icon"),
+            stat5icon: setting("stat5-icon"),
+            stat6icon: setting("stat6-icon"),
             cssClass: css,
             pos: pos,
             buttons: this.buttons
@@ -151,6 +155,10 @@ export class TokenBar extends Application {
 
         let stat1 = TokenBar.processStat(setting("stat1-resource"), actor.data.data);
         let stat2 = TokenBar.processStat(setting("stat2-resource"), actor.data.data);
+        let stat3 = TokenBar.processStat(setting("stat3-resource"), actor.data.data);
+        let stat4 = TokenBar.processStat(setting("stat4-resource"), actor.data.data);
+        let stat5 = TokenBar.processStat(setting("stat5-resource"), actor.data.data);
+        let stat6 = TokenBar.processStat(setting("stat6-resource"), actor.data.data);
 
         token.document.unsetFlag("monks-tokenbar", "notified");
 
@@ -178,6 +186,10 @@ export class TokenBar extends Application {
             movement: token.document.getFlag("monks-tokenbar", "movement"),
             stat1: stat1,
             stat2: stat2,
+            stat3: stat3,
+            stat4: stat4,
+            stat5: stat5,
+            stat6: stat6,
             statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
             resource1: resources[0],
             resource2: resources[1]

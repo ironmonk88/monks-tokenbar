@@ -13,7 +13,10 @@ export class DnD5eRolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         this._defaultSetting = mergeObject(this._defaultSetting, {
-            stat2: "skills.prc.passive"
+            stat2: "skills.prc.passive",
+            stat3: "skills.inv.passive",
+            stat4: "skills.ins.passive",
+            stat5: "skills.ste.passive"
         });
     }
 

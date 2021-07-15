@@ -28,6 +28,10 @@ export const registerSettings = function () {
 
 	let stat1 = "attributes.ac.value";
 	let stat2 = "";
+	let stat3 = "";
+	let stat4 = "";
+	let stat5 = "";
+	let stat6 = "";
 	switch (game.system.id) {
 		case "pf1":
 			stat1 = "attributes.ac.normal.total";
@@ -44,6 +48,10 @@ export const registerSettings = function () {
 		case "dnd5e":
 		case "sw5e":
 			stat2 = "skills.prc.passive";
+			stat3 = "skills.inv.passive";
+			stat4 = "skills.ins.passive";
+			stat5 = "skills.ste.passive";
+			stat6 = "attributes.movement.walk";
 			break;
 		case "tormenta20":
 			stat1 = "defesa.value";
@@ -65,8 +73,12 @@ export const registerSettings = function () {
 			break;
 	}
 
-	let icon1 = "fa-shield-alt";
-	let icon2 = "fa-eye";
+	let icon1 = "fas fa-shield-alt";
+	let icon2 = "fas fa-eye";
+	let icon3 = "fas fa-search";
+	let icon4 = "far fa-lightbulb";
+	let icon5 = "fas fa-eye-slash";
+	let icon6 = "fas fa-running";
 	switch (game.system.id) {
 		case "sfrpg":
 			icon2 = "fa-shield-virus";
@@ -278,6 +290,82 @@ export const registerSettings = function () {
 		scope: "world",
 		config: true,
 		default: stat2, //MonksTokenBar.system._defaultSetting.stat2,
+		type: String,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat3-icon", {
+		name: game.i18n.localize("MonksTokenBar.stat3-icon.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat3-icon.hint"),
+		scope: "world",
+		config: true,
+		default: icon3, //MonksTokenBar.system._defaultSetting.icon3,
+		type: String,
+		//choices: imageoptions,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat3-resource", {
+		name: game.i18n.localize("MonksTokenBar.stat3-resource.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat3-resource.hint"),
+		scope: "world",
+		config: true,
+		default: stat3, //MonksTokenBar.system._defaultSetting.stat3,
+		type: String,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat4-icon", {
+		name: game.i18n.localize("MonksTokenBar.stat4-icon.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat4-icon.hint"),
+		scope: "world",
+		config: true,
+		default: icon4, //MonksTokenBar.system._defaultSetting.icon4,
+		type: String,
+		//choices: imageoptions,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat4-resource", {
+		name: game.i18n.localize("MonksTokenBar.stat4-resource.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat4-resource.hint"),
+		scope: "world",
+		config: true,
+		default: stat4, //MonksTokenBar.system._defaultSetting.stat4,
+		type: String,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat5-icon", {
+		name: game.i18n.localize("MonksTokenBar.stat5-icon.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat5-icon.hint"),
+		scope: "world",
+		config: true,
+		default: icon5, //MonksTokenBar.system._defaultSetting.icon4,
+		type: String,
+		//choices: imageoptions,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat5-resource", {
+		name: game.i18n.localize("MonksTokenBar.stat5-resource.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat5-resource.hint"),
+		scope: "world",
+		config: true,
+		default: stat5, //MonksTokenBar.system._defaultSetting.stat4,
+		type: String,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat6-icon", {
+		name: game.i18n.localize("MonksTokenBar.stat6-icon.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat6-icon.hint"),
+		scope: "world",
+		config: true,
+		default: icon6, //MonksTokenBar.system._defaultSetting.icon4,
+		type: String,
+		//choices: imageoptions,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "stat6-resource", {
+		name: game.i18n.localize("MonksTokenBar.stat6-resource.name"),
+		hint: game.i18n.localize("MonksTokenBar.stat6-resource.hint"),
+		scope: "world",
+		config: true,
+		default: stat6, //MonksTokenBar.system._defaultSetting.stat4,
 		type: String,
 		onChange: debouncedReload
 	});
