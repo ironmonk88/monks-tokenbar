@@ -4,7 +4,8 @@
     /*height: 92px;*/
     pointer-events: none;
     flex-wrap: nowrap;
-    display:flex !important;
+    display: flex !important;
+    align-items: flex-end;
 }
 
 #tokenbar-window #tokenbar {
@@ -29,6 +30,7 @@ body #tokenbar-window:first-child{
     box-shadow: 0 0 3px #444 inset;
     border-radius: 3px;
     flex-wrap: nowrap;
+    align-self: flex-end;
 }
 
 #tokenbar .bar-controls > div{
@@ -107,7 +109,8 @@ body #tokenbar-window:first-child{
 
 #token-action-bar {
     flex: 1 1 auto;
-    height: 92px;
+    /*height: 92px;*/
+    height: fit-content;
     pointer-events: all;
     flex-wrap: nowrap;
     /*overflow: hidden;
@@ -116,10 +119,6 @@ body #tokenbar-window:first-child{
 
 #tokenbar.hidectrl .dialog-col {
     display: none;
-}
-
-#tokenbar.hidexp .assign-xp {
-    visibility: hidden;
 }
 
 #tokenbar-window #token-action-bar {
@@ -140,6 +139,7 @@ body #tokenbar-window:first-child{
     border: 1px solid #000;
     border-radius: 3px;
     flex-wrap: nowrap;
+    align-items: flex-end;
 }
 
 #tokenbar .token-list:empty{
@@ -150,7 +150,7 @@ body #tokenbar-window:first-child{
     position: relative;
     flex: 0 0 50px;
     width: 50px;
-    height: 90px;
+    /*height: 90px;*/
     border: 1px solid #000;
     border-radius: 2px;
     background: rgba(0, 0, 0, 0.5);
@@ -158,6 +158,7 @@ body #tokenbar-window:first-child{
     cursor: pointer;
     justify-content: flex-end;
     transition: width 0.4s linear;
+    height: fit-content;
 }
 
 /*#tokenbar #token-action-bar.closed {
@@ -194,7 +195,7 @@ body #tokenbar-window:first-child{
     color: #f0f0e0;
     font-weight: bold;
     pointer-events: none;
-    flex: 0 0 18px;
+    flex: 0 0 19px;
     flex-wrap:nowrap;
 }
 
@@ -795,4 +796,86 @@ body #tokenbar-window:first-child{
 #lootables.dual {
     transform: translateX(-50%);
     margin-right: 10px;
+}
+
+.monks-tokenbar.editstats .dialog-content div.icon,
+.monks-tokenbar.editstats .dialog-content div.remove,
+.monks-tokenbar.editstats .dialog-content div.add {
+    cursor: pointer;
+}
+
+.monks-tokenbar.editstats .font-picker {
+    position: absolute;
+    top: 0px;
+    left: 30px;
+    width: 308px;
+    height: 200px;
+    border: 1px solid #C0C0C0;
+    background: url(../../../ui/denim075.png) repeat;
+    border-radius: 5px;
+    box-shadow: 0 0 20px #000;
+    display: none;
+}
+
+.monks-tokenbar.editstats .font-picker header {
+    flex: 0 0 18px;
+    overflow: hidden;
+    padding: 0 8px;
+    line-height: 18px;
+    border-bottom: 1px solid #000;
+    color: #f0f0e0;
+    justify-content: flex-end;
+}
+
+.monks-tokenbar.editstats .font-picker section {
+    background: url(../../../ui/parchment.jpg) repeat;
+    overflow-y: auto;
+    height: calc(100% - 20px);
+}
+
+.monks-tokenbar.editstats .font-picker section > div {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.monks-tokenbar.editstats .tt-hint {
+    color: #999
+}
+
+.monks-tokenbar.editstats .tt-menu {
+    width: 314px;
+    margin: 4px 0;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    overflow: hidden;
+}
+
+.monks-tokenbar.editstats .tt-suggestion {
+    padding: 3px;
+}
+
+.monks-tokenbar.editstats .tt-suggestion:hover {
+    cursor: pointer;
+    color: #fff;
+    background-color: #0097cf;
+}
+
+.monks-tokenbar.editstats .tt-suggestion.tt-cursor {
+    color: #fff;
+    background-color: #0097cf;
+}
+
+.monks-tokenbar.editstats .tt-suggestion p {
+    margin: 0;
 }

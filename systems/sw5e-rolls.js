@@ -12,9 +12,10 @@ export class SW5eRolls extends BaseRolls {
             { id: "skill", text: "MonksTokenBar.Skill", groups: this.config.skills }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat2: "skills.prc.passive"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -32,6 +33,10 @@ export class SW5eRolls extends BaseRolls {
 
     get showXP() {
         return !game.settings.get('sw5e', 'disableExperienceTracking');
+    }
+
+    get defaultStats() {
+        return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.passive", icon: "fa-eye" }];
     }
 
     defaultRequest(app) {

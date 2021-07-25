@@ -56,7 +56,6 @@ export class TokenBar extends Application {
     /** @override */
     getData(options) {
         let css = [
-            ((game.system.id == "dnd5e" || game.system.id == "sw5e") && (game.settings.get(game.system.id, 'disableExperienceTracking')) ? 'hidexp' : null),
             !game.user.isGM ? "hidectrl" : null
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();
@@ -131,7 +130,7 @@ export class TokenBar extends Application {
             let value = parseInt(term);
             if (isNaN(value)) {
                 value = getProperty(data, term);
-                return (value == undefined || value == null ? null : String(value).trim());
+                return (value == undefined || value == null ? null : String(typeof value == 'object' ? value.value : value).trim());
             } else
                 return value;
         });
@@ -149,8 +148,14 @@ export class TokenBar extends Application {
     async mapToken(token) {
         let actor = token.actor;
 
-        let stat1 = TokenBar.processStat(setting("stat1-resource"), actor.data.data);
-        let stat2 = TokenBar.processStat(setting("stat2-resource"), actor.data.data);
+        let stats = {};
+        for (let stat of MonksTokenBar.stats) {
+            let value = TokenBar.processStat(stat.stat, actor.data.data);
+            stats[stat.stat] = { icon: stat.icon, value: value, hidden: (value == undefined) };
+        }
+
+        //let stat1 = TokenBar.processStat(setting("stat1-resource"), actor.data.data);
+        //let stat2 = TokenBar.processStat(setting("stat2-resource"), actor.data.data);
 
         token.document.unsetFlag("monks-tokenbar", "notified");
 
@@ -176,9 +181,8 @@ export class TokenBar extends Application {
             img: img,
             thumb: thumb?.thumb || thumb,
             movement: token.document.getFlag("monks-tokenbar", "movement"),
-            stat1: stat1,
-            stat2: stat2,
-            statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
+            stats: stats,
+            //statClass: (stat1 == undefined && stat2 == undefined ? 'hidden' : ''),
             resource1: resources[0],
             resource2: resources[1]
         }
@@ -239,6 +243,34 @@ export class TokenBar extends Application {
         if (tkn?.resource2?.value != tkn.token.document.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
             diff.resource2 = this.getResourceBar(tkn.token, "bar2");
         }
+
+        let viewstats = MonksTokenBar.stats;
+        let diffstats = {};
+        for (let stat of viewstats) {
+            let value = TokenBar.processStat(stat.stat, tkn.token.actor.data.data);
+
+            if (tkn.stats[stat.stat] == undefined) {
+                tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (value == undefined) };
+                diffstats[stat.stat] = tkn.stats[stat.stat];
+            }
+            else {
+                let tokenstat = duplicate(tkn.stats[stat.stat]);
+                if (tokenstat.value != value) {
+                    tokenstat.value = value;
+                    tokenstat.hidden = (value == undefined);
+                    diffstats[stat.stat] = tokenstat;
+                    //diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
+                }
+            }
+        }
+        for (let [k,v] of Object.entries(tkn.stats)) {
+            if (!viewstats.find(s => s.stat == k))
+                delete tkn.stats[k];
+        }
+        if (Object.keys(diffstats).length > 0) {
+            diff.stats = diffstats;
+        }
+        /*
         let stat1 = TokenBar.processStat(setting("stat1-resource"), tkn.token.actor.data.data);
         if (tkn.stat1 != stat1) {
             diff.stat1 = stat1;
@@ -248,7 +280,8 @@ export class TokenBar extends Application {
         if (tkn.stat2 != stat2) {
             diff.stat2 = stat2;
             diff.statClass = (tkn.stat1 == undefined && tkn.stat2 == undefined ? 'hidden' : '');
-        }
+        }*/
+
         if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
             diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
             //let thumb = diff.img;

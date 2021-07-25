@@ -11,14 +11,19 @@ export class Tormenta20Rolls extends BaseRolls {
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.pericias }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "defesa.value",
             stat2: "pericias.per.value"
-        });
+        });*/
     }
 
     get _supportedSystem() {
         return true;
+    }
+
+    get defaultStats() {
+        return [{ stat: "defesa.value", icon: "fa-shield-alt" }, { stat: "pericias.per.value", icon: "fa-eye" }];
     }
 
     defaultRequest(app) {

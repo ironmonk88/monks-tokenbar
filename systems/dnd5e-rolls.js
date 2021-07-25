@@ -12,9 +12,10 @@ export class DnD5eRolls extends BaseRolls {
             { id: "skill", text: "MonksTokenBar.Skill", groups: this.config.skills }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat2: "skills.prc.passive"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -30,6 +31,10 @@ export class DnD5eRolls extends BaseRolls {
         });
     }
 
+    get defaultStats() {
+        return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.passive", icon: "fa-eye" }];
+    }
+
     get showXP() {
         return !game.settings.get('dnd5e', 'disableExperienceTracking');
     }
@@ -43,6 +48,36 @@ export class DnD5eRolls extends BaseRolls {
 
     defaultContested() {
         return 'ability:str';
+    }
+
+    dynamicRequest(tokens) {
+        let tools = {};
+        //get the first token's tools
+        for (let item of tokens[0].actor.items) {
+            if (item.type == 'tool') {
+                let sourceID = item.getFlag("core", "sourceId") || item.id;
+                //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
+                tools[sourceID] = item.data.name;
+            }
+        }
+        //see if the other tokens have these tools
+        if (Object.keys(tools).length > 0) {
+            for (let i = 1; i < tokens.length; i++) {
+                let token = tokens[i];
+                for (let [k, v] of Object.entries(tools)) {
+                    let tool = token.actor.items.find(t => {
+                        return t.type == 'tool' && (t.getFlag("core", "sourceId") || t.id) == k;
+                    });
+                    if (tool == undefined)
+                        delete tools[k];
+                }
+            }
+        }
+
+        if (Object.keys(tools).length == 0)
+            return;
+
+        return [{ id: 'tool', text: 'Tools', groups: tools }];
     }
 
     roll({id, actor, request, requesttype, fastForward = false }, callback, e) {

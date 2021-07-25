@@ -11,11 +11,11 @@ export class D35eRolls extends BaseRolls {
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.savingThrows },
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
-
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "attributes.ac.normal.total",
             stat2: "skills.spt.value"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -24,6 +24,10 @@ export class D35eRolls extends BaseRolls {
 
     get showXP() {
         return !game.settings.get('D35E', 'disableExperienceTracking');
+    }
+
+    get defaultStats() {
+        return [{ stat: "attributes.ac.normal.total", icon: "fa-shield-alt" }, {stat:"skills.spt.value", icon: "fa-eye"}];
     }
 
     defaultRequest(app) {

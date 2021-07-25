@@ -1,4 +1,5 @@
 import { ResetPosition } from "./apps/resetposition.js";
+import { EditStats } from "./apps/editstats.js";
 import { MonksTokenBar } from "./monks-tokenbar.js"
 
 export const divideXpOptions = {
@@ -26,6 +27,7 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 
+	/*
 	let stat1 = "attributes.ac.value";
 	let stat2 = "";
 	switch (game.system.id) {
@@ -71,7 +73,7 @@ export const registerSettings = function () {
 		case "sfrpg":
 			icon2 = "fa-shield-virus";
 			break;
-	}
+	}*/
 
 	const dividexp = (game.system.id === "pf2e" ? "no-split" : "equal-split");
 
@@ -248,8 +250,8 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat1-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-icon.hint"),
 		scope: "world",
-		config: true,
-		default: icon1, //MonksTokenBar.system._defaultSetting.icon1,
+		config: false,
+		default: null,//icon1, //MonksTokenBar.system._defaultSetting.icon1,
 		type: String,
 		onChange: debouncedReload
 	});
@@ -257,8 +259,8 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat1-resource.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-resource.hint"),
 		scope: "world",
-		config: true,
-		default: stat1, //MonksTokenBar.system._defaultSetting.stat1,
+		config: false,
+		default: null, //stat1, //MonksTokenBar.system._defaultSetting.stat1,
 		type: String,
 		onChange: debouncedReload
 	});
@@ -266,8 +268,8 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat2-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-icon.hint"),
 		scope: "world",
-		config: true,
-		default: icon2, //MonksTokenBar.system._defaultSetting.icon2,
+		config: false,
+		default: null, //icon2, //MonksTokenBar.system._defaultSetting.icon2,
 		type: String,
 		//choices: imageoptions,
 		onChange: debouncedReload
@@ -276,8 +278,8 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.stat2-resource.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat2-resource.hint"),
 		scope: "world",
-		config: true,
-		default: stat2, //MonksTokenBar.system._defaultSetting.stat2,
+		config: false,
+		default: null, //stat2, //MonksTokenBar.system._defaultSetting.stat2,
 		type: String,
 		onChange: debouncedReload
 	});
@@ -292,6 +294,14 @@ export const registerSettings = function () {
 			log('Reset position');
 		}
 	});
+	game.settings.registerMenu(modulename, 'editStats', {
+		name: 'Edit Stats',
+		label: 'Edit Stats',
+		hint: 'Edit the stats that are displayed on the Tokenbar',
+		icon: 'fas fa-align-justify',
+		restricted: true,
+		type: EditStats
+	});
 	
 	//this is just a global setting for movement mode
 	game.settings.register(modulename, "movement", {
@@ -305,6 +315,11 @@ export const registerSettings = function () {
 		config: false,
 		default: false,
 		type: Boolean,
+	});
+	game.settings.register(modulename, "stats", {
+		scope: "world",
+		config: false,
+		type: Object,
 	});
 
 };

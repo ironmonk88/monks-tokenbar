@@ -1,3 +1,23 @@
+## Version 1.0.46
+
+Fixing issue with Assigning XP dialog getting NaN for xp to distribute.
+
+Added the option to customise the number of stats being displayed.
+
+When using the requestRoll API you can now call using English names instead of codes.  So calling with "perception" with translate to "skill:prc".
+
+Requesting a roll will now default to the current tokens on the Tokenbar instead of all player controlled.
+
+Moved dynamic items being added to the request roll dialog to the system object
+
+Tokenbar attributes that are an object will default to trying to find the .value of the object.
+
+Fixed issue with using fastForward and requestRoll from the API causing an error.
+
+used libWrapper to encapsulate canDrag override.  This should stop the message getting flagged from DF-QOL.
+
+Added skills to SWADE, so they'll now appear when requesting a Roll.
+
 ## Version 1.0.45
 
 Fixing issues with finding the proper tokens for the Tokenbar.

@@ -19,6 +19,10 @@ export class OSERolls extends BaseRolls {
         return true;
     }
 
+    get defaultStats() {
+        return [{ stat: "ac.value", icon: "fa-shield-alt" }];
+    }
+
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         return (allPlayers ? 'scores:str' : null);

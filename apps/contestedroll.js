@@ -56,7 +56,7 @@ export class ContestedRollApp extends Application {
                 //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'save' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
                 return {
                     id: item.token.id,
-                    uuid: item.token.uuid,
+                    uuid: item.token.document.uuid,
                     actorid: item.token.actor.id,
                     requesttype: requesttype,
                     request: request,
@@ -78,7 +78,7 @@ export class ContestedRollApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: ['dnd5e','sw5e'].includes(game.system.id),
+                canGrab: ['dnd5e', 'sw5e'].includes(game.system.id),
                 options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/contestedrollchatmsg.html", requestdata);

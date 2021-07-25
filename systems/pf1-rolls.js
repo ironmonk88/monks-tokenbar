@@ -11,10 +11,11 @@ export class PF1Rolls extends BaseRolls {
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "attributes.ac.normal.total",
             stat2: "skills.per.mod"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -30,6 +31,10 @@ export class PF1Rolls extends BaseRolls {
             else
                 return true;*/
         });
+    }
+
+    get defaultStats() {
+        return [{ stat: "attributes.ac.normal.total", icon: "fa-shield-alt" }, { stat: "skills.per.mod", icon: "fa-eye" }];
     }
 
     defaultRequest(app) {

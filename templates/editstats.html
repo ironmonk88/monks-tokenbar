@@ -1,0 +1,33 @@
+<div class="monks-tokenbar flexcol editstats">
+    <form>
+        <div class="dialog-content" style="flex: 0 0 200px;height:200px;overflow-y:auto;">
+
+            {{#each stats}}
+            <div class="form-group" data-id="{{this.stat}}">
+                <div class="icon" style="flex: 0 0 30px;padding: 8px;"><i class="fas {{this.icon}}"></i></div>
+                <input type="text" class="stat-text typeahead" autocomplete="off" value="{{this.stat}}" />
+                <div class="remove" style="flex: 0 0 30px;padding: 8px;"><i class="fas fa-trash"></i></div>
+            </div>
+            {{/each}}
+            <div class="form-group">
+                <div class="add" style="flex: 0 0 30px;padding: 8px;"><i class="fas fa-plus"></i></div>
+            </div>
+
+            <div class="font-picker">
+                <header class="flexrow">
+                    <a class="header-button close-picker" style="flex: 0 0 14px;"><i class="fas fa-times" style="margin-top:4px;"></i></a>
+                </header>
+                <section>
+                </section>
+            </div>
+        </div>
+        <footer class="sheet-footer flexrow">
+            <button type="button" name="submit">
+                <i class="far fa-save"></i> Save Changes
+            </button>
+            <button type="button" name="reset">
+                <i class="fas fa-undo"></i> Reset Defaults
+            </button>
+        </footer>
+    </form>
+</div>

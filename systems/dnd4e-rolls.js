@@ -14,10 +14,11 @@ export class DnD4eRolls extends BaseRolls {
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "defences.ac.value",
             stat2: "skills.prc.total"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -36,6 +37,10 @@ export class DnD4eRolls extends BaseRolls {
 
     get showXP() {
         return !game.settings.get('dnd4eBeta', 'disableExperienceTracking');
+    }
+
+    get defaultStats() {
+        return [{ stat: "defences.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.total", icon: "fa-eye" }];
     }
 
     defaultRequest(app) {

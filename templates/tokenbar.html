@@ -14,9 +14,10 @@
     <nav id="token-action-bar" class="flexrow">
         <ol class="flexrow token-list">{{#each tokens}}
             <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}} movement="{{this.movement}}">
-                <div class="token-stats flexcol {{this.statClass}}">
-                    <div class="token-stat stat1 flexrow">{{#if this.stat1}}<i class="fas {{../stat1icon}}"></i><span>{{this.stat1}}</span>{{/if}}</div>
-                    <div class="token-stat stat2 flexrow">{{#if this.stat2}}<i class="fas {{../stat2icon}}"></i><span>{{this.stat2}}</span>{{/if}}</div>
+                <div class="token-stats flexcol">
+                    {{#each this.stats}}
+                    <div class="token-stat flexrow" data-stat="{{@key}}" {{#if this.hidden}}style="visibility:hidden;"{{/if}} ><i class="fas {{this.icon}}"></i><span>{{this.value}}</span></div>
+                    {{/each}}
                 </div>
                 <div class="token-content">
                     <div class="movement-icon" movement="{{this.movement}}"><i class="fas"></i></div>

@@ -52,10 +52,38 @@ export class MonksTokenBar {
 
         registerSettings();
 
+        if (setting('stats') == undefined) {
+            //check and see if the user has selected something other than the default
+            if (setting('stat1-icon') != undefined || setting('stat1-resource') != undefined || setting('stat2-icon') != undefined || setting('stat2-resource') != undefined) {
+                let oldstats = {};
+                if (setting('stat1-resource') != undefined)
+                    oldstats[setting('stat1-resource')] = setting('stat1-icon');
+                if (setting('stat2-resource') != undefined)
+                    oldstats[setting('stat2-resource')] = setting('stat2-icon');
+                game.settings.set('monks-tokenbar', 'stats', oldstats);
+            }
+        }
+
+        /*
         let oldTokenCanDrag = Token.prototype._canDrag;
         Token.prototype._canDrag = function (user, event) {
             return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
         };
+        */
+
+        let canDrag = function (wrapped, ...args) {
+            let result = wrapped(...args);
+            return (MonksTokenBar.allowMovement(this, false) ? result : false);
+        }
+
+        if (game.modules.get("lib-wrapper")?.active) {
+            libWrapper.register("monks-tokenbar", "Token.prototype._canDrag", canDrag, "WRAPPER");
+        } else {
+            const oldCanDrag = Token.prototype._canDrag;
+            Token.prototype._canDrag = function (event) {
+                return canDrag.call(this, oldCanDrag.bind(this), ...arguments);
+            }
+        }
 
         /*
         let oldView = Scene.prototype.view;
@@ -65,6 +93,11 @@ export class MonksTokenBar {
             }
             return oldView.call(this);
         }*/
+    }
+
+    static get stats() {
+
+        return setting('stats') || MonksTokenBar.system.defaultStats;
     }
 
     static ready() {
@@ -95,6 +128,8 @@ export class MonksTokenBar {
         }
 
         MonksTokenBar.system.constructor.activateHooks();
+
+        game.settings.settings.get("monks-tokenbar.stats").default = MonksTokenBar.system.defaultStats;
 
         if (game.modules.get("monks-active-tiles")?.active) {
             game.MonksActiveTiles.triggerActions['setmovement'] = {
@@ -435,7 +470,7 @@ export class MonksTokenBar {
         if (game.user.isGM) {
             if (combat.started == true) {
                 let axpa;
-                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && (!["dnd5e", "sw5e"].includes(game.system.id) || !game.settings.get(game.system.id, 'disableExperienceTracking'))) {
+                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && MonksTokenBar.system.showXP) {
                     axpa = new AssignXPApp(combat);
                     await axpa.render(true);
                 }
@@ -652,7 +687,7 @@ Hooks.on("renderCombatTracker", (app, html, data) => {
 
 Hooks.on("renderTokenConfig", (app, html, data) => {
     if (game.user.isGM) {
-        let include = app.object.getFlag('monks-tokenbar', 'include') || 'default';
+        let include = app.token.getFlag('monks-tokenbar', 'include') || 'default';
         include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
             //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
         $('<div>')

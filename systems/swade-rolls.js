@@ -13,10 +13,11 @@ export class SwadeRolls extends BaseRolls {
             { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: attributes }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "stats.toughness.value"//,
             //stat2: "skills.per.mod"
-        });
+        });*/
     }
 
     get _supportedSystem() {
@@ -33,6 +34,10 @@ export class SwadeRolls extends BaseRolls {
         });
     }
 
+    get defaultStats() {
+        return [{ stat: "stats.toughness.value", icon: "fa-shield-alt" }];
+    }
+
     /*defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         return (allPlayers ? 'skill:per' : null);
@@ -43,6 +48,34 @@ export class SwadeRolls extends BaseRolls {
         return 'ability:str';
     }*/
 
+    dynamicRequest(tokens) {
+        let skills = {};
+        //get the first token's tools
+        for (let item of tokens[0].actor.items) {
+            if (item.type == 'skill') {
+                skills[item.data.name] = item.data.name;
+            }
+        }
+        //see if the other tokens have these tools
+        if (Object.keys(skills).length > 0) {
+            for (let i = 1; i < tokens.length; i++) {
+                let token = tokens[i];
+                for (let [k, v] of Object.entries(skills)) {
+                    let skill = token.actor.items.find(t => {
+                        return t.type == 'skill' && t.data.name == k;
+                    });
+                    if (skill == undefined)
+                        delete skills[k];
+                }
+            }
+        }
+
+        if (Object.keys(skills).length == 0)
+            return;
+
+        return [{ id: 'skill', text: 'Skills', groups: skills }];
+    }
+
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = { event: e, chatMessage: false };
@@ -50,6 +83,8 @@ export class SwadeRolls extends BaseRolls {
             rollfn = actor.rollAttribute;
         }
         else if (requesttype == 'skill') {
+            let item = actor.items.find(i => i.data.name == request && i.type == 'skill');
+            request = item.id;
             rollfn = actor.rollSkill;
         } else {
             if (request == 'init') {

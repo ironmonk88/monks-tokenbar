@@ -11,12 +11,13 @@ export class SFRPGRolls extends BaseRolls {
             { id: "skills", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "attributes.kac.value",
             stat2: "attributes.eac.value",
             icon1: "fa-shield-alt",
             icon2: "fa-shield-virus"
-        })
+        })*/
     }
 
     get _supportedSystem() {
@@ -31,6 +32,10 @@ export class SFRPGRolls extends BaseRolls {
             else
                 return true;
         });
+    }
+
+    get defaultStats() {
+        return [{ stat: "attributes.kac.value", icon: "fa-shield-alt" }, { stat: "attributes.eac.value", icon: "fa-shield-virus" }];
     }
 
     get contestedoptions() {

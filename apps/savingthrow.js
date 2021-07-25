@@ -12,12 +12,28 @@ export class SavingThrowApp extends Application {
 
         if (this.tokens.length == 0) {   //if none have been selected then default to the party
             this.tokens = canvas.tokens.placeables.filter(t => {
-                return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+                let include = t.document.getFlag('monks-tokenbar', 'include');
+                include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+                return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
             });
         }
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
-        this.request = options.request;
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
+        this.request = options.request;
+
+        //find best match for request
+        if (options.request) {
+            for (let opt of this.baseoptions) {
+                let byname = Object.entries(opt.groups).find(([k, v]) => {
+                    return i18n(v).toLowerCase() == options.request.toLowerCase()
+                });
+                if (byname) {
+                    this.request = opt.id + ':' + byname[0];
+                    break;
+                }
+            }
+        }
+
         this.dc = options.dc;
     }
 
@@ -36,32 +52,9 @@ export class SavingThrowApp extends Application {
         this.requestoptions = this.baseoptions;
 
         if (this.tokens.length > 0) {
-            let tools = {};
-            //get the first token's tools
-            for (let item of this.tokens[0].actor.items) {
-                if (item.type == 'tool') {
-                    let sourceID = item.getFlag("core", "sourceId") || item.id;
-                    //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
-                    tools[sourceID] = item.data.name;
-                }
-            }
-            //see if the other tokens have these tools
-            if (Object.keys(tools).length > 0) {
-                for (let i = 1; i < this.tokens.length; i++) {
-                    let token = this.tokens[i];
-                    for (let [k, v] of Object.entries(tools)) {
-                        let tool = token.actor.items.find(t => {
-                            return t.type == 'tool' && (t.getFlag("core", "sourceId") || t.id) == k;
-                        });
-                        if (tool == undefined)
-                            delete tools[k];
-                    }
-                }
-            }
-
-            if (Object.keys(tools).length > 0) {
-                this.requestoptions = this.requestoptions.concat([{ id: 'tool', text: 'Tools', groups: tools }]);
-            }
+            let dynamic = MonksTokenBar.system.dynamicRequest(this.tokens);
+            if (dynamic)
+                this.requestoptions = this.requestoptions.concat(dynamic);
         }
 
         return {
@@ -91,7 +84,9 @@ export class SavingThrowApp extends Application {
         switch (type) {
             case 'player':
                 this.tokens = canvas.tokens.placeables.filter(t => {
-                    return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+                    let include = t.document.getFlag('monks-tokenbar', 'include');
+                    include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+                    return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
                 });
                 this.render(true);
                 break;
@@ -140,6 +135,12 @@ export class SavingThrowApp extends Application {
             });
             SavingThrow.lastRequest = this.request;
 
+            if (this.request == undefined) {
+                log('Invalid request');
+                ui.notifications.error("Invalid value sent as a request");
+                return;
+            }
+
             let parts = this.request.split(':'); //$('.request-roll', this.element).val()
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
@@ -150,14 +151,14 @@ export class SavingThrowApp extends Application {
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
-                dc: this.dc || (request == 'death' && ['dnd5e','sw5e'].includes(game.system.id) ? '10' : ''),
+                dc: this.dc || (request == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
                 name: name,
                 requesttype: requesttype,
                 request: request,
                 rollmode: rollmode,
                 modename: modename,
                 tokens: tokens,
-                canGrab: ['dnd5e','sw5e'].includes(game.system.id),
+                canGrab: ['dnd5e', 'sw5e'].includes(game.system.id),
                 options: this.opts
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);

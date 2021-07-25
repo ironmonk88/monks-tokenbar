@@ -44,7 +44,7 @@ export class AssignXPApp extends Application {
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;
                     }else
-                        combatxp += combatant.actor?.data.data.details?.xp?.value;
+                        combatxp += (combatant.actor?.data.data.details?.xp?.value || 0);
                 }
             };
             //xp += (combatant?.actor.data.data.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.data.data.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
@@ -100,7 +100,7 @@ export class AssignXPApp extends Application {
                     return a + (b?.levels || b?.level || 0);
                 }, 0);
             } else {
-                levels = actor.data.data.details?.level?.value || combatant?.actor.data.data.details?.level || 0;
+                levels = actor.data.data.details?.level?.value || actor.data.data.details?.level || 0;
             }
 
             return levels;
