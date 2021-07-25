@@ -1,3 +1,7 @@
+## Version 1.0.46 edit
+
+Completely forgot to thank supervj for their work on fixing issues with SW5e compatibility!
+
 ## Version 1.0.46
 
 Fixing issue with Assigning XP dialog getting NaN for xp to distribute.
