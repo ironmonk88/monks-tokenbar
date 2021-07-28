@@ -10,9 +10,10 @@ export class OSERolls extends BaseRolls {
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves_long }
         ].concat(this._requestoptions);
 
+        /*
         this._defaultSetting = mergeObject(this._defaultSetting, {
             stat1: "ac.value"
-        });
+        });*/
     }
 
     get _supportedSystem() {

@@ -111,7 +111,7 @@ export class ContestedRollApp extends Application {
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
             ChatMessage.create(chatData, {});
-            if (setting('request-roll-sound-file') != '')
+            if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll')
                 AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
         } else

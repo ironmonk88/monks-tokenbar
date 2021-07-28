@@ -1,3 +1,11 @@
+## Version 1.0.47
+
+Tokenbar will no longer play the request roll sound when roll mode is set to self roll.
+
+Fixed issue with tokens not showing on Old School Essentials
+
+Changed name from Ability to Attribute in SWADE
+
 ## Version 1.0.46 edit
 
 Completely forgot to thank supervj for their work on fixing issues with SW5e compatibility!

@@ -42,6 +42,10 @@ export class BaseRolls {
         return true;
     }
 
+    get dcLabel() {
+        return "MonksTokenBar.SavingDC";
+    }
+
     get defaultStats() {
         return [];
     }

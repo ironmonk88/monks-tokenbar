@@ -10,7 +10,7 @@ export class SwadeRolls extends BaseRolls {
             attributes[k] = v.long;
 
         this._requestoptions = [
-            { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: attributes }
+            { id: "ability", text: i18n("MonksTokenBar.Attribute"), groups: attributes }
         ].concat(this._requestoptions);
 
         /*
