@@ -50,6 +50,7 @@
 	"MonksTokenBar.ActorNoRollFunction": "：ロールする関数が見つかりませんでした。",
 	"MonksTokenBar.ActorNoTool": "：そのツールを所持していません。",
 	"MonksTokenBar.UnknownSystem": "Monk's Tokenbarはこのゲームシステムに対応していません。",
+	"MonksTokenBar.ActorNotCombatant": "イニシアチブをロールするためには、戦闘に参加している必要があります。",
 
 	"MonksTokenBar.notify-on-change.name": "移動モードの変更を通知する",
 	"MonksTokenBar.notify-on-change.hint": "GMが移動モードの設定を変更したとき、すべてのプレイヤーに通知を送ります。",
@@ -103,6 +104,10 @@
 	"MonksTokenBar.send-levelup-whisper.hint": "アクターがレベルアップしたとき、秘話でプレイヤーにそれを教えます。",
 	"MonksTokenBar.show-inspiration.name": "インスピレーションを表示する",
 	"MonksTokenBar.show-inspiration.hint": "インスピレーションを所持しているコマにアイコンを表示します。",
+	"MonksTokenBar.allow-after-movement.name": "ターン終了直後の移動を許可する",
+	"MonksTokenBar.allow-after-movement.hint": "自身のターンの次のターン中も、プレイヤーがコマを移動できるようにします。プレイヤーが信頼できる場合、これは些細なミスの修正に役立ちます。",
+	"MonksTokenBar.show-on-tracker.name": "移動許可ボタンを表示",
+	"MonksTokenBar.show-on-tracker.hint": "イニシアチブ表のステータス欄に、移動許可ボタンを追加します。",
 	
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
