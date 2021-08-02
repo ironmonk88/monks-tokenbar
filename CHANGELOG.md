@@ -1,3 +1,17 @@
+## Version 1.0.48
+
+Fixed the fix of an issue with lootable.  Turns out that it was workign properly, but that I was loading the tokens inproperly when manually converting to lootable.
+
+Fixed an issue with resource bars showing up on an update even if they're not supposed to.
+
+Switched use of entities to contents.
+
+Fixed an issue where resource bars weren't aligning properly when more than two attributes were added.
+
+Added the appropriate reference to Catalan and Spanis translations.
+
+Updated the interface with Active Tiles to use the correct information being passed.
+
 ## Version 1.0.47 edit
 
 Sorry I keep missing contributions.  Thank you to jvir and Montver for Spanish translations
