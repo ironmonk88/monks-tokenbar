@@ -16,7 +16,7 @@ export class LootablesApp extends Application {
             if (this.tokens != undefined && !$.isArray(this.tokens))
                 this.tokens = [this.tokens];
 
-            this.tokens = this.tokens.map(t => { return { actor: t.actor, token: t, gold: null }; });
+            this.tokens = this.tokens.map(t => { return { actor: t.actor, token: t.document, gold: null }; });
         }
     }
 
@@ -203,7 +203,7 @@ export class LootablesApp extends Application {
             }
 
             let oldAlpha = token.token.data.alpha;
-            await token.token.document.update({
+            await token.token.update({
                 "overlayEffect": 'icons/svg/chest.svg',
                 "alpha": 0.6,
                 "actorData": {

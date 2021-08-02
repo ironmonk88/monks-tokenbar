@@ -141,26 +141,47 @@ export class MonksTokenBar {
                         name: "Select Entity",
                         type: "select",
                         subtype: "entity",
+                        options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
                         restrict: (entity) => { return (entity instanceof Token); }
                     },
                     {
                         id: "movement",
                         name: "Allow Movement",
-                        type: "checkbox"
+                        list: "movement",
+                        type: "list"
                     }
                 ],
+                values: {
+                    'movement': {
+                        "none": 'MonksTokenBar.NoMovement',
+                        "free": 'MonksTokenBar.FreeMovement',
+                        //"combat": 'MonksTokenBar.CombatTurn'
+                    }
+                },
                 fn: async (tile, token, action) => {
                     let entity;
                     if (action.data.entity.id == 'token')
-                        entity = token;
-                    else
+                        entity = token.object;
+                    else if (action.data.entity.id == 'players') {
+                        entity = canvas.tokens.placeables.filter(t => {
+                            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
+                        });
+                    } else if (action.data.entity.id == 'within') {
+                        entity = canvas.tokens.placeables.filter(t => {
+                            let offsetW = t.w / 2;
+                            let offsetH = t.h / 2;
+                            return tile.object.hitArea.contains((t.x + offsetW) - tile.data.x, (t.y + offsetH) - tile.data.y);
+                        });
+                    } else {
                         entity = await fromUuid(action.data.entity.id);
+                        entity = entity.object;
+                    }
 
-                    MonksTokenBar.changeTokenMovement((action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE), entity);
+                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entity);
                 },
                 content: (trigger, action) => {
 
-                    return trigger.name + ' of ' + action.data.entity.name + ' to ' + (action.data.movement ? i18n("MonksTokenBar.FreeMovement") : i18n("MonksTokenBar.NoMovement"));
+                    return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
                 }
             };
             game.MonksActiveTiles.triggerActions['requestroll'] = {
@@ -171,6 +192,7 @@ export class MonksTokenBar {
                         name: "Select Entity",
                         type: "select",
                         subtype: "entity",
+                        options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
                         restrict: (entity) => { return (entity instanceof Token); }
                     },
                     {
@@ -230,7 +252,13 @@ export class MonksTokenBar {
                     else if (action.data.entity.id == 'players') {
                         entity = canvas.tokens.placeables.filter(t => {
                             return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
-                        });
+                        }).map(t => t.document);
+                    } else if (action.data.entity.id == 'within') {
+                        entity = canvas.tokens.placeables.filter(t => {
+                            let offsetW = t.w / 2;
+                            let offsetH = t.h / 2;
+                            return tile.object.hitArea.contains((t.x + offsetW) - tile.data.x, (t.y + offsetH) - tile.data.y);
+                        }).map(t => t.document);
                     } else
                         entity = await fromUuid(action.data.entity.id);
 

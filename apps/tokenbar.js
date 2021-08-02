@@ -237,11 +237,13 @@ export class TokenBar extends Application {
         //and need to check the stat values
         //and need to check the image
         let diff = {};
-        if (tkn?.resource1?.value != tkn.token.document.getBarAttribute('bar1')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
-            diff.resource1 = this.getResourceBar(tkn.token, "bar1");
-        }
-        if (tkn?.resource2?.value != tkn.token.document.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
-            diff.resource2 = this.getResourceBar(tkn.token, "bar2");
+        if (game.settings.get("monks-tokenbar", "show-resource-bars")) {
+            if (tkn?.resource1?.value != tkn.token.document.getBarAttribute('bar1')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar1.attribute)) {
+                diff.resource1 = this.getResourceBar(tkn.token, "bar1");
+            }
+            if (tkn?.resource2?.value != tkn.token.document.getBarAttribute('bar2')?.value) { //getAttrProperty(tkn.token.actor.data.data, tkn.token.data.bar2.attribute)) {
+                diff.resource2 = this.getResourceBar(tkn.token, "bar2");
+            }
         }
 
         let viewstats = MonksTokenBar.stats;
@@ -444,7 +446,7 @@ export class TokenBar extends Application {
                 },
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    let players = game.users.entities
+                    let players = game.users.contents
                     .filter(u =>
                         !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
                     )

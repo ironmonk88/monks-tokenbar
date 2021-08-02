@@ -1,6 +1,6 @@
 ## Version 1.0.47 edit
 
-Sorry I keep missing contributions.  Thank you to jvir for Spanish translations
+Sorry I keep missing contributions.  Thank you to jvir and Montver for Spanish translations
 
 And thank you to touge as always for the Japanese updates
 

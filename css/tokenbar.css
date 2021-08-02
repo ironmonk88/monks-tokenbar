@@ -228,9 +228,9 @@ body #tokenbar-window:first-child{
     position: absolute;
     width: calc(100% + 4px);
     height: 10px;
-    top: 100%;
     margin-top: -8px;
     left: 0px;
+    bottom:-2px;
     border: 2px solid rgba(0, 0, 0, 0.9);
     border-radius: 3px;
     background-color: rgba(0, 0, 0, 0.5);
@@ -238,7 +238,7 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .resource[resource="2"] {
-    top: 36px;
+    bottom: 40px;
     margin-top:0px;
 }
 
