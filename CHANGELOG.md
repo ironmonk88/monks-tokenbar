@@ -1,3 +1,7 @@
+## Version 1.0.49
+
+Minor fix with the Active Tiles update.  Missed a spot where I didn't convert to the Token from TokenDocument.
+
 ## Version 1.0.48
 
 Fixed the fix of an issue with lootable.  Turns out that it was workign properly, but that I was loading the tokens inproperly when manually converting to lootable.

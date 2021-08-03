@@ -174,7 +174,7 @@ export class MonksTokenBar {
                         });
                     } else {
                         entity = await fromUuid(action.data.entity.id);
-                        entity = entity.object;
+                        entity = entity?.object;
                     }
 
                     MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entity);
@@ -248,22 +248,24 @@ export class MonksTokenBar {
                         return;
 
                     if (action.data.entity.id == 'token')
-                        entity = token;
+                        entity = token.object;
                     else if (action.data.entity.id == 'players') {
                         entity = canvas.tokens.placeables.filter(t => {
                             return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
-                        }).map(t => t.document);
+                        });
                     } else if (action.data.entity.id == 'within') {
                         entity = canvas.tokens.placeables.filter(t => {
                             let offsetW = t.w / 2;
                             let offsetH = t.h / 2;
                             return tile.object.hitArea.contains((t.x + offsetW) - tile.data.x, (t.y + offsetH) - tile.data.y);
-                        }).map(t => t.document);
-                    } else
+                        });
+                    } else {
                         entity = await fromUuid(action.data.entity.id);
+                        entity = entity?.object;
+                    }
 
                     if (!entity)
-                        return;
+                        entity = [];
 
                     let savingthrow = new SavingThrowApp(entity, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
                     if (action.data.silent === true) {
