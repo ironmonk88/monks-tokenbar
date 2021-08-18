@@ -103,7 +103,7 @@ export class SavingThrowApp extends Application {
                 if (tokens.length == 0)
                     ui.notifications.error('No tokens are currently selected');
                 else
-                    MonksTokenBar.system.savingthrow.addToken(tokens);
+                    this.addToken(tokens);
                 break;
             case 'clear':
                 this.tokens = [];

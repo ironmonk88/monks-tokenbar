@@ -11,8 +11,6 @@ export class EditStats extends FormApplication {
             if (attributes)
                 this.attributes = attributes.value.concat(attributes.bar).map(a => a.join('.'));
         }
-
-        log(this.attributes);
     }
 
     static get defaultOptions() {

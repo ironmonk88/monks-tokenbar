@@ -133,7 +133,7 @@ export class MonksTokenBar {
 
         if (game.modules.get("monks-active-tiles")?.active) {
             game.MonksActiveTiles.triggerActions['setmovement'] = {
-                name: 'Set Movement',
+                name: 'Change Movement Mode',
                 stop: true,
                 ctrls: [
                     {
@@ -141,7 +141,7 @@ export class MonksTokenBar {
                         name: "Select Entity",
                         type: "select",
                         subtype: "entity",
-                        options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                        options: { showToken: true, showWithin: true, showPlayers: true },
                         restrict: (entity) => { return (entity instanceof Token); }
                     },
                     {
@@ -155,32 +155,16 @@ export class MonksTokenBar {
                     'movement': {
                         "none": 'MonksTokenBar.NoMovement',
                         "free": 'MonksTokenBar.FreeMovement',
-                        //"combat": 'MonksTokenBar.CombatTurn'
+                        "combat": 'MonksTokenBar.CombatTurn'
                     }
                 },
-                fn: async (tile, token, action) => {
-                    let entity;
-                    if (action.data.entity.id == 'token')
-                        entity = token.object;
-                    else if (action.data.entity.id == 'players') {
-                        entity = canvas.tokens.placeables.filter(t => {
-                            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
-                        });
-                    } else if (action.data.entity.id == 'within') {
-                        entity = canvas.tokens.placeables.filter(t => {
-                            let offsetW = t.w / 2;
-                            let offsetH = t.h / 2;
-                            return tile.object.hitArea.contains((t.x + offsetW) - tile.data.x, (t.y + offsetH) - tile.data.y);
-                        });
-                    } else {
-                        entity = await fromUuid(action.data.entity.id);
-                        entity = entity?.object;
-                    }
+                fn: async (args = {}) => {
+                    const { action } = args;
+                    let entities = await game.MonksActiveTiles.getEntities(args);
 
-                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entity);
+                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
                 },
                 content: (trigger, action) => {
-
                     return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
                 }
             };
@@ -242,32 +226,14 @@ export class MonksTokenBar {
                         "success": "on Success"
                     }
                 },
-                fn: async (tile, token, action) => {
-                    let entity;
-                    if (!action.data.entity.id)
+                fn: async (args = {}) => {
+                    const { action } = args;
+                    let entities = await game.MonksActiveTiles.getEntities(args);
+
+                    if (entities.length == 0)
                         return;
 
-                    if (action.data.entity.id == 'token')
-                        entity = token.object;
-                    else if (action.data.entity.id == 'players') {
-                        entity = canvas.tokens.placeables.filter(t => {
-                            return t.actor != undefined && t.actor?.hasPlayerOwner && t.actor?.data.type != 'npc';
-                        });
-                    } else if (action.data.entity.id == 'within') {
-                        entity = canvas.tokens.placeables.filter(t => {
-                            let offsetW = t.w / 2;
-                            let offsetH = t.h / 2;
-                            return tile.object.hitArea.contains((t.x + offsetW) - tile.data.x, (t.y + offsetH) - tile.data.y);
-                        });
-                    } else {
-                        entity = await fromUuid(action.data.entity.id);
-                        entity = entity?.object;
-                    }
-
-                    if (!entity)
-                        entity = [];
-
-                    let savingthrow = new SavingThrowApp(entity, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
+                    let savingthrow = new SavingThrowApp(entities, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
                     if (action.data.silent === true) {
                         let msg = await savingthrow.requestRoll();
                         if (action.data.fastforward === true) {
@@ -406,12 +372,14 @@ export class MonksTokenBar {
 
         let newMove = (game.settings.get("monks-tokenbar", "movement") != movement ? movement : null);
         for (let token of tokens) {
-            let oldMove = token.document.getFlag("monks-tokenbar", "movement");
+            if (token instanceof Token)
+                token = token.document;
+            let oldMove = token.getFlag("monks-tokenbar", "movement");
             if (newMove != oldMove) {
-                await token.document.setFlag("monks-tokenbar", "movement", newMove);
-                await token.document.unsetFlag("monks-tokenbar", "notified");
+                await token.setFlag("monks-tokenbar", "movement", newMove);
+                await token.unsetFlag("monks-tokenbar", "notified");
 
-                let dispMove = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+                let dispMove = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
                 MonksTokenBar.displayNotification(dispMove, token);
 
                 /*if (MonksTokenBar.tokenbar != undefined) {

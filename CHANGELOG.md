@@ -1,3 +1,7 @@
+## Version 1.0.50
+
+Fix to make it work with updated Active Tile code.
+
 ## Version 1.0.49
 
 Minor fix with the Active Tiles update.  Missed a spot where I didn't convert to the Token from TokenDocument.
