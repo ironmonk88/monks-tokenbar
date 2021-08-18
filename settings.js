@@ -222,6 +222,14 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "show-disable-panning-option", {
+		name: game.i18n.localize("MonksTokenBar.show-disable-panning-option.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-disable-panning-option.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "request-roll-sound", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),

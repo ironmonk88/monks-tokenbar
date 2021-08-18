@@ -397,6 +397,20 @@ export class MonksTokenBar {
         //    MonksTokenBar.tokenbar.render(true);
     }
 
+    static async changeTokenPanning(tokens) {
+        if (tokens == undefined)
+            return;
+
+        tokens = tokens instanceof Array ? tokens : [tokens];
+
+        log('Changing token panning', tokens);
+
+        for (let token of tokens) {
+            let oldPanning = token.document.getFlag("monks-tokenbar", "nopanning");
+            await token.document.setFlag("monks-tokenbar", "nopanning", !oldPanning);
+        }
+    }
+
     static displayNotification(movement, token) {
         if (game.settings.get("monks-tokenbar", "notify-on-change")) {
             let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == MTB_MOVEMENT_TYPE.FREE ? i18n("MonksTokenBar.FreeMovement") : (movement == MTB_MOVEMENT_TYPE.NONE ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
