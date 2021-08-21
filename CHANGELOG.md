@@ -1,3 +1,7 @@
+## Version 1.0.51
+
+Fix to pass data back to Active Tiles instead of just true/false
+
 ## Version 1.0.50
 
 Fix to make it work with updated Active Tile code.

@@ -233,12 +233,15 @@ export class MonksTokenBar {
                     if (entities.length == 0)
                         return;
 
+                    entities = entities.map(e => e.object);
+
                     let savingthrow = new SavingThrowApp(entities, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
                     if (action.data.silent === true) {
                         let msg = await savingthrow.requestRoll();
                         if (action.data.fastforward === true) {
                             let result = await SavingThrow.onRollAll('all', msg);
-                            return (action.data.checkdc == 'success' ? !result : (action.data.checkdc == 'fail' ? result : null));
+                            result.result = (action.data.checkdc == 'success' ? !result : (action.data.checkdc == 'fail' ? result : null));
+                            return result;
                         }
                     }
                     else

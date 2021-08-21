@@ -351,15 +351,19 @@ export class SavingThrow {
                 SavingThrow.updateMessage(response, message, revealDice);
 
                 let dc = message.getFlag('monks-tokenbar', 'dc');
+                let total = 0;
+                let passed;
                 if (dc != '') {
                     dc = parseInt(dc);
-                    let result = true;
+                    passed = true;
                     for (let roll of response) {
-                        result = result && (roll.roll.total >= dc);
+                        passed = passed && (roll.roll.total >= dc);
+                        total += roll.roll.total;
                     }
-
-                    return result;
                 }
+
+                let roll = (total / response.length);
+                return { dc: dc, roll: roll, passed: passed, percent: Math.max(Math.min((roll / dc), 1), 0)};
             }
         });
     }
