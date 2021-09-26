@@ -305,6 +305,14 @@ export class TokenBar extends Application {
         if (tkn.inspiration != (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration')))
             diff.inspiration = (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration'));
 
+        if (game.settings.get("monks-tokenbar", "show-disable-panning-option")) {
+          if (tkn.nopanning != tkn.token.document.getFlag('monks-tokenbar', 'nopanning')) {
+            diff.nopanning = tkn.token.document.getFlag('monks-tokenbar', 'nopanning');
+          }
+        } else {
+          diff.nopanning = false;
+        }
+
         if (Object.keys(diff).length > 0) {
             //log('preUpdateTokenBarToken', tkn, diff);
             mergeObject(tkn, diff);
@@ -474,6 +482,15 @@ export class TokenBar extends Application {
                 }
             },
             {
+                name: "MonksTokenBar.DisablePanning",
+                icon: '<i class="fas fa-user-slash"></i>',
+                condition: game.settings.get("monks-tokenbar", "show-disable-panning-option"),
+                callback: li => {
+                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    MonksTokenBar.changeTokenPanning(entry.token);
+                }
+            },
+            {
                 name: "MonksTokenBar.TargetToken",
                 icon: '<i class="fas fa-bullseye"></i>',
                 condition: game.user.isGM,
@@ -524,6 +541,12 @@ export class TokenBar extends Application {
                 $('i[data-movement="' + movement + '"]', html).parent().addClass('selected');
             }
 
+            //Highlight if nopanning option is selected
+            let nopanning = entry?.token.document.getFlag("monks-tokenbar", "nopanning");
+            if (nopanning) {
+                $('i[class="fas fa-user-slash fa-fw"]', html).parent().addClass('selected');
+            }
+
             return result;
         };
     }
@@ -571,6 +594,10 @@ export class TokenBar extends Application {
 
         log('Center on token', entry, entry.token);
         entry?.token?.control({ releaseOthers: true });
+
+        const nopanning = entry?.token.document.getFlag("monks-tokenbar", "nopanning");
+        if (nopanning) return true;
+
         return canvas.animatePan({ x: entry?.token?.x, y: entry?.token?.y });
     }
 

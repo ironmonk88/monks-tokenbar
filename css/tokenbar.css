@@ -325,6 +325,25 @@ body #tokenbar-window:first-child{
 #tokenbar .token .inspiration-icon[inspiration="true"] {
     display:inline-block;
 }
+
+#tokenbar .token .panning-icon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    bottom: 0px;
+    left: 0px;
+    color: #ffc163;
+    filter: drop-shadow( 0 0 5px black);
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    line-height: 22px;
+    display:none;
+    font-size: 10px;
+}
+
+#tokenbar .token .panning-icon[nopanning="true"] {
+    display:inline-block;
+}
 /*-----------------------------Dialog Styles-------------------------------------*/
 .monks-tokenbar .dialog-buttons {
     flex: 0 0 32px;

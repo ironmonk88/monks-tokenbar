@@ -3,6 +3,7 @@
 	"MonksTokenBar.EditToken": "Edit Token",
 	"MonksTokenBar.TargetToken": "Target Token",
 	"MonksTokenBar.PrivateMessage": "Private Message",
+  "MonksTokenBar.DisablePanning": "Disable Panning",
 
 	"MonksTokenBar.easy": "Easy",
 	"MonksTokenBar.average": "Average",
@@ -98,6 +99,8 @@
 	"MonksTokenBar.delete-after-grab.hint": "Delete the message after grabbing a players message roll for a requested roll.",
 	"MonksTokenBar.show-lootable-menu.name": "Show Lootable Menu",
 	"MonksTokenBar.show-lootable-menu.hint": "Show lootable button on the token menu",
+	"MonksTokenBar.show-disable-panning-option.name": "Show Disable Panning Option",
+	"MonksTokenBar.show-disable-panning-option.hint": "Show a disable panning option in the token context menu",
 	"MonksTokenBar.request-roll-sound.name": "Request Roll Sound",
 	"MonksTokenBar.request-roll-sound.hint": "Play a sound when requesting a roll",
 	"MonksTokenBar.send-levelup-whisper.name": "Whisper player on levelup",
