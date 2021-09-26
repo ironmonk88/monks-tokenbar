@@ -39,6 +39,14 @@ export const MTB_MOVEMENT_TYPE = {
     COMBAT: 'combat'
 }
 
+export let manageTokenControl = (token, isShiftPressed) => {
+    if (!token) return;
+
+    const options = { releaseOthers: !isShiftPressed };
+    const testControl = token._controlled && isShiftPressed;
+    testControl ? token.release(options) : token.control(options);
+}
+
 export class MonksTokenBar {
     static tracker = false;
     static tokenbar = null;
@@ -545,6 +553,27 @@ export class MonksTokenBar {
             MonksTokenBar.grabmessage = message;
             if(message != undefined)
                 $('#chat-log .chat-message[data-message-id="' + MonksTokenBar.grabmessage.id + '"]').addClass('grabbing');
+        }
+
+        if (event.stopPropagation) event.stopPropagation();
+        if (event.preventDefault) event.preventDefault();
+        event.cancelBubble = true;
+        event.returnValue = false;
+    }
+
+    static selectActors(message, callback, event) {
+        const items = $('.item', message.data.content);
+        const isShiftPressed = event?.originalEvent?.shiftKey;
+        let selected = 0;
+
+        for (var item of items) {
+            const tokenId = $(item).attr('data-item-id');
+            const tokenInfo = message.getFlag('monks-tokenbar', 'token' + tokenId);
+            if (!callback(tokenInfo)) continue;
+
+            let token = canvas.tokens.get(tokenId);
+            if (!token) continue;
+            manageTokenControl(token, isShiftPressed || selected++ !== 0);
         }
 
         if (event.stopPropagation) event.stopPropagation();
