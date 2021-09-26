@@ -40,6 +40,9 @@
 	"MonksTokenBar.Passed": "Passed",
 	"MonksTokenBar.Failed": "Failed",
 	"MonksTokenBar.GrabMessage": "Grab Message Roll",
+	"MonksTokenBar.SelectFailed": "Select Failed Actors",
+	"MonksTokenBar.SelectSaved": "Select Saved Actors",
+	"MonksTokenBar.SelectAll": "Select All Actors",
 
 	"MonksTokenBar.UnknownError": "An unknown error occured",
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",

@@ -741,6 +741,10 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //await message.update({ "content": content });
         if (game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
+
+        $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, () => true));
+        $('.select-saved', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === true));
+        $('.select-failed', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === false));
     } else if (message._roll != undefined && message.data.type == 5){
         //check grab this roll
         if(game.system.id == 'dnd5e' || game.system.id == 'sw5e')
