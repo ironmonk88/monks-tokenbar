@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, error, i18n, setting, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, setting, manageTokenControl, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
 import { SavingThrowApp } from "../apps/savingthrow.js";
 import { ContestedRollApp } from "../apps/contestedroll.js";
 import { AssignXPApp } from "../apps/assignxp.js";
@@ -593,7 +593,7 @@ export class TokenBar extends Application {
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
         log('Center on token', entry, entry.token);
-        entry?.token?.control({ releaseOthers: true });
+        manageTokenControl(entry?.token, event?.originalEvent?.shiftKey);
 
         const nopanning = entry?.token.document.getFlag("monks-tokenbar", "nopanning");
         if (nopanning) return true;

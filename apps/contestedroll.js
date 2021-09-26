@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, manageTokenControl, i18n, setting } from "../monks-tokenbar.js";
 
 export class ContestedRollApp extends Application {
     constructor(item0, item1, options = {}) {
@@ -549,7 +549,7 @@ export class ContestedRoll {
         event.returnValue = false;
 
         let token = canvas.tokens.get(tokenId);
-        token.control({ releaseOthers: true });
+        manageTokenControl(token, event?.originalEvent?.shiftKey);
         return canvas.animatePan({ x: token.x, y: token.y });
     }
 }

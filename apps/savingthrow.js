@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, manageTokenControl, i18n, setting } from "../monks-tokenbar.js";
 
 export class SavingThrowApp extends Application {
     constructor(tokens, options = {}) {
@@ -562,9 +562,9 @@ export class SavingThrow {
         if (event.preventDefault) event.preventDefault();
         event.cancelBubble = true;
         event.returnValue = false;
-
+        
         let token = canvas.tokens.get(tokenId);
-        token.control({ releaseOthers: true });
+        manageTokenControl(token, event?.originalEvent?.shiftKey);
         return canvas.animatePan({ x: token.x, y: token.y });
     }
 
