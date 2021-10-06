@@ -39,13 +39,14 @@ export const MTB_MOVEMENT_TYPE = {
     COMBAT: 'combat'
 }
 
+/*
 export let manageTokenControl = (token, isShiftPressed) => {
     if (!token) return;
 
     const options = { releaseOthers: !isShiftPressed };
     const testControl = token._controlled && isShiftPressed;
     testControl ? token.release(options) : token.control(options);
-}
+}*/
 
 export class MonksTokenBar {
     static tracker = false;
@@ -72,13 +73,6 @@ export class MonksTokenBar {
             }
         }
 
-        /*
-        let oldTokenCanDrag = Token.prototype._canDrag;
-        Token.prototype._canDrag = function (user, event) {
-            return (MonksTokenBar.allowMovement(this, false) ? oldTokenCanDrag.call(this, user, event) : false);
-        };
-        */
-
         let canDrag = function (wrapped, ...args) {
             let result = wrapped(...args);
             return (MonksTokenBar.allowMovement(this, false) ? result : false);
@@ -93,18 +87,70 @@ export class MonksTokenBar {
             }
         }
 
-        /*
         let oldView = Scene.prototype.view;
         Scene.prototype.view = async function () {
             if (MonksTokenBar.tokenbar) {
-                $('#token-action-bar').addClass('closed');
+                MonksTokenBar.tokenbar.tokens = [];
+                MonksTokenBar.tokenbar.render(true);
             }
             return oldView.call(this);
-        }*/
+        }
+
+    }
+
+    static async chatCardAction(event) {
+        if (!setting('capture-savingthrows'))
+            return;
+
+        let _getChatCardActor = async function(card) {
+            // Case 1 - a synthetic actor from a Token
+            if (card.dataset.tokenId) {
+                const token = await fromUuid(card.dataset.tokenId);
+                if (!token) return null;
+                return token.actor;
+            }
+
+            // Case 2 - use Actor ID directory
+            const actorId = card.dataset.actorId;
+            return game.actors.get(actorId) || null;
+        }
+
+        let _getChatCardTargets = function(card) {
+            let targets = canvas.tokens.controlled.filter(t => !!t.actor);
+            if (!targets.length && game.user.character) targets = targets.concat(game.user.character.getActiveTokens());
+            if (!targets.length) ui.notifications.warn(game.i18n.localize("DND5E.ActionWarningNoToken"));
+            return targets;
+        }
+
+        // Extract card data
+        const button = event.currentTarget;
+        const card = button.closest(".chat-card");
+        const messageId = card.closest(".message").dataset.messageId;
+        const message = game.messages.get(messageId);
+        const action = button.dataset.action;
+
+        if (action === 'save') {
+            if (!(game.user.isGM || message.isAuthor)) return;
+
+            const actor = await _getChatCardActor(card);
+            if (!actor) return;
+
+            const storedData = message.getFlag("dnd5e", "itemData");
+            const item = storedData ? new this(storedData, { parent: actor }) : actor.items.get(card.dataset.itemId);
+
+            const targets = _getChatCardTargets(card);
+            if (targets.length) {
+                let savingthrow = new SavingThrowApp(targets, { request: 'save:' + button.dataset.ability, dc: item.data.data.save.dc });
+                savingthrow.requestRoll();
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+        }
     }
 
     static get stats() {
-
         return setting('stats') || MonksTokenBar.system.defaultStats;
     }
 
@@ -248,7 +294,7 @@ export class MonksTokenBar {
                         let msg = await savingthrow.requestRoll();
                         if (action.data.fastforward === true) {
                             let result = await SavingThrow.onRollAll('all', msg);
-                            result.result = (action.data.checkdc == 'success' ? !result : (action.data.checkdc == 'fail' ? result : null));
+                            result.result = (action.data.checkdc == 'success' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
                             return result;
                         }
                     }
@@ -325,7 +371,7 @@ export class MonksTokenBar {
                 SavingThrow.onAssignDeathST(data.tokenid, message);
             } break;
             case 'movementchange': {
-                if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.owner) {
+                if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.isOwner) {
                     ui.notifications.warn(data.msg);
                     log('movement change');
                     if (MonksTokenBar.tokenbar != undefined) {
@@ -334,6 +380,25 @@ export class MonksTokenBar {
                 }
             }
         }
+    }
+
+    static manageTokenControl(tokens, options) {
+        let { shiftKey, force } = options;
+        
+        //if !shift then release all currently selected
+        if (!shiftKey || force)
+            canvas.tokens.releaseAll();
+
+        if (!tokens) return;
+        tokens = (tokens instanceof Array ? tokens : [tokens]);
+
+        //select all token for control
+        const controlOptions = { releaseOthers: !shiftKey && !force };
+        tokens.forEach(token => (token._controlled && shiftKey && tokens.length == 1 ? token.release(controlOptions) : token.control(controlOptions)));
+
+        //document.getSelection().removeAllRanges();
+
+        return !shiftKey;
     }
 
     static isMovement(movement) {
@@ -361,8 +426,8 @@ export class MonksTokenBar {
         if (MonksTokenBar.tokenbar != undefined) {
             let tokenbar = MonksTokenBar.tokenbar;
             for (let i = 0; i < tokenbar.tokens.length; i++) {
-                await tokenbar.tokens[i].token.document.setFlag("monks-tokenbar", "movement", null);
-                tokenbar.tokens[i].token.document.unsetFlag("monks-tokenbar", "notified");
+                await tokenbar.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
+                tokenbar.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
             };
             tokenbar.render(true);
         }
@@ -414,8 +479,8 @@ export class MonksTokenBar {
         log('Changing token panning', tokens);
 
         for (let token of tokens) {
-            let oldPanning = token.document.getFlag("monks-tokenbar", "nopanning");
-            await token.document.setFlag("monks-tokenbar", "nopanning", !oldPanning);
+            let oldPanning = token.getFlag("monks-tokenbar", "nopanning");
+            await token.setFlag("monks-tokenbar", "nopanning", !oldPanning);
         }
     }
 
@@ -466,7 +531,7 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
@@ -575,25 +640,21 @@ export class MonksTokenBar {
         event.returnValue = false;
     }
 
-    static selectActors(message, callback, event) {
-        const items = $('.item', message.data.content);
-        const isShiftPressed = event?.originalEvent?.shiftKey;
-        let selected = 0;
+    static selectActors(message, filter, event) {
+        let tokens = Object.entries(message.data.flags['monks-tokenbar'])
+            .map(([k, v]) => { return (k.startsWith('token') ? v : null) })
+            .filter(filter)
+            .map(t => { return canvas.tokens.get(t?.id); })
+            .filter(t => t);
 
-        for (var item of items) {
-            const tokenId = $(item).attr('data-item-id');
-            const tokenInfo = message.getFlag('monks-tokenbar', 'token' + tokenId);
-            if (!callback(tokenInfo)) continue;
+        MonksTokenBar.manageTokenControl(tokens, { shiftKey: event?.originalEvent?.shiftKey, force: true });
 
-            let token = canvas.tokens.get(tokenId);
-            if (!token) continue;
-            manageTokenControl(token, isShiftPressed || selected++ !== 0);
+        if (event) {
+            if (event.stopPropagation) event.stopPropagation();
+            if (event.preventDefault) event.preventDefault();
+            event.cancelBubble = true;
+            event.returnValue = false;
         }
-
-        if (event.stopPropagation) event.stopPropagation();
-        if (event.preventDefault) event.preventDefault();
-        event.cancelBubble = true;
-        event.returnValue = false;
     }
 
     static onClickMessage(message, html) {
@@ -647,7 +708,7 @@ Hooks.on("updateCombat", function (combat, delta) {
     if (game.user.isGM) {
         if (MonksTokenBar.tokenbar) {
             $(MonksTokenBar.tokenbar.tokens).each(function () {
-                this.token.document.unsetFlag("monks-tokenbar", "nofified");
+                this.token.unsetFlag("monks-tokenbar", "nofified");
             });
         }
 
@@ -745,4 +806,8 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
 
         app.setPosition();
     }
+});
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+    $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 });

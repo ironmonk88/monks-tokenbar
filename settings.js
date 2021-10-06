@@ -182,6 +182,14 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "gold-formula", {
+		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),
+		hint: game.i18n.localize("MonksTokenBar.gold-formula.hint"),
+		scope: "world",
+		config: true,
+		default: "Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.data.data.details.cr}} ?? 0))))",
+		type: String,
+	});
 	game.settings.register(modulename, "allow-player", {
 		name: game.i18n.localize("MonksTokenBar.allow-player.name"),
 		hint: game.i18n.localize("MonksTokenBar.allow-player.hint"),
@@ -229,6 +237,7 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
+		onChange: debouncedReload
 	});
 	game.settings.register(modulename, "request-roll-sound", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
@@ -245,6 +254,23 @@ export const registerSettings = function () {
 		config: true,
 		default: "modules/monks-tokenbar/sounds/RollRequestAlert.ogg",
 		type: String,
+	});
+	game.settings.register(modulename, "show-vertical", {
+		name: game.i18n.localize("MonksTokenBar.show-vertical.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-vertical.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		onChange: debouncedReload
+	});
+	game.settings.register(modulename, "capture-savingthrows", {
+		name: game.i18n.localize("MonksTokenBar.capture-savingthrows.name"),
+		hint: game.i18n.localize("MonksTokenBar.capture-savingthrows.hint"),
+		scope: "world",
+		config: game.system.id == 'dnd5e',
+		default: false,
+		type: Boolean
 	});
 	game.settings.register(modulename, "popout-tokenbar", {
 		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),

@@ -157,7 +157,7 @@ body #tokenbar-window:first-child{
     box-shadow: 0 0 5px #000 inset;
     cursor: pointer;
     justify-content: flex-end;
-    transition: width 0.4s linear;
+    transition: width 0.4s linear, height 0.4s linear;
     height: fit-content;
 }
 
@@ -341,7 +341,7 @@ body #tokenbar-window:first-child{
     font-size: 10px;
 }
 
-#tokenbar .token .panning-icon[nopanning="true"] {
+#tokenbar .token .panning-icon[no-panning="true"] {
     display:inline-block;
 }
 /*-----------------------------Dialog Styles-------------------------------------*/
@@ -896,4 +896,78 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar.editstats .tt-suggestion p {
     margin: 0;
+}
+
+li.chat-message.message .message-content .monks-tokenbar *.noselect,
+li.chat-message.message .message-content .monks-tokenbar *.noselect * {
+    -webkit-touch-callout: none !important; /* iOS Safari */
+    -webkit-user-select: none !important; /* Safari */
+    -khtml-user-select: none !important; /* Konqueror HTML */
+    -moz-user-select: none !important; /* Old versions of Firefox */
+    -ms-user-select: none !important; /* Internet Explorer/Edge */
+    user-select: none !important; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+#tokenbar.vertical {
+    align-items: flex-start;
+    align-content: flex-start;
+    vertical-align: top;
+    flex-direction: column;
+}
+
+#tokenbar.vertical #tokenbar-controls {
+    align-self: flex-start;
+    min-width: calc(100% - 4px);
+    height: unset;
+    flex-direction: column;
+}
+
+#tokenbar.vertical #tokenbar-controls div#tokenbar-move-handle{
+    height: 10px;
+    width: 100%;
+}
+
+#tokenbar.vertical #tokenbar-controls .tokenbar-buttons {
+    flex-direction: row;
+    width: unset;
+    height: 30px;
+    margin-left: 4px;
+}
+
+#tokenbar.vertical #token-action-bar {
+    flex-direction: column;
+    margin-top: 2px;
+}
+
+#tokenbar.vertical #token-action-bar .token-list{
+    width: 102px;
+    flex-direction: column;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token{
+    flex-wrap: nowrap;
+    flex-direction: row-reverse;
+    width: 100px;
+    justify-content: flex-start;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token .token-stats {
+    flex: 0 0 48px;
+    justify-content: flex-start;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token .token-content {
+    width: 48px;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token .token-content .panning-icon {
+    top: 28px;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token .token-content .resource{
+    width:48px;
+}
+
+#tokenbar.vertical #token-action-bar .token-list .token .token-content .resource[resource="2"] {
+    top: -2px;
 }

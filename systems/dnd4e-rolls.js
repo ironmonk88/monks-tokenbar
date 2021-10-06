@@ -35,8 +35,13 @@ export class DnD4eRolls extends BaseRolls {
         });
     }
 
+    /*
     get showXP() {
         return !game.settings.get('dnd4eBeta', 'disableExperienceTracking');
+    }*/
+
+    getXP(actor) {
+        return actor.data.data.details.exp;
     }
 
     get defaultStats() {

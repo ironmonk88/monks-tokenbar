@@ -93,39 +93,15 @@ export class AssignXPApp extends Application {
         if(xp !== undefined)
             this.xp = xp;
 
-        let getLevel = function (actor) {
-            let levels = 0;
-            if (actor.data.data?.classes) {
-                levels = Object.values(actor.data.data?.classes).reduce((a, b) => {
-                    return a + (b?.levels || b?.level || 0);
-                }, 0);
-            } else if( MonksTokenBar.system.getLevel ) {
-                levels = MonksTokenBar.system.getLevel(actor);
-            } else {
-                levels = actor.data.data.details?.level?.value || actor.data.data.details?.level || 0;
-            }
-
-            return levels;
-        }
-
-        let getXP = function(actor){
-            let details = {xp: {value: 0, max:0}};
-            if ( MonksTokenBar.system.getXP ){
-                details = MonksTokenBar.system.getXP(actor);
-            } else {
-                details = actor.data.data.details;
-            }
-            return details;
-        }
-
         let sortedByLevel = this.actors.filter(a => !a.disabled).sort(function (a, b) {
-            const foo = getXP(a.actor);
-            const bar = getXP(b.actor);
+            const aXP = MonksTokenBar.system.getXP(a.actor);
+            const bXP = MonksTokenBar.system.getXP(b.actor);
             
-            let value = (getLevel(a.actor) + (foo.xp.value / foo.xp.max)) - (getLevel(b.actor) + (bar.xp.value / bar.xp.max));
+            let value = (MonksTokenBar.system.getLevel(a.actor) + (aXP.value / aXP.max)) - (MonksTokenBar.system.getLevel(b.actor) + (bXP.value / bXP.max));
             log(a.actor.name, b.actor.name, value);
             return value;
         });
+
         sortedByLevel.forEach(x => x.xp = 0);
         switch (this.dividexp) {
             case 'no-split':
@@ -156,7 +132,7 @@ export class AssignXPApp extends Application {
             for (let i = 0; i < actors.length / 2; i++) {
                 let poor = actors[i];
                 let rich = actors_reversed[i];
-                if (poor.actor.data.data.details.level !== rich.actor.data.data.details.level) {
+                if (MonksTokenBar.system.getLevel(poor.actor) !== MonksTokenBar.system.getLevel(rich.actor)) {
                     rich.xp += Math.ceil(charxp * higherXpMultiplier);
                     poor.xp += Math.floor(charxp * lowerXpMultiplier);
                 } else if (poor !== rich) {

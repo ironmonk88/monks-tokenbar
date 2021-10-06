@@ -35,6 +35,10 @@ export class SW5eRolls extends BaseRolls {
         return !game.settings.get('sw5e', 'disableExperienceTracking');
     }
 
+    getXP(actor) {
+        return actor.data.data.details.xp;
+    }
+
     get defaultStats() {
         return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.passive", icon: "fa-eye" }];
     }

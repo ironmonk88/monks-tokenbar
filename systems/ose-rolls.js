@@ -20,6 +20,13 @@ export class OSERolls extends BaseRolls {
         return true;
     }
 
+    getXP(actor) {
+        return {
+            value: actor.data.data.details.xp.value,
+            max: actor.data.data.details.xp.next
+        };
+    }
+
     get defaultStats() {
         return [{ stat: "ac.value", icon: "fa-shield-alt" }];
     }

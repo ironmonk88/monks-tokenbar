@@ -46,6 +46,10 @@ export class PF1Rolls extends BaseRolls {
         return 'ability:str';
     }
 
+    getXP(actor) {
+        return actor.data.data.details.xp;
+    }
+
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = { event: e, skipPrompt: fastForward, chatMessage: false };

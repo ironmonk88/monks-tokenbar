@@ -19,12 +19,12 @@
                                 <div class="item-name flexrow">
                                     <div class="item-image" style="background-image: url('{{this.icon}}')">
                                     </div>
-                                    <h4>
+                                    <h4 class="noselect">
                                         <div><span {{#unless this.showname}}class="gm-only"{{/unless}}>{{this.name}}</span></div>
                                     </h4>
                                 </div>
 
-                                <div class="roll-controls flexrow">
+                                <div class="roll-controls flexrow noselect">
                                     <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;"></a>
                                 </div>
                             </div>
@@ -37,6 +37,9 @@
         </div>
     </div>
     <footer class="card-footer gm-only">
-        <span class="message-mode">{{modename}}</span></span>
+        <span class="message-mode">{{modename}}</span>
+        <button type="button" class="select-failed footer-button" title="{{localize 'MonksTokenBar.SelectFailed'}}"><i class="fas fa-user-times"></i></button>
+        <button type="button" class="select-saved footer-button" title="{{localize 'MonksTokenBar.SelectSaved'}}"><i class="fas fa-user-check"></i></button>
+        <button type="button" class="select-all footer-button" title="{{localize 'MonksTokenBar.SelectAll'}}"><i class="fas fa-users"></i></button>
     </footer>
 </div>

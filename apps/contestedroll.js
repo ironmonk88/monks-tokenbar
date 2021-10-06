@@ -87,6 +87,7 @@ export class ContestedRollApp extends Application {
             delete requestdata.canGrab;
             for (let i = 0; i < tokens.length; i++)
                 requestdata["token" + tokens[i].id] = tokens[i];
+            //requestdata.tokens = tokens.map(t => t.id);
 
             log('create chat request');
             let chatData = {
@@ -387,8 +388,8 @@ export class ContestedRoll {
                     $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow" style="display:none;">
-                        <div class= "dice-result">${msgtoken.total}</div >
+                        `<div class="dice-total flexrow noselect" style="display:none;">
+                        <div class= "dice-result noselect">${msgtoken.total}</div >
                         <a class="item-control roll-result" title="${i18n("MonksTokenBar.RollResult")}" data-control="rollResult">
                             <i class="fas"></i>
                         </a>
@@ -400,7 +401,7 @@ export class ContestedRoll {
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow"><div class="dice-result">Error!</div ></div >`);
+                        `<div class="dice-total flexrow noselect"><div class="dice-result noselect">Error!</div ></div >`);
                     msgtoken.reveal = true;
                     msgtoken.error = true;
                     flags["token" + update.id] = msgtoken;
@@ -542,6 +543,19 @@ export class ContestedRoll {
             message.update({ flags: { 'monks-tokenbar': flags } });
     }
 
+    static async onRollAll(message, e) {
+        if (game.user.isGM) {
+            let flags = message.data.flags['monks-tokenbar'];
+            let tokens = Object.keys(flags)
+                .filter(key => key.startsWith('token'))
+                .map(key => flags[key]);
+
+            let ids = tokens.map(a => a.id);
+
+            return ContestedRoll.onRollAbility(ids, message, true, e);
+        }
+    }
+
     static async _onClickToken(tokenId, event) {
         if (event.stopPropagation) event.stopPropagation();
         if (event.preventDefault) event.preventDefault();
@@ -549,8 +563,9 @@ export class ContestedRoll {
         event.returnValue = false;
 
         let token = canvas.tokens.get(tokenId);
-        token.control({ releaseOthers: true });
-        return canvas.animatePan({ x: token.x, y: token.y });
+        let animate = MonksTokenBar.manageTokenControl(token, { shiftKey: event?.originalEvent?.shiftKey });
+
+        return (animate ? canvas.animatePan({ x: token.x, y: token.y }) : true);
     }
 }
 
@@ -594,17 +609,17 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             if (msgtoken) {
                 let actor = game.actors.get(msgtoken.actorid);
 
-                $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
+                $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor.isOwner)
                     $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id))
-                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
-                $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll'))));
+                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
+                $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll'))));
 
-                if (msgtoken.roll != undefined && msgtoken.roll.class == "Roll") {
+                if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
                     //let roll = Roll.fromData(msgtoken.roll);
-                    let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
-                    $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.owner));
+                    let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.isOwner);
+                    $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.isOwner));
                     if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM))
                         $('.dice-result', item).html(!msgtoken.reveal ? '...' : '-');
                     if (!msgtoken.reveal && game.user.isGM)
@@ -624,6 +639,12 @@ Hooks.on("renderChatMessage", (message, html, data) => {
                         .toggleClass('fa-ellipsis-h', (msgtoken.passed == 'waiting' || !revealAll) && msgtoken.roll != undefined && (game.user.isGM || rollmode != 'blindroll'));
                 }
             }
+
+            $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, (ti) => {
+                return ti;
+            }));
+            $('.select-saved', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === "won"));
+            $('.select-failed', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === "failed"));
 
             //if there hasn't been a roll, then show the button if this is the GM or if this token is controlled by the current user
 

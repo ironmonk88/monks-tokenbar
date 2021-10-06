@@ -1,7 +1,7 @@
-<div class="monks-tokenbar flexcol" style="height:100%;">
-    <div class="dialog-content" style="max-height: calc(100% - 32px);">
-        <form style="height:100%;">
-            <div class="flexrow" style="height:100%;">
+<div class="monks-tokenbar flexcol">
+    <div class="dialog-content">
+        <form>
+            <div class="flexrow">
                 <div style="padding-right:10px;">
                     <div class="form-group">
                         <label>{{localize dclabel}}</label>
@@ -37,7 +37,7 @@
                                 </div>
                             </li>
 
-                            <ol class="item-list">
+                            <ol class="item-list" style="min-height:150px;">
                                 {{#each tokens}}
                                 <li class="item flexrow " data-item-id="{{this.id}}" draggable="true">
                                     <div class="item-name flexrow rollable">

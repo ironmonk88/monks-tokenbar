@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, setting, error } from "../monks-tokenbar.js"
 
 export class Tormenta20Rolls extends BaseRolls {
     constructor() {
@@ -35,11 +35,9 @@ export class Tormenta20Rolls extends BaseRolls {
 
     getXP(actor){
         return {
-            xp: {
-                value: actor.data.data.attributes?.nivel?.xp.value,
-                max: actor.data.data.attributes?.nivel?.xp.proximo
-            }
-        }
+            value: actor.data.data.attributes?.nivel?.xp.value,
+            max: actor.data.data.attributes?.nivel?.xp.proximo
+        };
     }
 
 
@@ -64,7 +62,12 @@ export class Tormenta20Rolls extends BaseRolls {
         }
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });;
+                return rollfn.call(actor, request, options)
+                    .then(async (roll) => { return callback(roll); })
+                    .catch((err) => {
+                        error(err);
+                        return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
+                    });;
             } catch {
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };
             }

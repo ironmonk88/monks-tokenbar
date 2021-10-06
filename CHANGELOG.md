@@ -1,3 +1,38 @@
+## Version 1.0.52
+
+Moved checking for levels and getting xp to the system modules.  Should make assigning xp a little more flexible.
+
+Allowed contested roll to roll all.
+
+Added the option to select multiple tokens using the Shift key when clicking on either the tokens on the token bar, or tokens in the chat message.  Thank-you happycujo
+
+Added buttons to the chat message to select either all related tokens, tokens that passed the saving throw, or those that failed the saving throw.  Thank-you happycujo
+
+Fixed issue where contested roll wasn't updating the final result.
+
+Moved the gold formula to the settings so that GMs can set their own way of calculating gold.
+
+Changed the saving throw select dialog to alter height according to what's displayed.
+
+Optimized the token bar a little bit.  
+Thumbnails are stored between scenes so that it doesn't have to compress the characters image each time.
+Moved the needed hooks into the initialization function, so if the tokenbar is disabled, they're not loaded.
+Updated the function that renders the tokenbar  and optimized that code that collects the token data.
+
+Fixed an issue where switching scenes rapidly would cause the tokens to disappear.  That was a weird one.
+
+Allow players to see tokens from characters they have observe permissions on.
+
+Added the option to show the tokenbar vertically.
+
+Added option to disable panning when clicking on tokens on the tokenbar.
+
+Added the option to pass keypress data into the API function.  This will allow calling functions to set Advantage and Disadvantage when rolling all.
+
+Added the option to capture saving throws.  So if a chat card allows you to roll a saving throw you can have it create a Saving Throw roll through Tokenbar instead.
+
+Fixed issue where the results of a saving throw weren't being passed to Active Tiles properly.
+
 ## Version 1.0.51
 
 Fix to pass data back to Active Tiles instead of just true/false

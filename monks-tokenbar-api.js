@@ -59,21 +59,24 @@ export class MonksTokenBarAPI {
         if (options?.silent === true) {
             let msg = await savingthrow.requestRoll();
             if (options.fastForward === true)
-                SavingThrow.onRollAll('all', msg);
+                SavingThrow.onRollAll('all', msg, options);
         }
         else
             savingthrow.render(true);
     }
 
-    static requestContestedRoll(request0, request1, options = {}) {
+    static async requestContestedRoll(request0, request1, options = {}) {
         if (!game.user.isGM)
             return;
 
         options.rollmode = options.rollmode || 'roll';
 
         let contestedroll = new ContestedRollApp(request0, request1, options);
-        if (options?.silent === true)
-            contestedroll.request();
+        if (options?.silent === true) {
+            let msg = await contestedroll.request();
+            if (options.fastForward === true)
+                ContextedRoll.onRollAll('all', msg, options);
+        }
         else
             contestedroll.render(true);
     }

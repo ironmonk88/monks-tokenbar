@@ -43,7 +43,6 @@ export class SavingThrowApp extends Application {
             title: i18n("MonksTokenBar.RequestRoll"),
             template: "./modules/monks-tokenbar/templates/savingthrow.html",
             width: 800,
-            height: 500,
             popOut: true
         });
     }
@@ -168,6 +167,7 @@ export class SavingThrowApp extends Application {
             delete requestdata.canGrab;
             for (let i = 0; i < tokens.length; i++)
                 requestdata["token" + tokens[i].id] = tokens[i];
+            //requestdata.tokens = tokens.map(t => t.id);
 
             log('create chat request');
             let chatData = {
@@ -260,7 +260,7 @@ export class SavingThrow {
                     roll = msg.roll;
                     msg.delete();
                 }
-                if (game.dice3d != undefined && roll instanceof Roll) {// && !fastForward) {
+                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true) {// && !fastForward) {
                     let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                     if (rollmode == 'gmroll' && !game.user.isGM)
                         whisper.push(game.user.id);
@@ -403,8 +403,8 @@ export class SavingThrow {
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow" style="display:none;">
-                        <div class="dice-result ${(msgtoken.reveal ? 'reveal' : '')}"><span class="smoke-screen">...</span><span class="total">${msgtoken.total}</span></div >
+                        `<div class="dice-total flexrow noselect" style="display:none;">
+                        <div class="dice-result noselect ${(msgtoken.reveal ? 'reveal' : '')}"><span class="smoke-screen">...</span><span class="total">${msgtoken.total}</span></div >
                         <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
                             <i class="fas fa-check"></i>
                         </a>
@@ -423,7 +423,7 @@ export class SavingThrow {
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow" style="display:none;"><div class="dice-result">Error!</div ></div >`);
+                        `<div class="dice-total flexrow noselect" style="display:none;"><div class="dice-result">Error!</div ></div >`);
                     msgtoken.reveal = true;
                     msgtoken.error = true;
                     flags["token" + update.id] = msgtoken;
@@ -564,8 +564,9 @@ export class SavingThrow {
         event.returnValue = false;
 
         let token = canvas.tokens.get(tokenId);
-        token.control({ releaseOthers: true });
-        return canvas.animatePan({ x: token.x, y: token.y });
+        let animate = MonksTokenBar.manageTokenControl(token, { shiftKey: event?.originalEvent?.shiftKey });
+
+        return (animate ? canvas.animatePan({ x: token.x, y: token.y }) : true);
     }
 
     static async onAssignDeathST(tokenId, message, e) {
@@ -671,17 +672,17 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             if (msgtoken) {
                 let actor = game.actors.get(msgtoken.actorid);
 
-                $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.owner));
+                $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor.isOwner)
                     $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
-                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.owner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
-                $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.owner && rollmode != 'selfroll')));
+                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
+                $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll')));
                 if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
                     //log('Chat roll:', msgtoken.roll);
                     let roll = Roll.fromData(msgtoken.roll);
-                    let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.owner);
-                    $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal); //|| (rollmode == 'blindroll' && actor.owner)
+                    let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.isOwner);
+                    $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal); //|| (rollmode == 'blindroll' && actor.isOwner)
 
                     if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
                         $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
@@ -742,7 +743,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         if (game.system.id == 'dnd5e' || game.system.id == 'sw5e')
             $('.grab-message', html).on('click', $.proxy(MonksTokenBar.setGrabMessage, MonksTokenBar, message));
 
-        $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, () => true));
+        $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, (ti) => ti));
         $('.select-saved', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === true));
         $('.select-failed', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === false));
     } else if (message._roll != undefined && message.data.type == 5){

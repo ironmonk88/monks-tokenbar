@@ -26,6 +26,10 @@ export class D35eRolls extends BaseRolls {
         return !game.settings.get('D35E', 'disableExperienceTracking');
     }
 
+    getXP(actor) {
+        return actor.data.data.details.xp;
+    }
+
     get defaultStats() {
         return [{ stat: "attributes.ac.normal.total", icon: "fa-shield-alt" }, {stat:"skills.spt.value", icon: "fa-eye"}];
     }

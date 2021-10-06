@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
 
 export class LootablesApp extends Application {
     constructor(entity, options) {
@@ -69,9 +69,19 @@ export class LootablesApp extends Application {
             }
             // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
             if (!hasGold) {
+                let goldformula = setting('gold-formula');
                 if (this.usecr && !this.disabled) {
-                    const exponent = 0.15 * (getProperty(token.actor, "data.data.details.cr") ?? 0);
-                    let gold = Math.round(0.6 * 10 * (10 ** exponent));
+                    let gold = 0;
+                    try {
+                        const compiled = Handlebars.compile(goldformula);
+                        let content = compiled({ actor: token.actor }, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
+
+                        //const exponent = 0.15 * (getProperty(token.actor, "data.data.details.cr") ?? 0);
+                        //let gold = Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.data.data.details.cr}} ?? 0))));
+
+                        gold = eval(content);
+                    } catch {}
+
                     // Ensure it can divide evenly across all looting players
                     gold = gold + (gold % Math.max(lootingUsers.length, 1)) ?? 0;
                     token.gold = gold;

@@ -35,8 +35,24 @@ export class DnD5eRolls extends BaseRolls {
         return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.passive", icon: "fa-eye" }];
     }
 
+    getLevel(actor) {
+        let levels = 0;
+        if (actor.data.data?.classes) {
+            levels = Object.values(actor.data.data?.classes).reduce((a, b) => {
+                return a + (b?.levels || b?.level || 0);
+            }, 0);
+        } else
+            levels = super.getLevel(actor);
+
+        return levels;
+    }
+
     get showXP() {
         return !game.settings.get('dnd5e', 'disableExperienceTracking');
+    }
+
+    getXP(actor) {
+        return actor.data.data.details.xp;
     }
 
     defaultRequest(app) {

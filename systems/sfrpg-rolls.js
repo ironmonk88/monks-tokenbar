@@ -51,6 +51,10 @@ export class SFRPGRolls extends BaseRolls {
         return 'abilities:str';
     }
 
+    getXP(actor) {
+        return actor.data.data.details.xp;
+    }
+
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
         /*
         let rollfn = null;
