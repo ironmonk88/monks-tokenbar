@@ -4,9 +4,9 @@ Moved checking for levels and getting xp to the system modules.  Should make ass
 
 Allowed contested roll to roll all.
 
-Added the option to select multiple tokens using the Shift key when clicking on either the tokens on the token bar, or tokens in the chat message.  Thank-you happycujo
+Added the option to select multiple tokens using the Shift key when clicking on either the tokens on the token bar, or tokens in the chat message.  Thank-you happy-cujo
 
-Added buttons to the chat message to select either all related tokens, tokens that passed the saving throw, or those that failed the saving throw.  Thank-you happycujo
+Added buttons to the chat message to select either all related tokens, tokens that passed the saving throw, or those that failed the saving throw.  Thank-you happy-cujo
 
 Fixed issue where contested roll wasn't updating the final result.
 
@@ -25,13 +25,15 @@ Allow players to see tokens from characters they have observe permissions on.
 
 Added the option to show the tokenbar vertically.
 
-Added option to disable panning when clicking on tokens on the tokenbar.
+Added option to disable panning when clicking on tokens on the tokenbar. Thank you surged20
 
 Added the option to pass keypress data into the API function.  This will allow calling functions to set Advantage and Disadvantage when rolling all.
 
 Added the option to capture saving throws.  So if a chat card allows you to roll a saving throw you can have it create a Saving Throw roll through Tokenbar instead.
 
 Fixed issue where the results of a saving throw weren't being passed to Active Tiles properly.
+
+Updated Tormenta20 code.  Thank you VHPaiva.
 
 ## Version 1.0.51
 
