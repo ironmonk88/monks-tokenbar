@@ -1,3 +1,13 @@
+## Version 1.0.53
+
+Changed saving throws to pass information about which tokens passed and failed.
+
+Changed saving throws to continue on [Always, Any Failed, Any Succeeded]
+
+Changed saving throws to set current tokens to those that failed or succeeded.
+
+Started work on integration with CoC7.
+
 ## Version 1.0.52
 
 Moved checking for levels and getting xp to the system modules.  Should make assigning xp a little more flexible.

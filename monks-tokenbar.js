@@ -17,6 +17,7 @@ import { OSERolls } from "./systems/ose-rolls.js";
 import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
 import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
+import { CoC7Rolls } from "./systems/coc7-rolls.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -158,14 +159,14 @@ export class MonksTokenBar {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
         MonksTokenBar.system = new BaseRolls();
-        switch (game.system.id) {
+        switch (game.system.id.toLowerCase()) {
             case 'dnd5e':
                 MonksTokenBar.system = new DnD5eRolls(); break;
             case 'sw5e':
                 MonksTokenBar.system = new SW5eRolls(); break;
-            case 'D35E':
+            case 'd35e':
                 MonksTokenBar.system = new D35eRolls(); break;
-            case 'dnd4eBeta':
+            case 'dnd4ebeta':
                 MonksTokenBar.system = new DnD4eRolls(); break;
             case 'pf1':
                 MonksTokenBar.system = new PF1Rolls(); break;
@@ -179,6 +180,8 @@ export class MonksTokenBar {
                 MonksTokenBar.system = new OSERolls(); break;
             case 'swade':
                 MonksTokenBar.system = new SwadeRolls(); break;
+            case 'coc7':
+                MonksTokenBar.system = new CoC7Rolls(); break;
         }
 
         MonksTokenBar.system.constructor.activateHooks();
@@ -195,7 +198,7 @@ export class MonksTokenBar {
                         name: "Select Entity",
                         type: "select",
                         subtype: "entity",
-                        options: { showToken: true, showWithin: true, showPlayers: true },
+                        options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
                         restrict: (entity) => { return (entity instanceof Token); }
                     },
                     {
@@ -217,6 +220,8 @@ export class MonksTokenBar {
                     let entities = await game.MonksActiveTiles.getEntities(args);
 
                     MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
+
+                    return { tokens: entities };
                 },
                 content: (trigger, action) => {
                     return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
@@ -261,9 +266,15 @@ export class MonksTokenBar {
                         type: "checkbox"
                     },
                     {
-                        id: "checkdc",
-                        name: "Stop remaining actions",
-                        list: "stop",
+                        id: "usetokens",
+                        name: "Continue with",
+                        list: "usetokens",
+                        type: "list"
+                    },
+                    {
+                        id: "continue",
+                        name: "Continue if",
+                        list: "continue",
                         type: "list"
                     }
                 ],
@@ -274,10 +285,17 @@ export class MonksTokenBar {
                         "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
                         "selfroll": i18n('MonksTokenBar.SelfRoll')
                     },
-                    'stop': {
-                        "none": "Never",
-                        "fail": "on Fail",
-                        "success": "on Success"
+                    'usetokens': {
+                        "all": "All Tokens",
+                        "fail": "Tokens that Fail",
+                        "succeed": "Tokens that Succeed"
+                    },
+                    'continue': {
+                        "always": "Always",
+                        "failed": "Any Failed",
+                        "passed": "Any Passed",
+                        "allfail": "All Failed",
+                        "allpass": "All Passed"
                     }
                 },
                 fn: async (args = {}) => {
@@ -294,7 +312,20 @@ export class MonksTokenBar {
                         let msg = await savingthrow.requestRoll();
                         if (action.data.fastforward === true) {
                             let result = await SavingThrow.onRollAll('all', msg);
-                            result.result = (action.data.checkdc == 'success' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
+
+                            if (action.data.usetokens == 'fail' || action.data.usetokens == 'succeed') {
+                                result.tokens = result.tokenresults.filter(r => r.passed == (action.data.usetokens == 'succeed'));
+                                for (let i = 0; i < result.tokens.length; i++) {
+                                    result.tokens[i] = await fromUuid(result.tokens[i].uuid);
+                                }
+                            }
+
+                            result.continue = action.data.continue == 'always' ||
+                                (action.data.continue == 'passed' && result.passed > 0) ||
+                                (action.data.continue == 'failed' && result.failed > 0) ||
+                                (action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
+                                (action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
+                            //(action.data.continue == 'passed' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
                             return result;
                         }
                     }
@@ -306,7 +337,7 @@ export class MonksTokenBar {
                     let requesttype = (parts.length > 1 ? parts[0] : '');
                     let request = (parts.length > 1 ? parts[1] : parts[0]);
                     let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-                    return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.checkdc == 'fail' ? ", stop on fail" : (action.data?.checkdc == 'success' ? ", stop on success" : ''));
+                    return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '');
                 }
             };
         }
@@ -531,7 +562,7 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||

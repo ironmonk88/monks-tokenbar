@@ -6,6 +6,7 @@
     flex-wrap: nowrap;
     display: flex !important;
     align-items: flex-end;
+    width: fit-content;
 }
 
 #tokenbar-window #tokenbar {
@@ -21,6 +22,7 @@ body #tokenbar-window:first-child{
 
 #tokenbar .bar-controls {
     flex: 0 0 auto;
+    flex-basis: fit-content;
     height: 92px;
     margin: 0 2px;
     text-align: center;
@@ -517,6 +519,7 @@ body #tokenbar-window:first-child{
     background: rgba(0, 0, 0, 0.05);
     border: 2px groove #eeede0;
     font-weight: bold;
+    flex-wrap: nowrap;
 }
 
 .monks-tokenbar .sheet .items-list .items-header .item-control{

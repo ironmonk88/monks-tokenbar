@@ -351,19 +351,37 @@ export class SavingThrow {
                 SavingThrow.updateMessage(response, message, revealDice);
 
                 let dc = message.getFlag('monks-tokenbar', 'dc');
+                if (dc != '') dc = parseInt(dc);
                 let total = 0;
-                let passed;
-                if (dc != '') {
-                    dc = parseInt(dc);
+                let failed = 0;
+                let passed = 0;
+                let tokenresults = response.map(r => {
+                    let token = message.getFlag('monks-tokenbar', 'token' + r.id);
+                    total += r.roll.total;
+                    let pass = (isNaN(dc) || r.roll.total >= dc);
+                    if (pass)
+                        passed++;
+                    else
+                        failed++;
+                    return {
+                        id: r.id,
+                        uuid: token.uuid,
+                        roll: r.roll,
+                        name: token.name,
+                        passed: pass,
+                        actor: game.actors.get(token.actorid)
+                    }
+                });
+                /*
                     passed = true;
                     for (let roll of response) {
                         passed = passed && (roll.roll.total >= dc);
                         total += roll.roll.total;
                     }
-                }
+                }*/
 
-                let roll = (total / response.length);
-                return { dc: dc, roll: roll, passed: passed, percent: Math.max(Math.min((roll / dc), 1), 0)};
+                let grouproll = (total / response.length);
+                return { dc: dc, grouproll: grouproll, percent: Math.max(Math.min((grouproll / dc), 1), 0), passed: passed, failed: failed, tokenresults: tokenresults};
             }
         });
     }
