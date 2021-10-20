@@ -138,5 +138,6 @@
     "MonksTokenBar.assign-loot.hint": "Sólo funciona con el módulo Loot Sheet, pero una vez que el combate ha terminado, convierte a los enemigos caídos en saqueables",
     "MonksTokenBar.show-inspiration.hint": "Mostrar un icono en la ficha si tiene inspiración",
     "MonksTokenBar.RemoveActor": "Eliminar el personaje",
-    "MonksTokenBar.TokenNoActorAttrs": "el icono no tiene ningún personaje para utilizar los atributos adicionales"
+    "MonksTokenBar.TokenNoActorAttrs": "el icono no tiene ningún personaje para utilizar los atributos adicionales",
+    "MonksTokenBar.Characteristics": "Características"
 }
