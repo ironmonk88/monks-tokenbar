@@ -139,5 +139,17 @@
     "MonksTokenBar.show-inspiration.hint": "Mostrar un icono en la ficha si tiene inspiración",
     "MonksTokenBar.RemoveActor": "Eliminar el personaje",
     "MonksTokenBar.TokenNoActorAttrs": "el icono no tiene ningún personaje para utilizar los atributos adicionales",
-    "MonksTokenBar.Characteristics": "Características"
+    "MonksTokenBar.Characteristics": "Características",
+    "MonksTokenBar.SelectFailed": "Seleccionar actores que han fallado",
+    "MonksTokenBar.SelectAll": "Seleccionar todos los actores",
+    "MonksTokenBar.gold-formula.name": "Fórmula de oro",
+    "MonksTokenBar.gold-formula.hint": "Fórmula para calcular el oro de los enemigos muertos",
+    "MonksTokenBar.show-vertical.name": "Mostrar en vertical",
+    "MonksTokenBar.show-vertical.hint": "Mostrar Tokenbar verticalmente",
+    "MonksTokenBar.capture-savingthrows.name": "Capturar tirada de salvación",
+    "MonksTokenBar.capture-savingthrows.hint": "Crea una tarjeta de chat de tirada de salvación al solicitarla",
+    "MonksTokenBar.DisablePanning": "Desactivar la panorámica",
+    "MonksTokenBar.SelectSaved": "Seleccionar actores que han pasado la tirada",
+    "MonksTokenBar.show-disable-panning-option.name": "Mostrar  vertical",
+    "MonksTokenBar.show-disable-panning-option.hint": "Mostrar una opción de desactivar panorámica en el menú contextual del token"
 }
