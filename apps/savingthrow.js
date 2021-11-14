@@ -192,12 +192,15 @@ export class SavingThrowApp extends Application {
             }
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            msg = ChatMessage.create(chatData, {});
+            msg = await ChatMessage.create(chatData, {});
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll')
                 AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneTokenSelected"));
+
+        if (this['active-tiles'])
+            msg.setFlag('monks-tokenbar', 'active-tiles', this['active-tiles']);
 
         return msg;
     }
@@ -324,7 +327,7 @@ export class SavingThrow {
             }
         };
 
-        return Promise.all(promises).then(response => {
+        return Promise.all(promises).then(async (response) => {
             log('roll all finished', response);
             if (!game.user.isGM) {
                 let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
@@ -348,42 +351,67 @@ export class SavingThrow {
                 }
             } else {
                 const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-                SavingThrow.updateMessage(response, message, revealDice);
+                await SavingThrow.updateMessage(response, message, revealDice);
 
+                //if everyone has rolled
                 let dc = message.getFlag('monks-tokenbar', 'dc');
                 if (dc != '') dc = parseInt(dc);
                 let total = 0;
                 let failed = 0;
                 let passed = 0;
-                let tokenresults = response.map(r => {
-                    let token = message.getFlag('monks-tokenbar', 'token' + r.id);
-                    total += r.roll.total;
-                    let pass = (isNaN(dc) || r.roll.total >= dc);
-                    if (pass)
-                        passed++;
-                    else
-                        failed++;
+                let tokenresults = Object.entries(message.data.flags['monks-tokenbar']).filter(([k, v]) => {
+                    return k.startsWith('token')
+                }).map(([k, token]) => {
+                    let pass = null;
+                    if (token.roll) {
+                        total += token.roll.total;
+                        pass = (isNaN(dc) || token.roll.total >= dc);
+                        if (pass === true)
+                            passed++;
+                        else if(pass === false)
+                            failed++;
+                    }
+
                     return {
-                        id: r.id,
+                        id: token.id,
                         uuid: token.uuid,
-                        roll: r.roll,
+                        roll: token.roll,
                         name: token.name,
                         passed: pass,
                         actor: game.actors.get(token.actorid)
                     }
                 });
-                /*
-                    passed = true;
-                    for (let roll of response) {
-                        passed = passed && (roll.roll.total >= dc);
-                        total += roll.roll.total;
-                    }
-                }*/
 
-                let grouproll = (total / response.length);
-                return { dc: dc, grouproll: grouproll, percent: Math.max(Math.min((grouproll / dc), 1), 0), passed: passed, failed: failed, tokenresults: tokenresults};
+                if (passed + failed == tokenresults.length) {
+                    let grouproll = (total / response.length);
+                    let result = { dc: dc, grouproll: grouproll, percent: Math.max(Math.min((grouproll / dc), 1), 0), passed: passed, failed: failed, tokenresults: tokenresults };
+                    if (message.getFlag('monks-tokenbar', 'active-tiles')) {
+                        let restart = message.getFlag('monks-tokenbar', 'active-tiles');
+                        let tile = await fromUuid(restart.tile);
+
+                        if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
+                            result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
+                            for (let i = 0; i < result.tokens.length; i++) {
+                                result.tokens[i] = await fromUuid(result.tokens[i].uuid);
+                            }
+                        }
+
+                        result.continue = restart.action.data.continue == 'always' ||
+                            (restart.action.data.continue == 'passed' && result.passed > 0) ||
+                            (restart.action.data.continue == 'failed' && result.failed > 0) ||
+                            (restart.action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
+                            (restart.action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
+
+                        tile.resumeActions(restart.id, result);
+                    } else
+                        return result;
+                }
             }
         });
+    }
+
+    static collectResults() {
+        
     }
 
     static async updateMessage(updates, message, reveal = true) {
@@ -452,7 +480,7 @@ export class SavingThrow {
             }
         }
 
-        message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } });
+        await message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } });
 
         if (promises.length) {
             Promise.all(promises).then(response => {

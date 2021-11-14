@@ -106,21 +106,35 @@ export class LootablesApp extends Application {
                 continue;
 
             // Change sheet to lootable, and give players permissions.
-            let newActorData = {
-                'flags': {
-                    'core': {
-                        'sheetClass': 'dnd5e.LootSheet5eNPC'
-                    },
-                    'lootsheetnpc5e': {
-                        'lootsheettype': 'Loot'
-                    },
-                    'monks-tokenbar': {
-                        'converted': true
+            let newActorData = {};
+            if (setting('loot-sheet') == 'lootsheetnpc5e') {
+                newActorData = {
+                    'flags': {
+                        'core': {
+                            'sheetClass': 'dnd5e.LootSheet5eNPC'
+                        },
+                        'lootsheetnpc5e': {
+                            'lootsheettype': 'Loot'
+                        },
+                        'monks-tokenbar': {
+                            'converted': true
+                        }
                     }
-                }
-            };
+                };
+            } else if (setting('loot-sheet') == 'merchantsheetnpc') {
+                newActorData = {
+                    'flags': {
+                        'core': {
+                            'sheetClass': 'core.a'
+                        },
+                        'monks-tokenbar': {
+                            'converted': true
+                        }
+                    }
+                };
+            }
 
-            if (token.actor.data?.flags?.core?.sheetClass != 'dnd5e.LootSheet5eNPC')
+            if (!['dnd5e.LootSheet5eNPC', 'core.a'].includes(token.actor.data?.flags?.core?.sheetClass))
                 newActorData.flags['monks-tokenbar'].oldsheetClass = token.actor.data?.flags?.core?.sheetClass; //token.actor._getSheetClass();
 
             // Remove items that shouldn't be lootable
@@ -161,26 +175,41 @@ export class LootablesApp extends Application {
             // Need to convert the actor's currency data to the LS schema here to avoid
             // breakage. If there is already currency on the actor, it is retained.
 
-            if (typeof (token.actor.data.data.currency.cp) === "number") {
+            for (let curr of ['cp', 'sp', 'ep', 'gp', 'pp']) {
+                if (typeof (token.actor.data.data.currency[curr]) === "number" || token.actor.data.data.currency[curr] == undefined) {
+                    let oldCurrencyData = token.actor.data.data.currency[curr];
+                    newActorData[`data.currency.${curr}`] = { 'value': oldCurrencyData || 0 };
+                }
+            }
+            /*
+            if (typeof (token.actor.data.data.currency.cp) === "number" || token.actor.data.data.currency.cp == undefined) {
                 let oldCurrencyData = token.actor.data.data.currency;
                 newActorData['data.currency'] = {
-                    'cp': { 'value': oldCurrencyData.cp },
+                    'cp': { 'value': oldCurrencyData.cp || 0 },
                     'ep': { 'value': oldCurrencyData.ep },
                     'gp': { 'value': oldCurrencyData.gp },
                     'pp': { 'value': oldCurrencyData.pp },
                     'sp': { 'value': oldCurrencyData.sp }
                 };
-            }
+            }*/
+
+            newActorData = expandObject(newActorData)
 
             if (token.gold != undefined) {
-                if (newActorData['data.currency'] == undefined)
-                    newActorData['data.currency.gp.value'] = token.gold;
-                else
-                    newActorData['data.currency'].gp.value = token.gold;
+                setProperty(newActorData, 'data.currency.gp.value', token.gold);
             }
 
             token.actor._sheet = null;
 
+            game.socket.emit(
+                MonksTokenBar.SOCKET,
+                {
+                    msgtype: 'refreshsheet',
+                    senderId: game.user.id,
+                    tokenid: token?.id
+                },
+                (resp) => { }
+            );
             await token.actor.update(newActorData);
 
             let oldIds = oldItems.map(i => i.id);
@@ -264,6 +293,16 @@ export class LootablesApp extends Application {
 
             actorData.flags["monks-tokenbar"].olditems = [];
         }
+
+        game.socket.emit(
+            MonksTokenBar.SOCKET,
+            {
+                msgtype: 'refreshsheet',
+                senderId: game.user.id,
+                tokenid: app.token?.id
+            },
+            (resp) => { }
+        );
 
         if (newItems.length > 0)
             await Item.create(newItems, { parent: actor });
