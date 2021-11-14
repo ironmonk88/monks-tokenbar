@@ -111,10 +111,11 @@ export class ContestedRollApp extends Application {
             }
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            const msg = await ChatMessage.create(chatData, {});
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll')
                 AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
+            return msg;
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
     }
@@ -543,7 +544,7 @@ export class ContestedRoll {
             message.update({ flags: { 'monks-tokenbar': flags } });
     }
 
-    static async onRollAll(message, e) {
+    static async onRollAll(tokentype, message, e) {
         if (game.user.isGM) {
             let flags = message.data.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)

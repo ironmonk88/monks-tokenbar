@@ -189,8 +189,9 @@ export class AssignXPApp extends Application {
             };
 
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            const msg = await ChatMessage.create(chatData, {});
             this.close();
+            return msg;
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneActorSelected"));
     }
