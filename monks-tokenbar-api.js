@@ -75,7 +75,7 @@ export class MonksTokenBarAPI {
         if (options?.silent === true) {
             let msg = await contestedroll.request();
             if (options.fastForward === true)
-                ContextedRoll.onRollAll(msg, options);
+                ContestedRoll.onRollAll(msg, options);
         }
         else
             contestedroll.render(true);
