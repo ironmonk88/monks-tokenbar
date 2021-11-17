@@ -47,6 +47,7 @@ export class ContestedRollApp extends Application {
     }
 
     async request() {
+        let msg;
         if (this.item0.token != undefined && this.item1.token != undefined) {
             let tokens = [this.item0, this.item1].map((item, index) => {
                 let parts = this['item' + index].request.split(':'); //$('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
@@ -111,10 +112,11 @@ export class ContestedRollApp extends Application {
             }
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            msg = await ChatMessage.create(chatData, {});
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll')
                 AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
+            return msg;
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
     }
