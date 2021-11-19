@@ -188,7 +188,7 @@ export class ContestedRoll {
     }
 
     static _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
-        let actor = game.canvas.tokens.get(data.id).actor
+        let actor = game.canvas.tokens.get(data.id).actor;
         let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));       
 
         if (actor != undefined) {
@@ -324,7 +324,7 @@ export class ContestedRoll {
         for (let id of ids) {
             let msgtoken = flags["token" + id];
             if (msgtoken != undefined && msgtoken.roll == undefined) {
-                let actor = game.canvas.tokens.get(msgtoken.id).actor
+                let actor = game.canvas.tokens.get(msgtoken.id).actor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
                     promises.push(ContestedRoll._rollAbility({ id: id, actorid: msgtoken.id }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
@@ -609,7 +609,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId); //actors.find(a => { return a.id == actorId; });
             if (msgtoken) {
-                let actor = game.canvas.tokens.get(msgtoken.id).actor
+                let actor = game.canvas.tokens.get(msgtoken.id).actor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
