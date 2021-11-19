@@ -17,6 +17,7 @@ import { OSERolls } from "./systems/ose-rolls.js";
 import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
 import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
+import { CoC7Rolls } from "./systems/coc7-rolls.js";
 
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -158,14 +159,14 @@ export class MonksTokenBar {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
         MonksTokenBar.system = new BaseRolls();
-        switch (game.system.id) {
+        switch (game.system.id.toLowerCase()) {
             case 'dnd5e':
                 MonksTokenBar.system = new DnD5eRolls(); break;
             case 'sw5e':
                 MonksTokenBar.system = new SW5eRolls(); break;
-            case 'D35E':
+            case 'd35e':
                 MonksTokenBar.system = new D35eRolls(); break;
-            case 'dnd4eBeta':
+            case 'dnd4ebeta':
                 MonksTokenBar.system = new DnD4eRolls(); break;
             case 'pf1':
                 MonksTokenBar.system = new PF1Rolls(); break;
@@ -179,144 +180,20 @@ export class MonksTokenBar {
                 MonksTokenBar.system = new OSERolls(); break;
             case 'swade':
                 MonksTokenBar.system = new SwadeRolls(); break;
+            case 'coc7':
+                MonksTokenBar.system = new CoC7Rolls(); break;
         }
 
         MonksTokenBar.system.constructor.activateHooks();
 
         game.settings.settings.get("monks-tokenbar.stats").default = MonksTokenBar.system.defaultStats;
 
-        if (game.modules.get("monks-active-tiles")?.active) {
-            game.MonksActiveTiles.triggerActions['setmovement'] = {
-                name: 'Change Movement Mode',
-                stop: true,
-                ctrls: [
-                    {
-                        id: "entity",
-                        name: "Select Entity",
-                        type: "select",
-                        subtype: "entity",
-                        options: { showToken: true, showWithin: true, showPlayers: true },
-                        restrict: (entity) => { return (entity instanceof Token); }
-                    },
-                    {
-                        id: "movement",
-                        name: "Allow Movement",
-                        list: "movement",
-                        type: "list"
-                    }
-                ],
-                values: {
-                    'movement': {
-                        "none": 'MonksTokenBar.NoMovement',
-                        "free": 'MonksTokenBar.FreeMovement',
-                        "combat": 'MonksTokenBar.CombatTurn'
-                    }
-                },
-                fn: async (args = {}) => {
-                    const { action } = args;
-                    let entities = await game.MonksActiveTiles.getEntities(args);
-
-                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
-                },
-                content: (trigger, action) => {
-                    return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
-                }
-            };
-            game.MonksActiveTiles.triggerActions['requestroll'] = {
-                name: 'Request Roll',
-                ctrls: [
-                    {
-                        id: "entity",
-                        name: "Select Entity",
-                        type: "select",
-                        subtype: "entity",
-                        options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
-                        restrict: (entity) => { return (entity instanceof Token); }
-                    },
-                    {
-                        id: "request",
-                        name: "Request",
-                        list: () => { return MonksTokenBar.system._requestoptions; },
-                        type: "list"
-                    },
-                    {
-                        id: "dc",
-                        name: "DC",
-                        type: "text"
-                    },
-                    {
-                        id: "rollmode",
-                        name: "Roll Mode",
-                        list: "rollmode",
-                        type: "list"
-                    },
-                    {
-                        id: "silent",
-                        name: "Bypass Dialog",
-                        type: "checkbox"
-                    },
-                    {
-                        id: "fastforward",
-                        name: "Auto Roll",
-                        type: "checkbox"
-                    },
-                    {
-                        id: "checkdc",
-                        name: "Stop remaining actions",
-                        list: "stop",
-                        type: "list"
-                    }
-                ],
-                values: {
-                    'rollmode': {
-                        "roll": i18n('MonksTokenBar.PublicRoll'),
-                        "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
-                        "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
-                        "selfroll": i18n('MonksTokenBar.SelfRoll')
-                    },
-                    'stop': {
-                        "none": "Never",
-                        "fail": "on Fail",
-                        "success": "on Success"
-                    }
-                },
-                fn: async (args = {}) => {
-                    const { action } = args;
-                    let entities = await game.MonksActiveTiles.getEntities(args);
-
-                    if (entities.length == 0)
-                        return;
-
-                    entities = entities.map(e => e.object);
-
-                    let savingthrow = new SavingThrowApp(entities, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
-                    if (action.data.silent === true) {
-                        let msg = await savingthrow.requestRoll();
-                        if (action.data.fastforward === true) {
-                            let result = await SavingThrow.onRollAll('all', msg);
-                            result.result = (action.data.checkdc == 'success' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
-                            return result;
-                        }
-                    }
-                    else
-                        savingthrow.render(true);
-                },
-                content: (trigger, action) => {
-                    let parts = action.data?.request.split(':');
-                    let requesttype = (parts.length > 1 ? parts[0] : '');
-                    let request = (parts.length > 1 ? parts[1] : parts[0]);
-                    let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-                    return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.checkdc == 'fail' ? ", stop on fail" : (action.data?.checkdc == 'success' ? ", stop on success" : ''));
-                }
-            };
-        }
-
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
             MonksTokenBar.tokenbar.refresh();
         }
 
-        if (game.user.isGM && setting('assign-loot') && game.modules.get("lootsheetnpc5e")?.active) {
+        if (game.user.isGM && setting('loot-sheet') != 'none' && game.modules.get(setting('loot-sheet'))?.active) {
             let npcObject = (CONFIG.Actor.sheetClasses.npc || CONFIG.Actor.sheetClasses.minion);
             if (npcObject != undefined) {
                 let npcSheetNames = Object.values(npcObject)
@@ -376,6 +253,14 @@ export class MonksTokenBar {
                     log('movement change');
                     if (MonksTokenBar.tokenbar != undefined) {
                         MonksTokenBar.tokenbar.render(true);
+                    }
+                }
+            }
+            case 'refreshsheet': {
+                if (game.user.id != data.senderId) {
+                    let actor = canvas.tokens.get(data.tokenid)?.actor;
+                    if (actor) {
+                        actor._sheet = null;
                     }
                 }
             }
@@ -531,7 +416,7 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
@@ -568,7 +453,7 @@ export class MonksTokenBar {
                     await axpa.render(true);
                 }*/
 
-                if (setting("assign-loot") && game.modules.get("lootsheetnpc5e")?.active) {
+                if (setting("loot-sheet") != 'none' && game.modules.get(setting("loot-sheet"))?.active) {
                     let lapp = new LootablesApp(combat);
                     await lapp.render(true);
 
@@ -811,3 +696,197 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
 Hooks.on("renderChatMessage", (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 });
+
+Hooks.on("setupTileActions", (actions) => {
+    return Object.assign(actions, {
+        'setmovement': {
+            name: 'Change Movement Mode',
+            stop: true,
+            ctrls: [
+                {
+                    id: "entity",
+                    name: "Select Entity",
+                    type: "select",
+                    subtype: "entity",
+                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                    restrict: (entity) => { return (entity instanceof Token); }
+                },
+                {
+                    id: "movement",
+                    name: "Allow Movement",
+                    list: "movement",
+                    type: "list"
+                }
+            ],
+            values: {
+                'movement': {
+                    "none": 'MonksTokenBar.NoMovement',
+                    "free": 'MonksTokenBar.FreeMovement',
+                    "combat": 'MonksTokenBar.CombatTurn'
+                }
+            },
+            fn: async (args = {}) => {
+                const { action } = args;
+                let entities = await game.MonksActiveTiles.getEntities(args);
+
+                MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
+
+                return { tokens: entities };
+            },
+            content: (trigger, action) => {
+                return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
+            }
+        },
+        'requestroll': {
+            name: 'Request Roll',
+            ctrls: [
+                {
+                    id: "entity",
+                    name: "Select Entity",
+                    type: "select",
+                    subtype: "entity",
+                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                    restrict: (entity) => { return (entity instanceof Token); }
+                },
+                {
+                    id: "request",
+                    name: "Request",
+                    list: () => { return MonksTokenBar.system._requestoptions; },
+                    type: "list"
+                },
+                {
+                    id: "dc",
+                    name: "DC",
+                    type: "text"
+                },
+                {
+                    id: "rollmode",
+                    name: "Roll Mode",
+                    list: "rollmode",
+                    type: "list"
+                },
+                {
+                    id: "silent",
+                    name: "Bypass Dialog",
+                    type: "checkbox"
+                },
+                {
+                    id: "fastforward",
+                    name: "Auto Roll",
+                    type: "checkbox"
+                },
+                {
+                    id: "usetokens",
+                    name: "Continue with",
+                    list: "usetokens",
+                    type: "list"
+                },
+                {
+                    id: "continue",
+                    name: "Continue if",
+                    list: "continue",
+                    type: "list"
+                }
+            ],
+            values: {
+                'rollmode': {
+                    "roll": i18n('MonksTokenBar.PublicRoll'),
+                    "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
+                    "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
+                    "selfroll": i18n('MonksTokenBar.SelfRoll')
+                },
+                'usetokens': {
+                    "all": "All Tokens",
+                    "fail": "Tokens that Fail",
+                    "succeed": "Tokens that Succeed"
+                },
+                'continue': {
+                    "always": "Always",
+                    "failed": "Any Failed",
+                    "passed": "Any Passed",
+                    "allfail": "All Failed",
+                    "allpass": "All Passed"
+                }
+            },
+            fn: async (args = {}) => {
+                const { action, tile } = args;
+                let entities = await game.MonksActiveTiles.getEntities(args);
+
+                if (entities.length == 0)
+                    return;
+
+                entities = entities.map(e => e.object);
+
+                let savingthrow = new SavingThrowApp(entities, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
+                savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
+                if (action.data.silent === true) {
+                    let msg = await savingthrow.requestRoll();
+                    if (action.data.fastforward === true) {
+                        //need to delay slightly so the original action has time to save a state properly.
+                        window.setTimeout(function () {
+                            SavingThrow.onRollAll('all', msg);
+                        }, 100);
+                        //let result = await SavingThrow.onRollAll('all', msg);
+                        /*
+                        if (action.data.usetokens == 'fail' || action.data.usetokens == 'succeed') {
+                            result.tokens = result.tokenresults.filter(r => r.passed == (action.data.usetokens == 'succeed'));
+                            for (let i = 0; i < result.tokens.length; i++) {
+                                result.tokens[i] = await fromUuid(result.tokens[i].uuid);
+                            }
+                        }
+
+                        result.continue = action.data.continue == 'always' ||
+                            (action.data.continue == 'passed' && result.passed > 0) ||
+                            (action.data.continue == 'failed' && result.failed > 0) ||
+                            (action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
+                            (action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
+                        //(action.data.continue == 'passed' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
+                        return result;*/
+                    }
+                }
+                else
+                    savingthrow.render(true);
+
+                //if we got here then we need to pause before continuing and wait until the request has been fulfilled
+                return { pause: true };
+            },
+            content: (trigger, action) => {
+                let parts = action.data?.request.split(':');
+                let requesttype = (parts.length > 1 ? parts[0] : '');
+                let request = (parts.length > 1 ? parts[1] : parts[0]);
+                let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+                return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '');
+            }
+        },
+        'filterrequest': {
+            name: 'Filter Request Results',
+            group: 'filters',
+            ctrls: [
+                {
+                    id: "passed",
+                    name: "Passed Tokens Goto",
+                    type: "text"
+                },
+                {
+                    id: "failed",
+                    name: "Failed Tokens Goto",
+                    type: "text"
+                },
+            ],
+            fn: async (args = {}) => {
+                const { action, value } = args;
+
+                let goto = [];
+                if (action.data.failed) {
+                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed });
+                }
+                if (action.data.passed)
+                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed });
+                return { goto: goto };
+            },
+            content: (trigger, action) => {
+                return trigger.name;
+            }
+        }
+    });
+})

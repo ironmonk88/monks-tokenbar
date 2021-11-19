@@ -27,6 +27,12 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 
+	let lootsheetoptions = { 'none': 'Do not convert' };
+	if (game.modules.get("lootsheetnpc5e")?.active)
+		lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
+	if (game.modules.get("merchantsheetnpc")?.active)
+		lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
+
 	/*
 	let stat1 = "attributes.ac.value";
 	let stat2 = "";
@@ -178,9 +184,18 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
 		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
 		scope: "world",
-		config: game.modules.get("lootsheetnpc5e")?.active,
+		config: false,
 		default: false,
 		type: Boolean,
+	});
+	game.settings.register(modulename, "loot-sheet", {
+		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
+		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
+		scope: "world",
+		config: true,
+		default: "lootsheetnpc5e",
+		choices: lootsheetoptions,
+		type: String,
 	});
 	game.settings.register(modulename, "gold-formula", {
 		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),

@@ -1,3 +1,27 @@
+## Version 1.0.54
+
+Fixed issues with Loot sheet not opening due to currency issues.
+
+Fixed issues with lootables not syncing up with players
+
+Added option to select what loot sheet is used.  So you can now use either Loot Sheet or Merchant Sheet
+
+Updated code so that request rolls from Active Tiles can now be delayed until all players have rolled.
+
+Fixed spelling mistake in API that was preventing Contested Roll from being fast forwarded.
+
+Added filter for Active Tiles so you can do one thing with failed tokens, and another with successful ones.
+
+## Version 1.0.53
+
+Changed saving throws to pass information about which tokens passed and failed.
+
+Changed saving throws to continue on [Always, Any Failed, Any Succeeded]
+
+Changed saving throws to set current tokens to those that failed or succeeded.
+
+Started work on integration with CoC7.
+
 ## Version 1.0.52
 
 Moved checking for levels and getting xp to the system modules.  Should make assigning xp a little more flexible.
