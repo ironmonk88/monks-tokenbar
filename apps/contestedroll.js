@@ -545,7 +545,7 @@ export class ContestedRoll {
             message.update({ flags: { 'monks-tokenbar': flags } });
     }
 
-    static async onRollAll(message, e) {
+    static async onRollAll(all, message, e) {
         if (game.user.isGM) {
             let flags = message.data.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)
