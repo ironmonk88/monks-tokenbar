@@ -281,10 +281,8 @@ export class SavingThrow {
         }
     }
 
-    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
-        //let actor = game.actors.get(data.actorid);
-        let tokenOrActor = await fromUuid(data.uuid);
-        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+    static _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+        let actor = game.actors.get(data.actorid);
         let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
 
         if (actor != undefined) {
@@ -321,13 +319,10 @@ export class SavingThrow {
         for (let id of ids) {
             let msgtoken = flags["token" + id];
             if (msgtoken != undefined && msgtoken.roll == undefined) {
-                //let actor = game.actors.get(msgtoken.actorid);
-                let tokenOrActor = await fromUuid(lastArg.actorUuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
-
+                let actor = game.actors.get(msgtoken.actorid);
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e));
+                    promises.push(SavingThrow._rollAbility({ id: id, actorid: msgtoken.actorid }, request, requesttype, rollmode, fastForward, e));
                 }
             }
         };
@@ -413,9 +408,7 @@ export class SavingThrow {
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 } else if (update.error === true) {
-                    //let actor = game.actors.get(msgtoken.actorid);
-                    let tokenOrActor = await fromUuid(msgtoken.uuid);
-                    let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                    let actor = game.actors.get(msgtoken.actorid);
 
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
@@ -580,10 +573,7 @@ export class SavingThrow {
 
             let ids = tokens.filter(t => {
                 if (t.roll != undefined) return false;
-                //let actor = game.actors.get(t.actorid);
-                let tokenOrActor = await fromUuid(t.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
-
+                let actor = game.actors.get(t.actorid);
                 return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
             }).map(a => a.id);
 
