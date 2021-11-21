@@ -47,6 +47,7 @@ export class ContestedRollApp extends Application {
     }
 
     async request() {
+        let msg = null;
         if (this.item0.token != undefined && this.item1.token != undefined) {
             let tokens = [this.item0, this.item1].map((item, index) => {
                 let parts = this['item' + index].request.split(':'); //$('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
@@ -111,10 +112,11 @@ export class ContestedRollApp extends Application {
             }
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            msg = await ChatMessage.create(chatData, {});
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll')
                 AudioHelper.play({ src: setting('request-roll-sound-file') }, true);
             this.close();
+            return msg;
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestActorMissing"));
     }
@@ -185,8 +187,10 @@ export class ContestedRoll {
         }
     }
 
-    static _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
-        let actor = game.actors.get(data.actorid);
+    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+        //let actor = game.actors.get(data.actorid);
+        let tokenOrActor = await fromUuid(data.uuid)
+        let actor = tokenOrActor.actor;
         let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));       
 
         if (actor != undefined) {
@@ -322,10 +326,12 @@ export class ContestedRoll {
         for (let id of ids) {
             let msgtoken = flags["token" + id];
             if (msgtoken != undefined && msgtoken.roll == undefined) {
-                let actor = game.actors.get(msgtoken.actorid);
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    promises.push(ContestedRoll._rollAbility({ id: id, actorid: msgtoken.actorid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
                 }
             }
         };
@@ -543,7 +549,7 @@ export class ContestedRoll {
             message.update({ flags: { 'monks-tokenbar': flags } });
     }
 
-    static async onRollAll(message, e) {
+    static async onRollAll(all, message, e) {
         if (game.user.isGM) {
             let flags = message.data.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)
@@ -607,8 +613,9 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId); //actors.find(a => { return a.id == actorId; });
             if (msgtoken) {
-                let actor = game.actors.get(msgtoken.actorid);
-
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor;
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor.isOwner)
