@@ -190,7 +190,8 @@ export class ContestedRoll {
     static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid)
-        let actor = tokenOrActor.actor;
+        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+
         let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));       
 
         if (actor != undefined) {
@@ -328,7 +329,8 @@ export class ContestedRoll {
             if (msgtoken != undefined && msgtoken.roll == undefined) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor;
+                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
                     promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
@@ -594,7 +596,7 @@ Hooks.on("renderContestedRollApp", (app, html) => {
     $('#contestedroll-rollmode', html).val(app.rollmode);
 });
 
-Hooks.on("renderChatMessage", (message, html, data) => {
+Hooks.on("renderChatMessage", async (message, html, data) => {
     const svgCard = html.find(".monks-tokenbar.contested-roll");
     if (svgCard.length !== 0) {
 
@@ -613,7 +615,9 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId); //actors.find(a => { return a.id == actorId; });
             if (msgtoken) {
-                let actor = game.actors.get(msgtoken.actorid);
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
