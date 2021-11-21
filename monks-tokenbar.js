@@ -2,7 +2,7 @@
 import { TokenBar } from "./apps/tokenbar.js";
 import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
 import { SavingThrow, SavingThrowApp } from "./apps/savingthrow.js";
-import { ContestedRoll } from "./apps/contestedroll.js";
+import { ContestedRoll, ContestedRollApp } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
