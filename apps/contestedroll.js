@@ -613,8 +613,9 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId); //actors.find(a => { return a.id == actorId; });
             if (msgtoken) {
-                let actor = game.actors.get(msgtoken.actorid);
-
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor;
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor.isOwner)
