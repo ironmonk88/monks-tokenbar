@@ -581,9 +581,9 @@ export class SavingThrow {
             /*let tokenOrActor = await fromUuid(message.uuid);
             let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;*/
 
-            let ids = tokens.filter(t => {    
+            let ids = tokens.filter(t => {
                 if (t.roll != undefined) return false;
-                let actor = game.actors.get(t.actorid);        //Haven't changed this one as I am not clear about this check.
+                let actor = game.actors.get(t.actorid);  //Haven't changed this one as I am not clear about this check.
                 return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
             }).map(a => a.id);
 
