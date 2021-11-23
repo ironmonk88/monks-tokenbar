@@ -20,6 +20,7 @@ export class SavingThrowApp extends Application {
         this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
         this.request = options.request;
+        this.flavor = options.flavor;
 
         //find best match for request
         if (options.request) {
@@ -147,7 +148,7 @@ export class SavingThrowApp extends Application {
             let rollmode = this.rollmode;
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
-
+            let flavor = this.flavor;
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
@@ -172,7 +173,8 @@ export class SavingThrowApp extends Application {
             log('create chat request');
             let chatData = {
                 user: game.user.id,
-                content: html
+                content: html,
+                flavor: flavor
             };
             if (requestdata.rollmode == 'selfroll')
                 chatData.whisper = [game.user.id];
