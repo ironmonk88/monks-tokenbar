@@ -15,6 +15,7 @@ export class ContestedRollApp extends Application {
         this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
+        this.flavor = options.flavor;
     }
 
     static get defaultOptions() {
@@ -70,7 +71,8 @@ export class ContestedRollApp extends Application {
                     passed: 'waiting'
                 };
             });
-
+            
+            let flavor = this.flavor;
             let rollmode = this.rollmode; //$('#contestedroll-rollmode', this.element).val();
             game.user.setFlag("monks-tokenbar", "lastmodeCR", rollmode);
             game.user.setFlag("monks-tokenbar", "lastmodeHideNPCName", this.hidenpcname);
@@ -93,7 +95,8 @@ export class ContestedRollApp extends Application {
             log('create chat request');
             let chatData = {
                 user: game.user.id,
-                content: html
+                content: html,
+                flavor: flavor
             };
             if (rollmode == 'selfroll')
                 chatData.whisper = [game.user.id];
