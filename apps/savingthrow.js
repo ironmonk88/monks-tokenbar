@@ -283,8 +283,10 @@ export class SavingThrow {
         }
     }
 
-    static _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
-        let actor = game.actors.get(data.actorid);
+    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+        //let actor = game.actors.get(data.actorid);
+        let tokenOrActor = await fromUuid(data.uuid);
+        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
         let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
 
         if (actor != undefined) {
@@ -321,10 +323,12 @@ export class SavingThrow {
         for (let id of ids) {
             let msgtoken = flags["token" + id];
             if (msgtoken != undefined && msgtoken.roll == undefined) {
-                let actor = game.actors.get(msgtoken.actorid);
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    promises.push(SavingThrow._rollAbility({ id: id, actorid: msgtoken.actorid }, request, requesttype, rollmode, fastForward, e));
+                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e));
                 }
             }
         };
@@ -410,7 +414,9 @@ export class SavingThrow {
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 } else if (update.error === true) {
-                    let actor = game.actors.get(msgtoken.actorid);
+                    //let actor = game.actors.get(msgtoken.actorid);
+                    let tokenOrActor = await fromUuid(msgtoken.uuid);
+                    let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
 
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
@@ -572,7 +578,10 @@ export class SavingThrow {
             let tokens = Object.keys(flags)
                 .filter(key => key.startsWith('token'))
                 .map(key => flags[key]);
-
+            log(tokens)
+            /*let tokenOrActor = await fromUuid(message.uuid);
+            let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;*/
+            debugger; 
             let ids = tokens.filter(t => {
                 if (t.roll != undefined) return false;
                 let actor = game.actors.get(t.actorid);
@@ -693,7 +702,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
     //$('.item-control[data-type="monster"]', html).hide();
 });
 
-Hooks.on("renderChatMessage", (message, html, data) => {
+Hooks.on("renderChatMessage", async (message, html, data) => {
     const svgCard = html.find(".monks-tokenbar.savingthrow");
     if (svgCard.length !== 0) {
         log('Rendering chat message', message);
@@ -719,7 +728,9 @@ Hooks.on("renderChatMessage", (message, html, data) => {
             let tokenId = $(item).attr('data-item-id');
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId);//actors.find(a => { return a.id == actorId; });
             if (msgtoken) {
-                let actor = game.actors.get(msgtoken.actorid);
+                //let actor = game.actors.get(msgtoken.actorid);
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
