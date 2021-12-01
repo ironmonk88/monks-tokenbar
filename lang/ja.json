@@ -3,7 +3,8 @@
 	"MonksTokenBar.EditToken": "トークン設定",
 	"MonksTokenBar.TargetToken": "目標に選択",
 	"MonksTokenBar.PrivateMessage": "秘話",
-
+	"MonksTokenBar.DisablePanning": "パンの無効化",
+	
 	"MonksTokenBar.easy": "簡単",
 	"MonksTokenBar.average": "通常",
 	"MonksTokenBar.challenging": "困難",
@@ -39,6 +40,9 @@
 	"MonksTokenBar.Passed": "成功",
 	"MonksTokenBar.Failed": "失敗",
 	"MonksTokenBar.GrabMessage": "個別のロールを取り込む",
+	"MonksTokenBar.SelectFailed": "失敗したアクターを選択",
+	"MonksTokenBar.SelectSaved": "成功したアクターを選択",
+	"MonksTokenBar.SelectAll": "すべてのアクターを選択",
 
 	"MonksTokenBar.UnknownError": "不明なエラーが発生しました。",
 	"MonksTokenBar.CombatTurnMovementLimited": "今はあなたのターンではありません。",
@@ -98,6 +102,8 @@
 	"MonksTokenBar.delete-after-grab.hint": "個別に振られたロールをリクエストした判定に取り込んだあと、その個別ロールのメッセージを削除します。",
 	"MonksTokenBar.show-lootable-menu.name": "戦利品分配ボタンを表示する",
 	"MonksTokenBar.show-lootable-menu.hint": "基本操作メニューに戦利品分配ボタンを追加します。",
+	"MonksTokenBar.show-disable-panning-option.name": "“パンの無効化”オプションを表示する",
+	"MonksTokenBar.show-disable-panning-option.hint": "コマの右クリックメニューに“パンの無効化”を表示します。",
 	"MonksTokenBar.request-roll-sound.name": "判定リクエスト時に音を鳴らす",
 	"MonksTokenBar.request-roll-sound.hint": "判定をリクエストしたときにサウンドを再生します。",
 	"MonksTokenBar.send-levelup-whisper.name": "レベルアップをプレイヤーに告知する",
@@ -108,7 +114,13 @@
 	"MonksTokenBar.allow-after-movement.hint": "自身のターンの次のターン中も、プレイヤーがコマを移動できるようにします。プレイヤーが信頼できる場合、これは些細なミスの修正に役立ちます。",
 	"MonksTokenBar.show-on-tracker.name": "移動許可ボタンを表示",
 	"MonksTokenBar.show-on-tracker.hint": "イニシアチブ表のステータス欄に、移動許可ボタンを追加します。",
-	
+	"MonksTokenBar.gold-formula.name": "GPの計算式",
+	"MonksTokenBar.gold-formula.hint": "倒した敵から得られるGPの計算式です。",
+	"MonksTokenBar.show-vertical.name": "バーを垂直表示する",
+	"MonksTokenBar.show-vertical.hint": "トークンバーを垂直に表示します。",
+	"MonksTokenBar.capture-savingthrows.name": "セーヴィング・スローを展開する",
+	"MonksTokenBar.capture-savingthrows.hint": "アイテムがセーヴィング・スローを要求するときに判定用のチャットカードを作成します。",
+
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
 	"MonksTokenBar.Experience": "経験値",
