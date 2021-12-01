@@ -138,5 +138,18 @@
     "MonksTokenBar.RollResult": "Resultat de la tirada",
     "MonksTokenBar.CombatTurnMovementLimited": "El moviment està configurat a torn de combat, actualment no és el teu torn",
     "MonksTokenBar.RequestActorMissing": "No es pot enviar la sol·licitud si falta un dels personatges",
-    "MonksTokenBar.UnknownSystem": "No estas fent servir cap sistema que admeti Monk's Tokenbar."
+    "MonksTokenBar.UnknownSystem": "No estas fent servir cap sistema que admeti Monk's Tokenbar.",
+    "MonksTokenBar.SelectSaved": "Seleccionar actors que han passat la tirada",
+    "MonksTokenBar.SelectAll": "Selecciona tots els actors",
+    "MonksTokenBar.show-disable-panning-option.hint": "Mostra una opció de desactivar panoràmica al menú contextual del token",
+    "MonksTokenBar.gold-formula.name": "Fórmula d’Or",
+    "MonksTokenBar.gold-formula.hint": "Fórmula per calcular l'or dels enemics morts",
+    "MonksTokenBar.show-vertical.name": "Mostra vertical",
+    "MonksTokenBar.capture-savingthrows.name": "Captura de tirada de salvació",
+    "MonksTokenBar.capture-savingthrows.hint": "Crea una targeta de xat de tirada de salvació quan es sol·liciti",
+    "MonksTokenBar.DisablePanning": "Desactivar la panoràmica",
+    "MonksTokenBar.Characteristics": "Característiques",
+    "MonksTokenBar.SelectFailed": "Seleccionar actors que han fallat",
+    "MonksTokenBar.show-disable-panning-option.name": "Mostrar l'opció desactivar panoràmica",
+    "MonksTokenBar.show-vertical.hint": "Mostra la barra de token verticalment"
 }
