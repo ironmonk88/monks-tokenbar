@@ -128,6 +128,10 @@ export class BaseRolls {
         return null;
     }
 
+    get canGrab() {
+        return false;
+    }
+
     dynamicRequest(tokens) {
         return [];
     }

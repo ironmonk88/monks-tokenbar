@@ -44,14 +44,20 @@ export class SW5eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        let allPlayers = (app.entries.filter(t => t.data.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
-        return (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
+        let allZeroHP = app.entries.filter(t => getProperty(t.data.actor, "data.data.attributes.hp.value") == 0).length;
+        return (allZeroHP == app.entries.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
     }
 
     defaultContested() {
         return 'ability:str';
+    }
+
+    get canGrab() {
+        if (game.modules.get("betterrolls5e")?.active)
+            return false;
+        return true;
     }
 
     roll({id, actor, request, requesttype, fastForward = false }, callback, e) {

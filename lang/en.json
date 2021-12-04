@@ -121,6 +121,8 @@
 	"MonksTokenBar.show-vertical.hint": "Show the Tokenbar vertically",
 	"MonksTokenBar.capture-savingthrows.name": "Capture Saving Throw",
 	"MonksTokenBar.capture-savingthrows.hint": "Create Saving Throw Chat Card when requesting item saving throw roll",
+	"MonksTokenBar.token-size.name": "Size of tokens",
+	"MonksTokenBar.token-size.hint": "Change the size of the tokens on Tokenbar, in case the attributes disappear off the side.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -141,6 +143,7 @@
 	"MonksTokenBar.DeleteItem": "Delete Item",
 	"MonksTokenBar.Vs": "Vs",
 	"MonksTokenBar.Request": "Request",
+	"MonksTokenBar.RequestWithRoll": "Request with Roll",
 	"MonksTokenBar.Roll": "Roll",
 	"MonksTokenBar.SavingDC": "DC",
 	"MonksTokenBar.SavingDCPlaceholder": "Leave blank to not calculate",
@@ -159,5 +162,7 @@
 	"MonksTokenBar.AssignByCR": "Assign gold by CR",
 	"MonksTokenBar.ConvertToLootable": "Convert to Lootable",
 	"MonksTokenBar.Gold": "Gold",
-	"MonksTokenBar.Levelup": "You have enough xp to level up!"
+	"MonksTokenBar.Levelup": "You have enough xp to level up!",
+	"MonksTokenBar.EditStats": "Edit Stats",
+	"MonksTokenBar.Flavor": "Flavor"
 }

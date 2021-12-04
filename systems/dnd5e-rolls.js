@@ -56,20 +56,26 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
-        return (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
+        let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "data.data.attributes.hp.value") == 0).length;
+        return (allZeroHP == app.entries.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
     }
 
     defaultContested() {
         return 'ability:str';
     }
 
-    dynamicRequest(tokens) {
+    get canGrab() {
+        if (game.modules.get("betterrolls5e")?.active)
+            return false;
+        return true;
+    }
+
+    dynamicRequest(entries) {
         let tools = {};
         //get the first token's tools
-        for (let item of tokens[0].actor.items) {
+        for (let item of entries[0].token.actor.items) {
             if (item.type == 'tool') {
                 let sourceID = item.getFlag("core", "sourceId") || item.id;
                 //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
@@ -78,10 +84,9 @@ export class DnD5eRolls extends BaseRolls {
         }
         //see if the other tokens have these tools
         if (Object.keys(tools).length > 0) {
-            for (let i = 1; i < tokens.length; i++) {
-                let token = tokens[i];
+            for (let i = 1; i < entries.length; i++) {
                 for (let [k, v] of Object.entries(tools)) {
-                    let tool = token.actor.items.find(t => {
+                    let tool = entries[i].token.actor.items.find(t => {
                         return t.type == 'tool' && (t.getFlag("core", "sourceId") || t.id) == k;
                     });
                     if (tool == undefined)

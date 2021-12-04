@@ -48,20 +48,19 @@ export class SwadeRolls extends BaseRolls {
         return 'ability:str';
     }*/
 
-    dynamicRequest(tokens) {
+    dynamicRequest(entries) {
         let skills = {};
         //get the first token's tools
-        for (let item of tokens[0].actor.items) {
+        for (let item of entries[0].token.actor.items) {
             if (item.type == 'skill') {
                 skills[item.data.name] = item.data.name;
             }
         }
         //see if the other tokens have these tools
         if (Object.keys(skills).length > 0) {
-            for (let i = 1; i < tokens.length; i++) {
-                let token = tokens[i];
+            for (let i = 1; i < entries.length; i++) {
                 for (let [k, v] of Object.entries(skills)) {
-                    let skill = token.actor.items.find(t => {
+                    let skill = entries[i].token.actor.items.find(t => {
                         return t.type == 'skill' && t.data.name == k;
                     });
                     if (skill == undefined)

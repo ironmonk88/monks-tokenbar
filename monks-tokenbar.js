@@ -2,7 +2,7 @@
 import { TokenBar } from "./apps/tokenbar.js";
 import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
 import { SavingThrow, SavingThrowApp } from "./apps/savingthrow.js";
-import { ContestedRoll } from "./apps/contestedroll.js";
+import { ContestedRoll, ContestedRollApp } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
@@ -33,6 +33,16 @@ export let i18n = key => {
 export let setting = key => {
     return game.settings.get("monks-tokenbar", key);
 };
+
+export let makeid = () => {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < 16; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
 
 export const MTB_MOVEMENT_TYPE = {
     FREE: 'free',
@@ -97,6 +107,54 @@ export class MonksTokenBar {
             return oldView.call(this);
         }
 
+        if(setting('token-size') != 50) {
+            let innerHTML = `
+#tokenbar .token {
+    flex: 0 0 ${setting('token-size')}px;
+    width: ${setting('token-size')};
+}
+`;
+        let style = document.createElement("style");
+        style.id = "monkstokenbar-css-changes";
+
+        style.innerHTML = innerHTML;
+        if (innerHTML != '')
+            document.querySelector("head").appendChild(style);
+    }
+    }
+
+    static getTokenEntries(tokens) {
+        if (typeof tokens == 'string')
+            tokens = tokens.split(',').map(function (item) { return item.trim(); });
+
+        let findToken = function (t) {
+            if (typeof t == 'string') {
+                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
+            } else if (!(t instanceof Token))
+                t = null;
+
+            return t;
+        }
+
+        tokens = tokens.map(t => {
+            if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
+                t = JSON.parse(t);
+            if (typeof t == 'object' && t.token && t.constructor.name == 'Object') {
+                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey }, request: t.request, fastForward: t.fastForward };
+            } else {
+                t = { token: findToken(t) };
+            }
+
+            Object.defineProperty(t, 'id', {
+                get: function () {
+                    return this.token.id;
+                }
+            });
+
+            return (t.token == undefined ? null : t);
+        }).filter(c => !!c);
+
+        return tokens;
     }
 
     static async chatCardAction(event) {
@@ -140,8 +198,9 @@ export class MonksTokenBar {
             const item = storedData ? new this(storedData, { parent: actor }) : actor.items.get(card.dataset.itemId);
 
             const targets = _getChatCardTargets(card);
-            if (targets.length) {
-                let savingthrow = new SavingThrowApp(targets, { request: 'save:' + button.dataset.ability, dc: item.data.data.save.dc });
+            const entries = MonksTokenBar.getTokenEntries(targets);
+            if (tokens.length) {
+                let savingthrow = new SavingThrowApp(entries, { request: 'save:' + button.dataset.ability, dc: item.data.data.save.dc });
                 savingthrow.requestRoll();
 
                 event.preventDefault();
@@ -214,8 +273,20 @@ export class MonksTokenBar {
         }
     }
 
+    static playSound(sound, users) {
+        AudioHelper.play({ src: sound }, (users == 'all' ? true : false));
+        if (users != 'all' && (users.length > 1 || users[0] != game.user.id))
+            MonksTokenBar.emit('playSound', { sound: sound, users: users });
+    }
+
+    static emit(action, args = {}) {
+        args.action = action;
+        args.senderId = game.user.id;
+        game.socket.emit(MonksTokenBar.SOCKET, args, (resp) => { });
+    }
+
     static onMessage(data) {
-        switch (data.msgtype) {
+        switch (data.action) {
             case 'rollability': {
                 if (game.user.isGM) {
                     let message = game.messages.get(data.msgid);
@@ -255,7 +326,7 @@ export class MonksTokenBar {
                         MonksTokenBar.tokenbar.render(true);
                     }
                 }
-            }
+            } break;
             case 'refreshsheet': {
                 if (game.user.id != data.senderId) {
                     let actor = canvas.tokens.get(data.tokenid)?.actor;
@@ -263,7 +334,13 @@ export class MonksTokenBar {
                         actor._sheet = null;
                     }
                 }
-            }
+            } break;
+            case 'playSound': {
+                if (data.users.includes(game.user.id)) {
+                    console.log('Playing sound', data.sound);
+                    AudioHelper.play({ src: data.sound }, false);
+                }
+            } break;
         }
     }
 
@@ -374,15 +451,11 @@ export class MonksTokenBar {
             let msg = (token != undefined ? token.name + ": " : "") + i18n("MonksTokenBar.MovementChanged") + (movement == MTB_MOVEMENT_TYPE.FREE ? i18n("MonksTokenBar.FreeMovement") : (movement == MTB_MOVEMENT_TYPE.NONE ? i18n("MonksTokenBar.NoMovement") : i18n("MonksTokenBar.CombatTurn")));
             ui.notifications.warn(msg);
             log('display notification');
-            game.socket.emit(
-                MonksTokenBar.SOCKET,
+            MonksTokenBar.emit('movementchange',
                 {
-                    msgtype: 'movementchange',
-                    senderId: game.user.id,
                     msg: msg,
                     tokenid: token?.id
-                },
-                (resp) => { }
+                }
             );
         }
     }
@@ -507,6 +580,9 @@ export class MonksTokenBar {
     }
 
     static setGrabMessage(message, event) {
+        if (!MonksTokenBar.system.canGrab)
+            return;
+
         if (MonksTokenBar.grabmessage != undefined) {
             $('#chat-log .chat-message[data-message-id="' + MonksTokenBar.grabmessage.id + '"]').removeClass('grabbing');
         }
@@ -545,20 +621,15 @@ export class MonksTokenBar {
     static onClickMessage(message, html) {
         if (MonksTokenBar.grabmessage != undefined) {
             //make sure this message matches the grab message
-            let roll = {};
-            if (game.system.id == 'pf2e') {
-                let [abilityId, type] = message.data.flags.pf2e.context.type.split('-');
-                roll = { type: (type == 'check' ? 'attribute': type), abilityId: abilityId };
-            } else
-                roll = message.getFlag(game.system.id, 'roll');
-            if (roll && MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'requesttype') == roll.type &&
-                MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'request') == (roll.skillId || roll.abilityId)) {
+            if (message._roll) {
                 let tokenId = message.data.speaker.token;
                 let msgtoken = MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'token' + tokenId);
 
                 if (msgtoken != undefined) {
-                    let r = Roll.fromJSON(message.data.roll);
-                    SavingThrow.updateMessage([{ id: tokenId, roll: r }], MonksTokenBar.grabmessage);
+                    if (MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'what') == 'contestedroll')
+                        ContestedRoll.updateMessage([{ id: tokenId, roll: message.roll }], MonksTokenBar.grabmessage);
+                    else
+                        SavingThrow.updateMessage([{ id: tokenId, roll: message.roll }], MonksTokenBar.grabmessage);
                     if (setting('delete-after-grab'))
                         message.delete();
                     MonksTokenBar.grabmessage = null;
@@ -817,7 +888,7 @@ Hooks.on("setupTileActions", (actions) => {
 
                 entities = entities.map(e => e.object);
 
-                let savingthrow = new SavingThrowApp(entities, { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
+                let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
                 savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
                 if (action.data.silent === true) {
                     let msg = await savingthrow.requestRoll();

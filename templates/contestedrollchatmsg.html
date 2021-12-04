@@ -38,6 +38,7 @@
     </div>
     <footer class="card-footer gm-only">
         <span class="message-mode">{{modename}}</span>
+        {{#if canGrab}}<button type="button" class="grab-message footer-button" title="{{localize 'MonksTokenBar.GrabMessage'}}"><i class="fas fa-hand-sparkles"></i></button>{{/if}}
         <button type="button" class="select-failed footer-button" title="{{localize 'MonksTokenBar.SelectFailed'}}"><i class="fas fa-user-times"></i></button>
         <button type="button" class="select-saved footer-button" title="{{localize 'MonksTokenBar.SelectSaved'}}"><i class="fas fa-user-check"></i></button>
         <button type="button" class="select-all footer-button" title="{{localize 'MonksTokenBar.SelectAll'}}"><i class="fas fa-users"></i></button>

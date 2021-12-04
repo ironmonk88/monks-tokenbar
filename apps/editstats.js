@@ -1,9 +1,13 @@
-import { MonksTokenBar, log, error, i18n, setting } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, setting, makeid } from "../monks-tokenbar.js";
 
 export class EditStats extends FormApplication {
     constructor(object, options) {
         super(object, options);
-        this.stats = MonksTokenBar.stats;
+        this.stats = object?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
+        this.stats = this.stats.map(s => {
+            s.id = s.id || makeid();
+            return s;
+        });
         //let's just grab the first player character we can find
         let player = game.actors.find(a => a.type == 'character');
         if (player) {
@@ -31,7 +35,10 @@ export class EditStats extends FormApplication {
     }
 
     _updateObject() {
-        game.settings.set('monks-tokenbar', 'stats', this.stats);
+        if (Object.keys(this.object).length != 0) {
+            this.object.setFlag('monks-tokenbar', 'stats', this.stats);
+        }else
+            game.settings.set('monks-tokenbar', 'stats', this.stats);
         MonksTokenBar.tokenbar.refresh();
         this.submitting = true;
     }
@@ -45,12 +52,18 @@ export class EditStats extends FormApplication {
 
     removeStat() {
         let statid = event.currentTarget.closest('.form-group').dataset.id;
-        this.stats.findSplice(s => s.stat === statid);
+        this.stats.findSplice(s => s.id === statid);
         $('.form-group[data-id="' + statid + '"]', this.element).remove();
     }
 
     resetStats() {
-        this.stats = MonksTokenBar.system.defaultStats;
+        if (Object.keys(this.object).length != 0) {
+            this.stats = MonksTokenBar.stats;
+            this.object.unsetFlag('monks-tokenbar', 'stats');
+            this.close();
+        }
+        else
+            this.stats = MonksTokenBar.system.defaultStats;
         this.render(true);
         let that = this;
         window.setTimeout(function () { that.setPosition(); }, 100);
@@ -62,7 +75,7 @@ export class EditStats extends FormApplication {
     }
 
     selectIcon(event) {
-        let stat = this.stats.find(s => s.stat == this.statid);
+        let stat = this.stats.find(s => s.id == this.statid);
         stat.icon = event.currentTarget.dataset.value;
         $('.form-group[data-id="' + this.statid + '"] .icon i', this.element).attr('class', 'fas ' + stat.icon);
         $('.font-picker', this.element).hide();
@@ -70,12 +83,8 @@ export class EditStats extends FormApplication {
 
     changeText(event) {
         let statid = event.currentTarget.closest('.form-group').dataset.id;
-        let stat = this.stats.find(s => s.stat == statid);
-
-        let newstat = $(event.currentTarget).val();
-        if (this.stats.find(s => s.stat == newstat) != undefined)
-            newstat = statid;
-        stat.stat = newstat;
+        let stat = this.stats.find(s => s.id == statid);
+        stat.stat = $(event.currentTarget).val();
         if (!this.submitting)
             this.render(true);
     }

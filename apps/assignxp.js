@@ -161,6 +161,7 @@ export class AssignXPApp extends Application {
     }
 
     async assign() {
+        let msg = null;
         let chatactors = this.actors
           .filter(a => { return !a.disabled; })
           .map(a => {
@@ -189,10 +190,12 @@ export class AssignXPApp extends Application {
             };
 
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            ChatMessage.create(chatData, {});
+            msg = ChatMessage.create(chatData, {});
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneActorSelected"));
+
+        return msg;
     }
 
     activateListeners(html) {
@@ -205,7 +208,7 @@ export class AssignXPApp extends Application {
             $('.item-delete', this).click($.proxy(that.disableActor, that, this.dataset.itemId));
         });
 
-        $('.dialog-buttons.assign', html).click($.proxy(this.assign, this));
+        $('.dialog-button.assign', html).click($.proxy(this.assign, this));
 
         $('#dividexp', html).change(function () {
             that.dividexp = $(this).find('option:selected').val();
@@ -234,16 +237,7 @@ export class AssignXP {
             await message.setFlag('monks-tokenbar', 'actors', actors);
         } else {
             $(e.target).hide();
-            game.socket.emit(
-              MonksTokenBar.SOCKET,
-              {
-                  msgtype: 'assignxp',
-                  senderId: game.user.id,
-                  actorid: actorid,
-                  msgid: message.id
-              },
-              (resp) => { }
-            );
+            MonksTokenBar.emit('assignxp', { actorid: actorid, msgid: message.id });
         }
     }
 

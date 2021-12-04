@@ -1,7 +1,5 @@
 import { MonksTokenBar, log, error, i18n, setting, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
-import { SavingThrowApp } from "../apps/savingthrow.js";
-import { ContestedRollApp } from "../apps/contestedroll.js";
-import { AssignXPApp } from "../apps/assignxp.js";
+import { EditStats } from "./editstats.js";
 
 export class TokenBar extends Application {
 	constructor(options) {
@@ -141,6 +139,10 @@ export class TokenBar extends Application {
         if (formula == undefined || formula == '')
             return null;
 
+        if (formula.includes("{{")) {
+            const compiled = Handlebars.compile(formula);
+            formula = compiled(data, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
+        }
         //formula = formula.replaceAll('@', '');
         formula = formula.replace(/@/g, '');
         let dataRgx = new RegExp(/([a-z.0-9_\-]+)/gi);
@@ -159,8 +161,7 @@ export class TokenBar extends Application {
         try {
             result = eval(result);
         } catch{ }
-
-        return String(result);
+        return String(result).replace(/["']/g, "");
     }
 
     async getCurrentTokens() {
@@ -227,7 +228,7 @@ export class TokenBar extends Application {
             }
         }
 
-        let viewstats = MonksTokenBar.stats;
+        let viewstats = tkn.token.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
         for (let stat of viewstats) {
             let value = TokenBar.processStat(stat.stat, tkn.token.actor.data.data);
@@ -447,6 +448,18 @@ export class TokenBar extends Application {
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     if (entry.token.actor) entry.token.sheet.render(true)
+                }
+            },
+            {
+                name: "MonksTokenBar.EditStats",
+                icon: '<i class="fas fa-list-ul"></i>',
+                condition: li => {
+                    return game.user.isGM;
+                },
+                callback: li => {
+                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    if (entry)
+                        new EditStats(entry.token).render(true);
                 }
             },
             {

@@ -49,7 +49,7 @@ export class DnD4eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         return (allPlayers ? 'skill:prc' : null);
     }
 

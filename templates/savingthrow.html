@@ -5,7 +5,7 @@
                 <div style="padding-right:10px;">
                     <div class="form-group">
                         <label>{{localize dclabel}}</label>
-                        <input type="text" id="monks-tokenbar-savingdc" placeholder="{{localize 'MonksTokenBar.SavingDCPlaceholder'}}" value="{{dc}}" />
+                        <input type="number" step="any" id="monks-tokenbar-savingdc" placeholder="{{localize 'MonksTokenBar.SavingDCPlaceholder'}}" value="{{dc}}" />
                     </div>
                     <div class="form-group">
                         <label>{{localize 'MonksTokenBar.RollMode'}}</label>
@@ -15,6 +15,10 @@
                             <option value="blindroll">{{localize 'MonksTokenBar.BlindGMRoll'}}</option>
                             <option value="selfroll">{{localize 'MonksTokenBar.SelfRoll'}}</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label>{{localize 'MonksTokenBar.Flavor'}}</label>
+                        <input type="text" id="monks-tokenbar-flavor" value="{{flavor}}" />
                     </div>
                     <div class="form-group sheet">
                         <ol class="items-list inventory-list">
@@ -38,14 +42,14 @@
                             </li>
 
                             <ol class="item-list" style="min-height:150px;">
-                                {{#each tokens}}
-                                <li class="item flexrow " data-item-id="{{this.id}}" draggable="true">
+                                {{#each entries}}
+                                <li class="item flexrow " data-item-id="{{this.token.id}}" draggable="true">
                                     <div class="item-name flexrow rollable">
-                                        <div class="item-image" style="background-image: url('{{this.data.img}}')">
-                                            <video width="30" height="30"><source src="{{this.data.img}}" /></video>
+                                        <div class="item-image" style="background-image: url('{{this.token.data.img}}')">
+                                            <video width="30" height="30"><source src="{{this.token.data.img}}" /></video>
                                         </div>
                                         <h4>
-                                            {{this.name}}
+                                            {{this.token.name}}
                                         </h4>
                                     </div>
 
@@ -73,7 +77,8 @@
             </div>
         </form>
     </div>
-    <div class="dialog-buttons">
-        <button class="dialog-buttons request" data-button="request">{{localize 'MonksTokenBar.Request'}}</button>
+    <div class="dialog-buttons flexrow">
+        <button class="dialog-button request-roll" data-button="request-roll"><i class="fas fa-dice"></i> {{localize 'MonksTokenBar.RequestWithRoll'}}</button>
+        <button class="dialog-button request" data-button="request"><i class="fas fa-receipt"></i> {{localize 'MonksTokenBar.Request'}}</button>
     </div>
 </div>

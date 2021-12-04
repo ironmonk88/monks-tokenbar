@@ -1,3 +1,35 @@
+## Version 1.0.55
+
+Added option to return the chat message created when prompting to assign xp
+
+Converted contected roll to use an array of tokens like saving throw does, to maintain some consistency
+
+Recentered the contested roll dialog.
+
+Fixed issue with contested rolls not working from the API, thank you+++
+
+Added option to specify if individual tokens can be fast forwarded or if they have advantage or disadvatage, in both contested and requested rolls.  This means there's a new way to request these rolls, instead of an array of strings or token ids you can now specify an array of objects.  So `game.MonksTokenBar.requestRoll([{token:"Thoramir", altKey: true},"John Locke", {token:"Toadvine", fastForward:true}], {request:'perception',dc:15, silent:true, fastForward:false, flavor:'Testing flavor'})` is now possible, to give advantage to Thoramir and to auto roll Toadvine.
+
+Added option for flavor text with contested and requested rolls, thank you weepingminotaur
+
+Changed how the sounds are played so only the relevant players will hear it.
+
+Added the option to request the roll with all the dice being rolled.
+
+Fixed an issue with contested rolls and who gets to see who passed and who failed.
+
+Added option to grab rolls with contested rolls.
+
+I've also reduce the restrictions when grabbing rolls, so you can now grab any roll and use that in contested or requested rolls.  So this is a bit of a beware, it will grab any roll message you click on.  But it also means that you can grab unrelated rolls if your character wants to roll althletics instead of acrobatics for example.
+
+You can now edit the stats for individual tokens.
+
+Added option to change the width of the tokens being displayed on the token bar.
+
+Stats can now use handlebar notation
+
+Stats can also have text in quotes
+
 ## Version 1.0.54
 
 Fixed issues with Loot sheet not opening due to currency issues.

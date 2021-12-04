@@ -3,7 +3,7 @@
         <div class="dialog-content" style="flex: 0 0 200px;height:200px;overflow-y:auto;">
 
             {{#each stats}}
-            <div class="form-group" data-id="{{this.stat}}">
+            <div class="form-group" data-id="{{this.id}}">
                 <div class="icon" style="flex: 0 0 30px;padding: 8px;"><i class="fas {{this.icon}}"></i></div>
                 <input type="text" class="stat-text typeahead" autocomplete="off" value="{{this.stat}}" />
                 <div class="remove" style="flex: 0 0 30px;padding: 8px;"><i class="fas fa-trash"></i></div>

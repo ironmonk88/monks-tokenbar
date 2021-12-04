@@ -19,17 +19,7 @@ export class MonksTokenBarAPI {
         if (!MonksTokenBar.isMovement(movement))
             return;
 
-        if (typeof tokens == 'string')
-            tokens = tokens.split(',').map(function (item) { return item.trim(); });
-
-        let useTokens = tokens.map(t => {
-            if (typeof t == 'string') {
-                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
-            } else if (!(t instanceof Token))
-                t = null;
-
-            return t;
-        }).filter(c => !!c);
+        let useTokens = MonksTokenBar.getTokenEntries(tokens).map(t => t.token);
 
         if (useTokens != undefined) {
             MonksTokenBar.changeTokenMovement(movement, useTokens);
@@ -46,16 +36,9 @@ export class MonksTokenBarAPI {
         if (typeof tokens == 'string')
             tokens = tokens.split(',').map(function (item) { return item.trim(); });
 
-        let useTokens = tokens.map(t => {
-            if (typeof t == 'string') {
-                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
-            } else if (!(t instanceof Token))
-                t = null;
+        let entries = MonksTokenBar.getTokenEntries(tokens);
 
-            return t;
-        }).filter(c => !!c);
-
-        let savingthrow = new SavingThrowApp(useTokens, options);
+        let savingthrow = new SavingThrowApp(entries, options);
         if (options?.silent === true) {
             let msg = await savingthrow.requestRoll();
             if (options.fastForward === true)
@@ -75,7 +58,9 @@ export class MonksTokenBarAPI {
 
         options.rollmode = options.rollmode || 'roll';
 
-        let contestedroll = new ContestedRollApp(request0, request1, options);
+        let entries = MonksTokenBar.getTokenEntries([request0, request1]);
+
+        let contestedroll = new ContestedRollApp(entries, options);
         if (options?.silent === true) {
             let msg = await contestedroll.request();
             if (options.fastForward === true)

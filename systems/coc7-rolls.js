@@ -53,10 +53,10 @@ export class CoC7Rolls extends BaseRolls {
         return 'characteristics:str';
     }
 
-    dynamicRequest(tokens) {
+    dynamicRequest(entries) {
         let skills = {};
         //get the first token's skills
-        for (let item of tokens[0].actor.items) {
+        for (let item of entries[0].token.actor.items) {
             if (item.type == 'skill') {
                 let sourceID = item.getFlag("core", "sourceId") || item.id;
                 skills[sourceID] = item.data.name;
@@ -64,10 +64,9 @@ export class CoC7Rolls extends BaseRolls {
         }
         //see if the other tokens have these skills
         if (Object.keys(skills).length > 0) {
-            for (let i = 1; i < tokens.length; i++) {
-                let token = tokens[i];
+            for (let i = 1; i < entries.length; i++) {
                 for (let [k, v] of Object.entries(skills)) {
-                    let tool = token.actor.items.find(t => {
+                    let tool = entries[i].token.actor.items.find(t => {
                         return t.type == 'skill' && (t.getFlag("core", "sourceId") || t.id) == k;
                     });
                     if (tool == undefined)

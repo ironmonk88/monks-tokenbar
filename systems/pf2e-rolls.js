@@ -37,7 +37,7 @@ export class PF2eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
+        let allPlayers = (app.entries.filter(t => t.data.actor?.hasPlayerOwner).length == app.entries.length);
         return (allPlayers ? 'attribute:perception' : null);
     }
 

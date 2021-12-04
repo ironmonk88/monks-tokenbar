@@ -55,7 +55,7 @@ export class LootablesApp extends Application {
             $('.item-delete', this).click($.proxy(that.disableToken, that, this.dataset.itemId));
         });
 
-        $('.dialog-buttons.convert-to-lootable', html).click($.proxy(this.convertToLootable, this));
+        $('.dialog-button.convert-to-lootable', html).click($.proxy(this.convertToLootable, this));
         $('#assign-gold-by-cr', html).change($.proxy(this.calcGold, this));
     };
 
@@ -201,15 +201,7 @@ export class LootablesApp extends Application {
 
             token.actor._sheet = null;
 
-            game.socket.emit(
-                MonksTokenBar.SOCKET,
-                {
-                    msgtype: 'refreshsheet',
-                    senderId: game.user.id,
-                    tokenid: token?.id
-                },
-                (resp) => { }
-            );
+            MonksTokenBar.emit('refreshsheet', { tokenid: token?.id });
             await token.actor.update(newActorData);
 
             let oldIds = oldItems.map(i => i.id);
@@ -294,15 +286,7 @@ export class LootablesApp extends Application {
             actorData.flags["monks-tokenbar"].olditems = [];
         }
 
-        game.socket.emit(
-            MonksTokenBar.SOCKET,
-            {
-                msgtype: 'refreshsheet',
-                senderId: game.user.id,
-                tokenid: app.token?.id
-            },
-            (resp) => { }
-        );
+        MonksTokenBar.emit('refreshsheet', { tokenid: app.token?.id } );
 
         if (newItems.length > 0)
             await Item.create(newItems, { parent: actor });

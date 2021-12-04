@@ -287,6 +287,20 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean
 	});
+	game.settings.register(modulename, "token-size", {
+		name: game.i18n.localize("MonksTokenBar.token-size.name"),
+		hint: game.i18n.localize("MonksTokenBar.token-size.hint"),
+		scope: "world",
+		config: true,
+		range: {
+			min: 50,
+			max: 100,
+			step: 5,
+		},
+		default: 50,
+		type: Number,
+		onChange: debouncedReload
+	});
 	game.settings.register(modulename, "popout-tokenbar", {
 		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),
 		hint: game.i18n.localize("MonksTokenBar.popout-tokenbar.hint"),

@@ -183,6 +183,8 @@ body #tokenbar-window:first-child{
 #tokenbar .token .token-content {
     flex: 0 0 48px;
     height: 48px;
+    justify-content: center;
+    display: flex;
 }
 
 #tokenbar .token .token-stats.hidden {
@@ -201,8 +203,9 @@ body #tokenbar-window:first-child{
     flex-wrap:nowrap;
 }
 
-#tokenbar .token .token-stat i{
-    padding-top:2px;
+#tokenbar .token .token-stat i {
+    padding-top: 2px;
+    flex: 0 0 17px;
 }
 
 #tokenbar .token .token-stat span{
