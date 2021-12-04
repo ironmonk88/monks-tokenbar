@@ -6,11 +6,11 @@ Converted contected roll to use an array of tokens like saving throw does, to ma
 
 Recentered the contested roll dialog.
 
-Fixed issue with contested rolls not working from the API, thank you+++
+Fixed issue with contested rolls not working from the API, thank you p4535992 and thatlonelybugbear
 
 Added option to specify if individual tokens can be fast forwarded or if they have advantage or disadvatage, in both contested and requested rolls.  This means there's a new way to request these rolls, instead of an array of strings or token ids you can now specify an array of objects.  So `game.MonksTokenBar.requestRoll([{token:"Thoramir", altKey: true},"John Locke", {token:"Toadvine", fastForward:true}], {request:'perception',dc:15, silent:true, fastForward:false, flavor:'Testing flavor'})` is now possible, to give advantage to Thoramir and to auto roll Toadvine.
 
-Added option for flavor text with contested and requested rolls, thank you weepingminotaur
+Added option for flavor text with contested and requested rolls, thank you thatlonelybugbear
 
 Changed how the sounds are played so only the relevant players will hear it.
 
@@ -29,6 +29,10 @@ Added option to change the width of the tokens being displayed on the token bar.
 Stats can now use handlebar notation
 
 Stats can also have text in quotes
+
+Updates tp Spanish and Catalan languages, thank you jvir
+
+Updates to Japanese translation, thank you BrotherSharper
 
 ## Version 1.0.54
 
