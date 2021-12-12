@@ -30,6 +30,7 @@
 	"MonksTokenBar.AbilityCheck": "能力値判定",
 	"MonksTokenBar.SavingThrow": "セーヴ",
 	"MonksTokenBar.Skill": "技能",
+	"MonksTokenBar.Characteristics": "個性",
 	"MonksTokenBar.DeathSavingThrow": "死亡セーヴ",
 	"MonksTokenBar.Initiative": "イニシアチブ",
 	"MonksTokenBar.Check": "判定",
@@ -95,7 +96,7 @@
 	"MonksTokenBar.change-to-combat.name": "戦闘中の移動モード",
 	"MonksTokenBar.change-to-combat.hint": "戦闘が開始したときに、移動モードを“戦闘ターン”に変更します。",
 	"MonksTokenBar.assign-loot.name": "敵を戦利品に変換する",
-	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵のシートを戦利品に変換します。「Loot Sheet」モジュールが必要です。",
+	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵のシートを戦利品に変換します。",
 	"MonksTokenBar.popout-tokenbar.name": "トークンバーのポップアウト",
 	"MonksTokenBar.popout-tokenbar.hint": "「PopOut!」モジュールが使用できるよう、ダイアログウィンドウにトークンバーを配置します。",
 	"MonksTokenBar.delete-after-grab.name": "取り込み後の個別ロールを削除する",
@@ -120,7 +121,9 @@
 	"MonksTokenBar.show-vertical.hint": "トークンバーを垂直に表示します。",
 	"MonksTokenBar.capture-savingthrows.name": "セーヴィング・スローを展開する",
 	"MonksTokenBar.capture-savingthrows.hint": "アイテムがセーヴィング・スローを要求するときに判定用のチャットカードを作成します。",
-
+	"MonksTokenBar.token-size.name": "コマの表示幅",
+	"MonksTokenBar.token-size.hint": "横幅が足りず属性値が表示しきれないケースに対応するため、バー上のコマの横幅を変更します。",
+	
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
 	"MonksTokenBar.Experience": "経験値",
@@ -140,6 +143,7 @@
 	"MonksTokenBar.DeleteItem": "削除",
 	"MonksTokenBar.Vs": "Vs",
 	"MonksTokenBar.Request": "リクエスト",
+	"MonksTokenBar.RequestWithRoll": "自動ロール",
 	"MonksTokenBar.Roll": "ロール",
 	"MonksTokenBar.SavingDC": "DC",
 	"MonksTokenBar.SavingDCPlaceholder": "空欄にすると自動判定なし",
@@ -158,5 +162,7 @@
 	"MonksTokenBar.AssignByCR": "CRからGPを割り当てる",
 	"MonksTokenBar.ConvertToLootable": "ルートシートに変換",
 	"MonksTokenBar.Gold": "GP",
-	"MonksTokenBar.Levelup": "レベルアップ可能なXPに到達しました！"
+	"MonksTokenBar.Levelup": "レベルアップ可能なXPに到達しました！",
+	"MonksTokenBar.EditStats": "表示値の編集",
+	"MonksTokenBar.Flavor": "説明文"
 }
