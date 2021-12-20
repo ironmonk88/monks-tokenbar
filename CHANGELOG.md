@@ -1,3 +1,13 @@
+## Version 1.0.56
+
+When the saving throw request is closed, informing Active Tiles that the state information is no longer needed.
+
+Moved the token indicators higher in the z-order so they appear above the bars.
+
+Added the option to change the global movement state if no entity is selected.
+
+Added flavor text to the request roll via Active Tiles.
+
 ## Version 1.0.55
 
 Added option to return the chat message created when prompting to assign xp
