@@ -96,7 +96,7 @@
 	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
 	"MonksTokenBar.change-to-combat.hint": "Change movement to combat when combat starts",
 	"MonksTokenBar.assign-loot.name": "Convert enemies to lootable",
-	"MonksTokenBar.assign-loot.hint": "Once the combat is over, convert the fallen enemies to lootable",
+	"MonksTokenBar.assign-loot.hint": "Once the combat is over, provide a dialog to convert the fallen enemies to lootable",
 	"MonksTokenBar.popout-tokenbar.name": "Popout TokenBar",
 	"MonksTokenBar.popout-tokenbar.hint": "Put the TokenBar in a dialog window so that you can use the PopOut! module.",
 	"MonksTokenBar.delete-after-grab.name": "Delete message after grab",

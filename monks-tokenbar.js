@@ -478,11 +478,11 @@ export class MonksTokenBar {
                     let tokPermission = token.actor?.data.permission ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
-                        && curCombat.turns.every(t => { return t._token.id !== token.id; });
+                        && curCombat.turns.every(t => { return t.data.tokenId !== token.id; });
                 }
 
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !(entry._token.id == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
+                return !(entry.data.tokenId == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
             }
 
             return true;
@@ -695,6 +695,10 @@ Hooks.on("getSceneControlButtons", (controls) => {
             title: "MonksTokenBar.Lootables",
             icon: "fas fa-dolly-flatbed",
             onClick: () => {
+                if (setting('loot-sheet') == 'none') {
+                    ui.notifications.warn('No lootsheet selected');
+                    return;
+                }
                 new LootablesApp().render(true);
             },
             toggle: false,

@@ -1,3 +1,9 @@
+## Version 1.0.57
+
+Fixed an issue with combat turns in v9.  Refrences to the token involved have changed.
+
+Clarified what's happening if you try and convert lootables but no loot sheet is selected.
+
 ## Version 1.0.56
 
 When the saving throw request is closed, informing Active Tiles that the state information is no longer needed.
