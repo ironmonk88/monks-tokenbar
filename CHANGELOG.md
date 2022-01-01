@@ -1,3 +1,19 @@
+## Version 1.0.58
+
+Fixed issue with vertical alignment and no tokens.  The tokenbar shrunk improperly.
+
+Added a line between Target Token and Free Movement in the context menu when clicking on a token.
+
+Fixed an issue that was preventing the module from stopping tokens from moving.
+
+Changed the Active Tiles integration so that you can select global movement rather than leaving the entity blank to indicate a global change.
+
+Updated the code with Active Tiles upgrades
+
+Changed the default of allow movement after turn to false.
+
+Fixed up issue with PF2E rolls.
+
 ## Version 1.0.57
 
 Fixed an issue with combat turns in v9.  Refrences to the token involved have changed.

@@ -152,7 +152,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.allow-after-movement.hint"),
 		scope: "world",
 		config: true,
-		default: true,
+		default: false,
 		type: Boolean
 	});
 	game.settings.register(modulename, "movement-after-combat", {

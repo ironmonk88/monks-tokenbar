@@ -272,7 +272,8 @@ body #tokenbar-window:first-child{
     word-break: break-all;
 }
 
-#tokenbar .token .context-items li:nth-child(5) {
+#tokenbar .token .context-items li:nth-child(5),
+#tokenbar .token .context-items li:nth-child(7) {
     border-top: 2px groove #444; /*#23221d;*/
 }
 
@@ -922,6 +923,7 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     align-content: flex-start;
     vertical-align: top;
     flex-direction: column;
+    min-width: 105px;
 }
 
 #tokenbar.vertical #tokenbar-controls {

@@ -86,7 +86,7 @@ export class MonksTokenBar {
 
         let canDrag = function (wrapped, ...args) {
             let result = wrapped(...args);
-            return (MonksTokenBar.allowMovement(this, false) ? result : false);
+            return (MonksTokenBar.allowMovement(this.document, false) ? result : false);
         }
 
         if (game.modules.get("lib-wrapper")?.active) {
@@ -489,7 +489,7 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
@@ -678,8 +678,7 @@ Hooks.on("ready", MonksTokenBar.ready);
 
 Hooks.on('preUpdateToken', (document, update, options, userId) => {
     if ((update.x != undefined || update.y != undefined) && !game.user.isGM) {
-        let token = document.object;
-        let allow = MonksTokenBar.allowMovement(token);
+        let allow = MonksTokenBar.allowMovement(document);
         if (!allow) {
             delete update.x;
             delete update.y;
@@ -779,12 +778,25 @@ Hooks.on("setupTileActions", (actions) => {
             stop: true,
             ctrls: [
                 {
+                    id: "global",
+                    name: "Change Global Movement",
+                    type: "checkbox",
+                    onClick: (app) => {
+                        app.checkConditional();
+                        app.setPosition({ height: 'auto' });
+                    },
+                    defvalue: true
+                },
+                {
                     id: "entity",
                     name: "Select Entity",
                     type: "select",
                     subtype: "entity",
-                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true, clearValue: true },
-                    restrict: (entity) => { return (entity instanceof Token); }
+                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                    restrict: (entity) => { return (entity instanceof Token); },
+                    conditional: (app) => {
+                        return !$('input[name="data.global"]', app.element).prop('checked');
+                    }
                 },
                 {
                     id: "movement",
@@ -803,7 +815,7 @@ Hooks.on("setupTileActions", (actions) => {
             fn: async (args = {}) => {
                 const { action } = args;
                 
-                if (action.data.entity == undefined || action.data.entity == "")
+                if (!!action.data.global)
                     MonksTokenBar.changeGlobalMovement(action.data.movement);
                 else {
                     let entities = await game.MonksActiveTiles.getEntities(args);
@@ -811,8 +823,9 @@ Hooks.on("setupTileActions", (actions) => {
                     return { tokens: entities };
                 }
             },
-            content: (trigger, action) => {
-                return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
+            content: async (trigger, action) => {
+                let entityName = (!!action.data.global ? 'Everyone' : await game.MonksActiveTiles.entityName(action.data?.entity));
+                return `<span class="action-style">${trigger.name}</span> of <span class="entity-style">${entityName}</span> to <span class="details-style">"${i18n(trigger.values.movement[action.data?.movement])}"</span>`;
             }
         },
         'requestroll': {
@@ -830,7 +843,8 @@ Hooks.on("setupTileActions", (actions) => {
                     id: "request",
                     name: "Request",
                     list: () => { return MonksTokenBar.system._requestoptions; },
-                    type: "list"
+                    type: "list",
+                    required: true
                 },
                 {
                     id: "dc",
@@ -933,17 +947,18 @@ Hooks.on("setupTileActions", (actions) => {
                 //if we got here then we need to pause before continuing and wait until the request has been fulfilled
                 return { pause: true };
             },
-            content: (trigger, action) => {
+            content: async (trigger, action) => {
                 let parts = action.data?.request.split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
                 let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-                return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '');
+                let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+                return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
             }
         },
         'filterrequest': {
-            name: 'Filter Request Results',
-            group: 'filters',
+            name: 'Redirect Request Results',
+            group: 'logic',
             ctrls: [
                 {
                     id: "passed",
@@ -967,8 +982,8 @@ Hooks.on("setupTileActions", (actions) => {
                     goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed });
                 return { goto: goto };
             },
-            content: (trigger, action) => {
-                return trigger.name;
+            content: async (trigger, action) => {
+                return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}`;
             }
         }
     });

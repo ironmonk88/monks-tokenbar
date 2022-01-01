@@ -53,36 +53,63 @@ export class PF2eRolls extends BaseRolls {
         let rollfn = null;
         let opts = request;
         if (requesttype == 'attribute') {
-            if (actor.data.data.attributes[request]?.roll) {
-                opts = actor.getRollOptions(["all", request]);
-                rollfn = actor.data.data.attributes[request].roll;
-            } else
-                rollfn = actor.rollAttribute;
-        }
-        else if (requesttype == 'ability') {
-            rollfn = function (event, abilityName) {
-                const skl = this.data.data.abilities[abilityName],
-                    flavor = `${CONFIG.PF2E.abilities[abilityName]} Check`;
+            rollfn = function (event, attributeName) {
+                const attribute = actor.data.data.attributes[attributeName];
+                if (!attribute)
+                    return;
+                const parts = ["@mod", "@itemBonus"],
+                    configAttributes = CONFIG.PF2E.attributes;
+                const flavor = `${game.i18n.localize(configAttributes[attributeName])} Check`;
+
                 return game.pf2e.Dice.d20Roll({
-                    event: event,
-                    parts: ["@mod"],
+                    event,
+                    parts,
                     data: {
-                        mod: skl.mod
+                        mod: attribute.value
                     },
                     title: flavor,
                     speaker: ChatMessage.getSpeaker({
-                        actor: this
+                        actor: actor
                     }),
                     rollType: 'ignore'
                 });
             }
         }
+        else if (requesttype == 'ability') {
+            rollfn = function (event, abilityName) {
+                const bonus = actor.data.data.abilities[abilityName].mod,
+                    title = game.i18n.localize(`PF2E.AbilityCheck.${abilityName}`),
+                    data = { bonus },
+                    speaker = ChatMessage.getSpeaker({
+                        actor: actor
+                    });
+                return game.pf2e.Dice.d20Roll({
+                    event,
+                    parts: ["@bonus"],
+                    data: data,
+                    title: title,
+                    speaker: speaker,
+                    rollType: 'ignore'
+                });
+            }
+        }
         else if (requesttype == 'save') {
-            if (actor.data.data.saves[request]?.roll) {
-                opts = actor.getRollOptions(["all", "saving-throw", request]);
-                rollfn = actor.data.data?.saves[request].roll;
-            } else
-                rollfn = actor.rollSave;
+            rollfn = function (event, saveName) {
+                const save = actor.data.data.saves[saveName],
+                    flavor = `${game.i18n.localize(CONFIG.PF2E.saves[saveName])} Save Check`;
+                return game.pf2e.Dice.d20Roll({
+                    event,
+                    parts: ["@mod", "@itemBonus"],
+                    data: {
+                        mod: save.value
+                    },
+                    title: flavor,
+                    speaker: ChatMessage.getSpeaker({
+                        actor: actor
+                    }),
+                    rollType: 'ignore'
+                })
+            }
         }
         else if (requesttype == 'skill') {
             if (actor.data.data?.skills[request]?.roll) {
@@ -94,7 +121,7 @@ export class PF2eRolls extends BaseRolls {
 
         if (rollfn != undefined) {
             try {
-                if (requesttype == 'ability')
+                if (requesttype != 'skill')
                     return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else {
                     opts.push("ignore");
