@@ -291,6 +291,7 @@ body #tokenbar-window:first-child{
     background: rgba(0, 0, 0, 0.5);
     text-align: center;
     line-height: 22px;
+    z-index: 2;
 }
 
 #tokenbar .token .movement-icon[movement=""],
@@ -323,8 +324,9 @@ body #tokenbar-window:first-child{
     background: rgba(0, 0, 0, 0.5);
     text-align: center;
     line-height: 22px;
-    display:none;
+    display: none;
     font-size: 10px;
+    z-index: 2;
 }
 
 #tokenbar .token .inspiration-icon[inspiration="true"] {
@@ -342,8 +344,9 @@ body #tokenbar-window:first-child{
     background: rgba(0, 0, 0, 0.5);
     text-align: center;
     line-height: 22px;
-    display:none;
+    display: none;
     font-size: 10px;
+    z-index: 2;
 }
 
 #tokenbar .token .panning-icon[no-panning="true"] {

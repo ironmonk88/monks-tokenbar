@@ -94,6 +94,10 @@ export class LootablesApp extends Application {
     }
 
     async convertToLootable() {
+        if (setting('loot-sheet') == 'none') {
+            return;
+        }
+
         // Limit selection to Players and Trusted Players
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
 

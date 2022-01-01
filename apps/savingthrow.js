@@ -69,6 +69,16 @@ export class SavingThrowApp extends Application {
         };
     }
 
+    async close(options = {}) {
+        let restart = this['active-tiles'];
+        if (!this.requestingResults && restart) {
+            //clear the saved state if the GM closes the request
+            let tile = await fromUuid(restart.tile);
+            tile.resumeActions(restart.id, { continue: false });
+        }
+        return super.close(options);
+    }
+
     addToken(tokens) {
         if (!$.isArray(tokens))
             tokens = [tokens];
@@ -215,6 +225,7 @@ export class SavingThrowApp extends Application {
             msg.mtb_callback = this.opts.callback;
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll' && roll !== false)
                 MonksTokenBar.playSound(setting('request-roll-sound-file'), whisper);
+            this.requestingResults = true;
             this.close();
 
             if (this['active-tiles'])

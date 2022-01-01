@@ -478,11 +478,11 @@ export class MonksTokenBar {
                     let tokPermission = token.actor?.data.permission ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
-                        && curCombat.turns.every(t => { return t._token.id !== token.id; });
+                        && curCombat.turns.every(t => { return t.data.tokenId !== token.id; });
                 }
 
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !(entry._token.id == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
+                return !(entry.data.tokenId == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
             }
 
             return true;
@@ -695,6 +695,10 @@ Hooks.on("getSceneControlButtons", (controls) => {
             title: "MonksTokenBar.Lootables",
             icon: "fas fa-dolly-flatbed",
             onClick: () => {
+                if (setting('loot-sheet') == 'none') {
+                    ui.notifications.warn('No lootsheet selected');
+                    return;
+                }
                 new LootablesApp().render(true);
             },
             toggle: false,
@@ -779,7 +783,7 @@ Hooks.on("setupTileActions", (actions) => {
                     name: "Select Entity",
                     type: "select",
                     subtype: "entity",
-                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true, clearValue: true },
                     restrict: (entity) => { return (entity instanceof Token); }
                 },
                 {
@@ -798,11 +802,14 @@ Hooks.on("setupTileActions", (actions) => {
             },
             fn: async (args = {}) => {
                 const { action } = args;
-                let entities = await game.MonksActiveTiles.getEntities(args);
-
-                MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
-
-                return { tokens: entities };
+                
+                if (action.data.entity == undefined || action.data.entity == "")
+                    MonksTokenBar.changeGlobalMovement(action.data.movement);
+                else {
+                    let entities = await game.MonksActiveTiles.getEntities(args);
+                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
+                    return { tokens: entities };
+                }
             },
             content: (trigger, action) => {
                 return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
@@ -828,6 +835,11 @@ Hooks.on("setupTileActions", (actions) => {
                 {
                     id: "dc",
                     name: "DC",
+                    type: "number"
+                },
+                {
+                    id: "flavor",
+                    name: "Flavor Text",
                     type: "text"
                 },
                 {
@@ -888,7 +900,7 @@ Hooks.on("setupTileActions", (actions) => {
 
                 entities = entities.map(e => e.object);
 
-                let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc });
+                let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc, flavor: action.data.flavor });
                 savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
                 if (action.data.silent === true) {
                     let msg = await savingthrow.requestRoll();
