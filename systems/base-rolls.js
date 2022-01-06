@@ -143,4 +143,8 @@ export class BaseRolls {
     async assignXP(msgactor) {
 
     }
+
+    parseKeys(e, keys) {
+
+    }
 }

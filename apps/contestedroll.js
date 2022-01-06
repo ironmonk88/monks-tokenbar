@@ -233,8 +233,8 @@ export class ContestedRoll {
     static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid)
-        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
-        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));       
+        let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
+        let fastForward = ffwd || (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey);
 
         if (actor != undefined) {
             if (requesttype == 'dice') {
@@ -265,11 +265,21 @@ export class ContestedRoll {
             if (msgtoken != undefined && msgtoken.roll == undefined) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    let e = Object.assign({}, evt, msgtoken.modifiers);
-                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
+                    let keys = msgtoken.keys || {};
+                    let e = Object.assign({}, evt);
+                    e.ctrlKey = evt.ctrlKey;
+                    e.altKey = evt.altKey;
+                    e.shiftKey = evt.shiftKey;
+                    e.metaKey = evt.metaKey;
+
+                    for (let [k, v] of Object.entries(keys))
+                        e[k] = evt[k] || v;
+                    MonksTokenBar.system.parseKeys(e, keys);
+
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, keys, evt));
                 }
             }
         };
@@ -550,11 +560,11 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
             if (msgtoken) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
-                if (game.user.isGM || actor.isOwner)
+                if (game.user.isGM || actor?.isOwner)
                     $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll'))));

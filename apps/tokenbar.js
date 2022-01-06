@@ -166,7 +166,7 @@ export class TokenBar extends Application {
 
     async getCurrentTokens() {
         //log('Get current Tokens');
-        this.tokens = canvas.scene.tokens
+        this.tokens = (canvas.scene?.tokens || [])
             .filter(t => {
                 let include = t.getFlag('monks-tokenbar', 'include');
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));

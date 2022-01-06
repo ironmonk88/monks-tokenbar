@@ -157,4 +157,9 @@ export class DnD5eRolls extends BaseRolls {
             }).then(() => { });
         }
     }
+
+    parseKeys(e, keys) {
+        e.ctrlKey = e.ctrlKey || keys.disadvantage;
+        e.altKey = e.altKey || keys.advantage;
+    }
 }

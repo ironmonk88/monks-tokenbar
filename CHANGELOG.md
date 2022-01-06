@@ -1,3 +1,21 @@
+## Version 1.0.59
+
+Fixed issues with using Ctrl or Alt to add Advantage or Disadvantage to a roll.
+
+Fixed issues with editing custom stats
+
+Fixed issues with Lootables not changing to Loot Sheet properly.
+
+Fixed an issue when a scene has no Tokens attached to it, or if there's no scene added.
+
+Wrapper Scene.prototype.view properly.
+
+Added option to specify Advantage and Disadvantage with the API when requesting rolls.
+
+Added Current Tokens to the options when selecting an entity for requesting a roll.
+
+Added the Resume anchor when deciding what to do with tokens that passed or failed, once those are dealt with you can now resume actions with all tokens.
+
 ## Version 1.0.58
 
 Fixed issue with vertical alignment and no tokens.  The tokenbar shrunk improperly.

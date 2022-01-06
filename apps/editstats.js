@@ -44,10 +44,8 @@ export class EditStats extends FormApplication {
     }
 
     addStat(event) {
-        if (this.stats.find(s => s.stat == "") == undefined) {
-            this.stats.push({ stat: "", icon: "fa-address-book" });
-            this.render(true);
-        }
+        this.stats.push({ id: makeid(), stat: "", icon: "fa-address-book" });
+        this.render(true);
     }
 
     removeStat() {

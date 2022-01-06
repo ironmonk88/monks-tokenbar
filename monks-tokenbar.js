@@ -98,13 +98,21 @@ export class MonksTokenBar {
             }
         }
 
-        let oldView = Scene.prototype.view;
-        Scene.prototype.view = async function () {
+        let sceneView = function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
                 MonksTokenBar.tokenbar.tokens = [];
                 MonksTokenBar.tokenbar.render(true);
             }
-            return oldView.call(this);
+            return wrapped(...args);
+        }
+
+        if (game.modules.get("lib-wrapper")?.active) {
+            libWrapper.register("monks-tokenbar", "Scene.prototype.view", sceneView, "WRAPPER");
+        } else {
+            const oldSceneView = Scene.prototype.view;
+            Scene.prototype.view = function (event) {
+                return sceneView.call(this, oldSceneView.bind(this), ...arguments);
+            }
         }
 
         if(setting('token-size') != 50) {
@@ -140,7 +148,7 @@ export class MonksTokenBar {
             if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
                 t = JSON.parse(t);
             if (typeof t == 'object' && t.token && t.constructor.name == 'Object') {
-                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey }, request: t.request, fastForward: t.fastForward };
+                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage }, request: t.request, fastForward: t.fastForward };
             } else {
                 t = { token: findToken(t) };
             }
@@ -687,7 +695,7 @@ Hooks.on('preUpdateToken', (document, update, options, userId) => {
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
-    if (game.user.isGM && setting('show-lootable-menu') && game.modules.get("lootsheetnpc5e")?.active) {
+    if (game.user.isGM && setting('show-lootable-menu') && setting('loot-sheet') != 'none') {
         let tokenControls = controls.find(control => control.name === "token")
         tokenControls.tools.push({
             name: "togglelootable",
@@ -836,7 +844,7 @@ Hooks.on("setupTileActions", (actions) => {
                     name: "Select Entity",
                     type: "select",
                     subtype: "entity",
-                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
                     restrict: (entity) => { return (entity instanceof Token); }
                 },
                 {
@@ -970,20 +978,35 @@ Hooks.on("setupTileActions", (actions) => {
                     name: "Failed Tokens Goto",
                     type: "text"
                 },
+                {
+                    id: "resume",
+                    name: "Continue to Anchor",
+                    type: "text"
+                },
             ],
             fn: async (args = {}) => {
                 const { action, value } = args;
 
                 let goto = [];
                 if (action.data.failed) {
-                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed });
+                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
+                    if (data.tokens.length)
+                        goto.push(data);
                 }
-                if (action.data.passed)
-                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed });
+
+                if (action.data.passed) {
+                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
+                    if (data.tokens.length)
+                        goto.push(data);
+                }
+
+                if (action.data.resume)
+                    goto.push({ tokens: value.tokens, tag: action.data.resume });
+
                 return { goto: goto };
             },
             content: async (trigger, action) => {
-                return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}`;
+                return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
             }
         }
     });
