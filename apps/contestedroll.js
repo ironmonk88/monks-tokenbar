@@ -217,7 +217,7 @@ export class ContestedRoll {
             if (rollmode == 'gmroll' && !game.user.isGM)
                 whisper.push(game.user.id);
 
-            if (game.dice3d != undefined && roll instanceof Roll) { // && !fastForward) {
+            if (game.dice3d != undefined && roll instanceof Roll && game.system.id != 'swade') { // && !fastForward) {
                 finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
                 });

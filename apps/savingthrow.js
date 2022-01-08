@@ -310,7 +310,7 @@ export class SavingThrow {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
                     whisper.push(game.user.id);
-                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true) {// && !fastForward) {
+                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && game.system.id != 'swade') {// && !fastForward) {
                     finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                         return { id: id, reveal: true, userid: game.userId };
                     });

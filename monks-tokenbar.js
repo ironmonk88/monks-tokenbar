@@ -376,7 +376,7 @@ export class MonksTokenBar {
     }
 
     static getDiceSound(hasMaestroSound = false) {
-        const has3DDiceSound = game.dice3d ? game.settings.get("dice-so-nice", "settings").enabled : false;
+        const has3DDiceSound = game.dice3d ? game.modules.get("dice-so-nice").active : false;
         const playRollSounds = true; //game.settings.get("betterrolls5e", "playRollSounds")
 
         if (playRollSounds && !has3DDiceSound && !hasMaestroSound) {
