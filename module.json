@@ -47,6 +47,11 @@
 			"lang": "ca",
 			"name": "Catalan",
 			"path": "lang/ca.json"
+		},
+		{
+			"lang": "fr",
+			"name": "Français",
+			"path": "lang/fr.json"
 		}
 	],
 	"esmodules": [
