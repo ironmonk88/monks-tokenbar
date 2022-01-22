@@ -256,6 +256,7 @@ export class SavingThrowApp extends Application {
 
         $('.dialog-button.request', html).click($.proxy(this.requestRoll, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.requestRoll, this, true));
+        $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
 
         $('#monks-tokenbar-savingdc', html).blur($.proxy(function (e) {
             this.dc = $(e.currentTarget).val();
@@ -273,6 +274,19 @@ export class SavingThrowApp extends Application {
             this.rollmode = $(e.currentTarget).val();
         }, this));
     };
+
+    async saveToMacro() {
+        let tokens = this.entries.map(t => { return { token: t.token.id } });
+
+        let parts = this.request.split(':');
+        let requesttype = (parts.length > 1 ? parts[0] : '');
+        let request = (parts.length > 1 ? parts[1] : parts[0]);
+        let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
+
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        macro.sheet.render(true);
+    }
 }
 
 export class SavingThrow {
@@ -371,10 +385,10 @@ export class SavingThrow {
                     //roll the dice, using standard details from actor
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
-                    e.ctrlKey = evt.ctrlKey;
-                    e.altKey = evt.altKey;
-                    e.shiftKey = evt.shiftKey;
-                    e.metaKey = evt.metaKey;
+                    e.ctrlKey = evt?.ctrlKey;
+                    e.altKey = evt?.altKey;
+                    e.shiftKey = evt?.shiftKey;
+                    e.metaKey = evt?.metaKey;
 
                     for (let [k, v] of Object.entries(keys))
                         e[k] = evt[k] || v;

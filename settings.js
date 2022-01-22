@@ -27,99 +27,82 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 
-	let lootsheetoptions = { 'none': 'Do not convert' };
-	if (game.modules.get("lootsheetnpc5e")?.active)
-		lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
-	if (game.modules.get("merchantsheetnpc")?.active)
-		lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
+	let lootoptions = {
+		'convert': game.i18n.localize("MonksTokenBar.Convert"),
+		'transfer': game.i18n.localize("MonksTokenBar.Transfer"),
+		'transferplus': game.i18n.localize("MonksTokenBar.TransferPlus"),
+	};
 
-	/*
-	let stat1 = "attributes.ac.value";
-	let stat2 = "";
-	switch (game.system.id) {
-		case "pf1":
-			stat1 = "attributes.ac.normal.total";
-			stat2 = "skills.per.mod";
-			break;
-		case "D35E":
-			stat1 = "attributes.ac.normal.total";
-			stat2 = "skills.spt.value";
-			break;
-		case "dnd4eBeta":
-			stat1 = "defences.ac.value";
-			stat2 = "skills.prc.total";
-			break;
-		case "dnd5e":
-		case "sw5e":
-			stat2 = "skills.prc.passive";
-			break;
-		case "tormenta20":
-			stat1 = "defesa.value";
-			stat2 = "pericias.per.value";
-			break;
-		case "pf2e":
-			stat2 = "attributes.perception.value + 10";
-			break;
-		case "ose":
-			stat1 = "ac.value";
-			break;
-		case "sfrpg":
-			stat1 = "attributes.kac.value";
-			stat2 = "attributes.eac.value";
-			break;
-		case "swade":
-			stat1 = "stats.toughness.value";
-			stat2 = "";
-			break;
-	}
-
-	let icon1 = "fa-shield-alt";
-	let icon2 = "fa-eye";
-	switch (game.system.id) {
-		case "sfrpg":
-			icon2 = "fa-shield-virus";
-			break;
-	}*/
-
+	let lootsheetoptions = MonksTokenBar.getLootSheetOptions();
+	let lootentity = {};
+	let lootfolder = {};
+	
 	const dividexp = (game.system.id === "pf2e" ? "no-split" : "equal-split");
 
-	game.settings.register(modulename, "notify-on-change", {
-		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
-		hint: game.i18n.localize("MonksTokenBar.notify-on-change.hint"),
+	game.settings.registerMenu(modulename, 'resetPosition', {
+		name: 'Reset Position',
+		label: 'Reset Position',
+		hint: 'Reset the position of the tokenbar if it disappears off the screen.',
+		icon: 'fas fa-desktop',
+		restricted: true,
+		type: ResetPosition,
+		onClick: (value) => {
+			log('Reset position');
+		}
+	});
+
+	game.settings.registerMenu(modulename, 'editStats', {
+		name: 'Edit Stats',
+		label: 'Edit Stats',
+		hint: 'Edit the stats that are displayed on the Tokenbar',
+		icon: 'fas fa-align-justify',
+		restricted: true,
+		type: EditStats
+	});
+
+	//------------------------------------Token Bar settings--------------------------------------------
+	game.settings.register(modulename, "allow-player", {
+		name: game.i18n.localize("MonksTokenBar.allow-player.name"),
+		hint: game.i18n.localize("MonksTokenBar.allow-player.hint"),
 		scope: "world",
 		config: true,
-		default: true,
+		default: false,
+		type: Boolean,
+	});
+	game.settings.register(modulename, "disable-tokenbar", {
+		name: game.i18n.localize("MonksTokenBar.disable-tokenbar.name"),
+		hint: game.i18n.localize("MonksTokenBar.disable-tokenbar.hint"),
+		scope: "client",
+		config: true,
+		default: false,
 		type: Boolean,
 	});
 
-	game.settings.register(modulename, "show-xp-dialog", {
-		name: game.i18n.localize("MonksTokenBar.show-xp-dialog.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-xp-dialog.hint"),
+	game.settings.register(modulename, "show-vertical", {
+		name: game.i18n.localize("MonksTokenBar.show-vertical.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-vertical.hint"),
 		scope: "world",
 		config: true,
-		default: true,
+		default: false,
 		type: Boolean,
+		onChange: debouncedReload
 	});
 
+	//------------------------------------Icon settings--------------------------------------------
 
-	game.settings.register(modulename, "divide-xp", {
-		name: game.i18n.localize("MonksTokenBar.divide-xp.name"),
-		hint: game.i18n.localize("MonksTokenBar.divide-xp.hint"),
+	game.settings.register(modulename, "token-size", {
+		name: game.i18n.localize("MonksTokenBar.token-size.name"),
+		hint: game.i18n.localize("MonksTokenBar.token-size.hint"),
 		scope: "world",
 		config: true,
-		default: dividexp,
-		type: String,
-		choices: divideXpOptions,
-		localize: true
-	});
-
-	game.settings.register(modulename, "send-levelup-whisper", {
-		name: game.i18n.localize("MonksTokenBar.send-levelup-whisper.name"),
-		hint: game.i18n.localize("MonksTokenBar.send-levelup-whisper.hint"),
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean,
+		range: {
+			min: 50,
+			max: 100,
+			step: 5,
+		},
+		default: 50,
+		type: Number,
+		onChange: debouncedReload
 	});
 
 	game.settings.register(modulename, "show-resource-bars", {
@@ -139,6 +122,35 @@ export const registerSettings = function () {
 		type: String,
 		choices: imageoptions,
 	});
+
+	game.settings.register(modulename, "show-inspiration", {
+		name: game.i18n.localize("MonksTokenBar.show-inspiration.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-inspiration.hint"),
+		scope: "client",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+	game.settings.register(modulename, "show-disable-panning-option", {
+		name: game.i18n.localize("MonksTokenBar.show-disable-panning-option.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-disable-panning-option.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		onChange: debouncedReload
+	});
+
+	//------------------------------------Movement settings--------------------------------------------
+	game.settings.register(modulename, "notify-on-change", {
+		name: game.i18n.localize("MonksTokenBar.notify-on-change.name"),
+		hint: game.i18n.localize("MonksTokenBar.notify-on-change.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "change-to-combat", {
 		name: game.i18n.localize("MonksTokenBar.change-to-combat.name"),
 		hint: game.i18n.localize("MonksTokenBar.change-to-combat.hint"),
@@ -146,6 +158,14 @@ export const registerSettings = function () {
 		config: true,
 		default: true,
 		type: Boolean
+	});
+	game.settings.register(modulename, "free-npc-combat", {
+		name: game.i18n.localize("MonksTokenBar.free-npc-combat.name"),
+		hint: game.i18n.localize("MonksTokenBar.free-npc-combat.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
 	});
 	game.settings.register(modulename, "allow-after-movement", {
 		name: game.i18n.localize("MonksTokenBar.allow-after-movement.name"),
@@ -172,31 +192,38 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean
 	});
-	game.settings.register(modulename, "free-npc-combat", {
-		name: game.i18n.localize("MonksTokenBar.free-npc-combat.name"),
-		hint: game.i18n.localize("MonksTokenBar.free-npc-combat.hint"),
+
+	//------------------------------------After Combat settings--------------------------------------------
+
+	game.settings.register(modulename, "send-levelup-whisper", {
+		name: game.i18n.localize("MonksTokenBar.send-levelup-whisper.name"),
+		hint: game.i18n.localize("MonksTokenBar.send-levelup-whisper.hint"),
 		scope: "world",
 		config: true,
-		default: false,
+		default: true,
 		type: Boolean,
 	});
-	game.settings.register(modulename, "assign-loot", {
-		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
-		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
-		scope: "world",
-		config: false,
-		default: false,
-		type: Boolean,
-	});
-	game.settings.register(modulename, "loot-sheet", {
-		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
-		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
+
+	game.settings.register(modulename, "show-xp-dialog", {
+		name: game.i18n.localize("MonksTokenBar.show-xp-dialog.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-xp-dialog.hint"),
 		scope: "world",
 		config: true,
-		default: "lootsheetnpc5e",
-		choices: lootsheetoptions,
+		default: true,
+		type: Boolean,
+	});
+
+	game.settings.register(modulename, "divide-xp", {
+		name: game.i18n.localize("MonksTokenBar.divide-xp.name"),
+		hint: game.i18n.localize("MonksTokenBar.divide-xp.hint"),
+		scope: "world",
+		config: true,
+		default: dividexp,
 		type: String,
+		choices: divideXpOptions,
+		localize: true
 	});
+
 	game.settings.register(modulename, "gold-formula", {
 		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),
 		hint: game.i18n.localize("MonksTokenBar.gold-formula.hint"),
@@ -205,29 +232,42 @@ export const registerSettings = function () {
 		default: "Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.data.data.details.cr}} ?? 0))))",
 		type: String,
 	});
-	game.settings.register(modulename, "allow-player", {
-		name: game.i18n.localize("MonksTokenBar.allow-player.name"),
-		hint: game.i18n.localize("MonksTokenBar.allow-player.hint"),
+
+	game.settings.register(modulename, "loot-type", {
+		name: game.i18n.localize("MonksTokenBar.loot-type.name"),
+		hint: game.i18n.localize("MonksTokenBar.loot-type.hint"),
 		scope: "world",
 		config: true,
-		default: false,
-		type: Boolean,
+		default: "transferplus",
+		choices: lootoptions,
+		type: String,
 	});
-	game.settings.register(modulename, "disable-tokenbar", {
-		name: game.i18n.localize("MonksTokenBar.disable-tokenbar.name"),
-		hint: game.i18n.localize("MonksTokenBar.disable-tokenbar.hint"),
-		scope: "client",
-		config: true,
-		default: false,
-		type: Boolean,
-	});
-	game.settings.register(modulename, "delete-after-grab", {
-		name: game.i18n.localize("MonksTokenBar.delete-after-grab.name"),
-		hint: game.i18n.localize("MonksTokenBar.delete-after-grab.hint"),
+	game.settings.register(modulename, "loot-sheet", {
+		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
+		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
 		scope: "world",
 		config: true,
-		default: false,
-		type: Boolean,
+		default: "monks-enhanced-journal",
+		choices: lootsheetoptions,
+		type: String,
+	});
+	game.settings.register(modulename, "loot-entity", {
+		name: game.i18n.localize("MonksTokenBar.loot-entity.name"),
+		hint: game.i18n.localize("MonksTokenBar.loot-entity.hint"),
+		scope: "world",
+		config: true,
+		default: "",
+		choices: lootentity,
+		type: String,
+	});
+	game.settings.register(modulename, "loot-folder", {
+		name: game.i18n.localize("MonksTokenBar.loot-folder.name"),
+		hint: game.i18n.localize("MonksTokenBar.loot-folder.hint"),
+		scope: "world",
+		config: true,
+		default: "",
+		choices: lootfolder,
+		type: String,
 	});
 	game.settings.register(modulename, "show-lootable-menu", {
 		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
@@ -237,23 +277,9 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean,
 	});
-	game.settings.register(modulename, "show-inspiration", {
-		name: game.i18n.localize("MonksTokenBar.show-inspiration.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-inspiration.hint"),
-		scope: "client",
-		config: true,
-		default: false,
-		type: Boolean,
-	});
-	game.settings.register(modulename, "show-disable-panning-option", {
-		name: game.i18n.localize("MonksTokenBar.show-disable-panning-option.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-disable-panning-option.hint"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		onChange: debouncedReload
-	});
+
+	//------------------------------------Request Roll settings--------------------------------------------
+
 	game.settings.register(modulename, "request-roll-sound", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
@@ -270,14 +296,13 @@ export const registerSettings = function () {
 		default: "modules/monks-tokenbar/sounds/RollRequestAlert.ogg",
 		type: String,
 	});
-	game.settings.register(modulename, "show-vertical", {
-		name: game.i18n.localize("MonksTokenBar.show-vertical.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-vertical.hint"),
+	game.settings.register(modulename, "delete-after-grab", {
+		name: game.i18n.localize("MonksTokenBar.delete-after-grab.name"),
+		hint: game.i18n.localize("MonksTokenBar.delete-after-grab.hint"),
 		scope: "world",
 		config: true,
 		default: false,
 		type: Boolean,
-		onChange: debouncedReload
 	});
 	game.settings.register(modulename, "capture-savingthrows", {
 		name: game.i18n.localize("MonksTokenBar.capture-savingthrows.name"),
@@ -287,28 +312,27 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean
 	});
-	game.settings.register(modulename, "token-size", {
-		name: game.i18n.localize("MonksTokenBar.token-size.name"),
-		hint: game.i18n.localize("MonksTokenBar.token-size.hint"),
+
+	//this is just a global setting for movement mode
+	game.settings.register(modulename, "movement", {
 		scope: "world",
-		config: true,
-		range: {
-			min: 50,
-			max: 100,
-			step: 5,
-		},
-		default: 50,
-		type: Number,
-		onChange: debouncedReload
+		config: false,
+		default: "free",
+		type: String,
 	});
-	game.settings.register(modulename, "popout-tokenbar", {
-		name: game.i18n.localize("MonksTokenBar.popout-tokenbar.name"),
-		hint: game.i18n.localize("MonksTokenBar.popout-tokenbar.hint"),
-		scope: "client",
+	game.settings.register(modulename, "debug", {
+		scope: "world",
 		config: false,
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "stats", {
+		scope: "world",
+		config: false,
+		type: Object,
+	});
+
+	//outdated
 	game.settings.register(modulename, "stat1-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat1-icon.name"),
 		hint: game.i18n.localize("MonksTokenBar.stat1-icon.hint"),
@@ -345,44 +369,6 @@ export const registerSettings = function () {
 		default: null, //stat2, //MonksTokenBar.system._defaultSetting.stat2,
 		type: String,
 		onChange: debouncedReload
-	});
-	game.settings.registerMenu(modulename, 'resetPosition', {
-		name: 'Reset Position',
-		label: 'Reset Position',
-		hint: 'Reset the position of the tokenbar if it disappears off the screen.',
-		icon: 'fas fa-desktop',
-		restricted: true,
-		type: ResetPosition,
-		onClick: (value) => {
-			log('Reset position');
-		}
-	});
-	game.settings.registerMenu(modulename, 'editStats', {
-		name: 'Edit Stats',
-		label: 'Edit Stats',
-		hint: 'Edit the stats that are displayed on the Tokenbar',
-		icon: 'fas fa-align-justify',
-		restricted: true,
-		type: EditStats
-	});
-	
-	//this is just a global setting for movement mode
-	game.settings.register(modulename, "movement", {
-		scope: "world",
-		config: false,
-		default: "free",
-		type: String,
-	});
-	game.settings.register(modulename, "debug", {
-		scope: "world",
-		config: false,
-		default: false,
-		type: Boolean,
-	});
-	game.settings.register(modulename, "stats", {
-		scope: "world",
-		config: false,
-		type: Object,
 	});
 
 };

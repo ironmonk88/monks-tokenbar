@@ -270,10 +270,10 @@ export class ContestedRoll {
                     //roll the dice, using standard details from actor
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
-                    e.ctrlKey = evt.ctrlKey;
-                    e.altKey = evt.altKey;
-                    e.shiftKey = evt.shiftKey;
-                    e.metaKey = evt.metaKey;
+                    e.ctrlKey = evt?.ctrlKey;
+                    e.altKey = evt?.altKey;
+                    e.shiftKey = evt?.shiftKey;
+                    e.metaKey = evt?.metaKey;
 
                     for (let [k, v] of Object.entries(keys))
                         e[k] = evt[k] || v;

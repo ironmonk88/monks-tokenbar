@@ -1,38 +1,69 @@
-<div class="monks-tokenbar flexcol">
+<form class="monks-tokenbar flexcol">
     <div class="dialog-content">
         <form style="height:100%;">
+            <p class="notes">{{notes}}</p>
             <div class="form-group">
                 <label>{{localize 'MonksTokenBar.AssignByCR'}}</label>
-                <input type="checkbox" id="assign-gold-by-cr" {{#if usecr}}checked{{/if}} />
+                <input type="checkbox" id="assign-gold-by-cr" name="assign-gold-by-cr" {{#if usecr}} checked{{/if}} />
             </div>
+            {{#if createEntity}}
+            <div class="form-group">
+                <label>{{localize 'MonksTokenBar.CreateEntityName'}}</label>
+                <input type="text" id="entity-name" name="entity-name" placeholder="{{placeholder}}"/>
+            </div>
+            {{/if}}
+            {{#if clearEntity}}
+            <div class="form-group">
+                <label>{{localize 'MonksTokenBar.ClearCurrentItems'}}</label>
+                <input type="checkbox" id="clear-items" name="clear-items" />
+            </div>
+            {{/if}}
             <div class="form-group sheet">
                 <ol class="items-list inventory-list">
                     <li class="items-header flexrow">
                         <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
-                        <div class="item-controls flexrow" style="justify-content: center;">
-                            {{localize 'MonksTokenBar.Gold'}}
-                        </div>
                         <div class="item-controls flexrow">
                         </div>
                     </li>
 
                     <ol class="item-list">
-                        {{#each tokens}}
-                        <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.token.id}}" draggable="true">
-                            <div class="item-name flexrow rollable">
-                                <div class="item-image" style="background-image: url('{{this.token.data.img}}')">
-                                    <video width="30" height="30"><source src="{{this.token.data.img}}" /></video>
-                                    <i class="fas fa-ban"></i>
+                        {{#each entries}}
+                        <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.token.id}}">
+                            <div class="flexcol">
+                                <div class="item-row flexrow">
+                                    <div class="item-name flexrow rollable">
+                                        <div class="item-image" style="background-image: url('{{this.token.data.img}}')">
+                                            <video width="30" height="30"><source src="{{this.token.data.img}}" /></video>
+                                            <i class="fas fa-ban"></i>
+                                        </div>
+                                        <h4>
+                                            {{this.token.name}}
+                                        </h4>
+                                    </div>
+                                    <div class="item-controls flexrow">
+                                        <input type="checkbox" name="tokens.{{this.token.id}}.include" {{#if this.include}} checked{{/if}} />
+                                    </div>
                                 </div>
-                                <h4>
-                                    {{this.token.name}}
-                                </h4>
-                            </div>
-                            <div style="flex:0 0 60px;">
-                                <input type="number" class="chargold" value="{{this.gold}}" />
-                            </div>
-                            <div class="item-controls flexrow">
-                                <a class="item-control item-delete" title="{{localize 'MonksTokenBar.RemoveActor'}}"><i class="fas {{#if this.disabled}}fa-plus{{else}}fa-trash{{/if}}"></i></a>
+                                <div class="item-tooltip flexcol" style="display:none;">
+                                    {{#if this.currency}}
+                                    <div class="flexrow" style="border-top: 1px solid var(--color-text-light-5) ">
+                                        {{#each this.currency}}
+                                        <div class="flexrow" style="flex-direction:row-reverse;">
+                                            <input type="number" name="tokens.{{../token.id}}.currency.{{@key}}" class="chargold" value="{{this}}" />
+                                            <span style="text-align: center;">{{@key}}</span>
+                                        </div>
+                                        {{/each}}
+                                    </div>
+                                    {{/if}}
+                                    <div class="included-items">
+                                        {{#each this.items}}
+                                        <input type="checkbox" style="display:none;" name="tokens.{{../token.id}}.items.{{this._id}}.included" {{#if this.included}} checked{{/if}} />
+                                        <div class="{{#if this.included}}included{{/if}}">
+                                            {{this.name}}
+                                        </div>
+                                        {{/each}}
+                                    </div>
+                                </div>
                             </div>
                         </li>
                         {{/each}}
@@ -44,4 +75,4 @@
     <div class="dialog-buttons">
         <button class="dialog-button convert-to-lootable" data-button="assign">{{localize 'MonksTokenBar.ConvertToLootable'}}</button>
     </div>
-</div>
+</form>

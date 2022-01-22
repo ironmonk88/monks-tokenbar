@@ -654,6 +654,22 @@ export class MonksTokenBar {
         this.changeTokenMovement(movement, combatant.token.object);
         $(event.currentTarget).toggleClass('active', movement);
     }
+
+    static getLootSheetOptions(lootType) {
+        let lootsheetoptions = { 'none': 'Do not convert' };
+        if (game.modules.get("lootsheetnpc5e")?.active)
+            lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
+        if (game.modules.get("merchantsheetnpc")?.active)
+            lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
+        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType !='convert')
+            lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
+
+        return lootsheetoptions;
+    }
+
+    static getLootFolder() {
+
+    }
 }
 
 Hooks.once('init', async function () {
@@ -735,6 +751,72 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         });
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
+
+    $('[name="monks-tokenbar.loot-entity"]', html).on('change', () => {
+        //folder is only needed if entity is create
+        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
+        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
+        let list = [];
+        if (type != 'convert') {
+            if (($('[name="monks-tokenbar.loot-entity"]', html).val() || setting('loot-entity')) == 'create') {
+                list.push({ id: '', name: '' });
+                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
+                    //find Actors Folders
+                    for (let entry of game.folders) {
+                        if (entry.data.type == 'Actor')
+                            list.push({ id: entry.id, name: entry.name });
+                    }
+                } else if (sheet == 'monks-enhanced-journal') {
+                    //find Journal Entry Folders
+                    for (let entry of game.folders) {
+                        if (entry.data.type == 'JournalEntry')
+                            list.push({ id: entry.id, name: entry.name });
+                    }
+                }
+            }
+        }
+
+        let folderid = setting('loot-folder');
+        $('[name="monks-tokenbar.loot-folder"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == folderid).html(e.name) }));
+    });
+
+    $('[name="monks-tokenbar.loot-sheet"]', html).on('change', () => {
+        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
+        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
+        let list = [];
+        if (type != 'convert') {
+            list.push({ id: 'create', name: '-- Create new --' });
+            if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
+                //find Actors
+                for (let entry of game.actors) {
+                    if (entry.getFlag('core', 'sheetClass') == (sheet == 'lootsheetnpc5e' ? 'dnd5e.LootSheetNPC5e' : (sheet == 'merchantsheetnpc' ? 'core.a' : '')))
+                        list.push({ id: entry.id, name: entry.name });
+                }
+            } else if (sheet == 'monks-enhanced-journal') {
+                //find Journal Entries
+                for (let entry of game.journal) {
+                    if (entry.getFlag('monks-enhanced-journal', 'type') == 'loot')
+                        list.push({ id: entry.id, name: entry.name });
+                }
+            }
+        }
+
+        let entityid = setting('loot-entity');
+        $('[name="monks-tokenbar.loot-entity"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == entityid).html(e.name) })).change();
+    });
+
+    $('[name="monks-tokenbar.loot-type"]', html).on('change', () => {
+        let sheetid = $('[name="monks-tokenbar.loot-sheet"] ', html).val() || setting('loot-sheet');
+        let list = MonksTokenBar.getLootSheetOptions($('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type'));
+
+        $('[name="monks-tokenbar.loot-sheet"] ', html).empty().append(Object.entries(list).map(([k, v]) => { return $('<option>').attr('value', k).prop('selected', k == sheetid).html(i18n(v)) })).change();
+    }).change();
+
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.request-roll-sound-file"]').parents('div.form-group:first'));
 });
 
 Hooks.on("renderCombatTracker", (app, html, data) => {
@@ -779,6 +861,10 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 });
 
+Hooks.on("setupTileGroups", (groups) => {
+    groups['monks-tokenbar'] = { name: "Monk's Token Bar" }
+});
+
 Hooks.on("setupTileActions", (actions) => {
     return Object.assign(actions, {
         'setmovement': {
@@ -813,6 +899,7 @@ Hooks.on("setupTileActions", (actions) => {
                     type: "list"
                 }
             ],
+            group: 'monks-tokenbar',
             values: {
                 'movement': {
                     "none": 'MonksTokenBar.NoMovement',
@@ -913,6 +1000,7 @@ Hooks.on("setupTileActions", (actions) => {
                     "allpass": "All Passed"
                 }
             },
+            group: 'monks-tokenbar',
             fn: async (args = {}) => {
                 const { action, tile } = args;
                 let entities = await game.MonksActiveTiles.getEntities(args);
@@ -984,6 +1072,7 @@ Hooks.on("setupTileActions", (actions) => {
                     type: "text"
                 },
             ],
+            group: 'monks-tokenbar',
             fn: async (args = {}) => {
                 const { action, value } = args;
 

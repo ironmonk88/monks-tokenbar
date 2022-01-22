@@ -32,7 +32,7 @@ export class OSERolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.data.actor?.hasPlayerOwner).length == app.entries.length);
+        let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
         return (allPlayers ? 'scores:str' : null);
     }
 
@@ -63,7 +63,7 @@ export class OSERolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+            "data.details.xp.value": parseInt(actor.data.data.details.xp.value) + parseInt(msgactor.xp)
         });
 
         if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.next) {

@@ -1,3 +1,16 @@
+## Version 1.0.60
+
+Fixed issue with additional keys not being passed through properly
+
+Updated Lootables so you can now specify how much coin each actor is providing, as well as which items are being included in looting.
+It will now also use Enhanced Journals to create a lootable entity.
+
+Added the option to save a Request to a macro.
+
+Reordered the settings menu.
+
+Fixed issues with assigning XP in multiple systems
+
 ## Version 1.0.59
 
 Fixed issues with using Ctrl or Alt to add Advantage or Disadvantage to a roll.

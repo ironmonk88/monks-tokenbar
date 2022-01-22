@@ -60,7 +60,7 @@ export class TokenBar extends Application {
     return mergeObject(super.defaultOptions, {
         id: "tokenbar-window",
         template: "./modules/monks-tokenbar/templates/tokenbar.html",
-        popOut: setting('popout-tokenbar')
+        popOut: false
     });
     }
 
@@ -304,91 +304,89 @@ export class TokenBar extends Application {
         }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
 
-        if (!setting('popout-tokenbar')) {
-            html.find('#tokenbar-move-handle').mousedown(ev => {
-                ev.preventDefault();
-                ev = ev || window.event;
-                let isRightMB = false;
-                if ("which" in ev) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-                    isRightMB = ev.which == 3;
-                } else if ("button" in ev) { // IE, Opera 
-                    isRightMB = ev.button == 2;
-                }
+        html.find('#tokenbar-move-handle').mousedown(ev => {
+            ev.preventDefault();
+            ev = ev || window.event;
+            let isRightMB = false;
+            if ("which" in ev) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+                isRightMB = ev.which == 3;
+            } else if ("button" in ev) { // IE, Opera 
+                isRightMB = ev.button == 2;
+            }
 
-                if (!isRightMB) {
-                    dragElement(document.getElementById("tokenbar"));
-                    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (!isRightMB) {
+                dragElement(document.getElementById("tokenbar"));
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-                    function dragElement(elmnt) {
-                        elmnt.onmousedown = dragMouseDown;
-                        function dragMouseDown(e) {
-                            e = e || window.event;
-                            e.preventDefault();
-                            pos3 = e.clientX;
-                            pos4 = e.clientY;
+                function dragElement(elmnt) {
+                    elmnt.onmousedown = dragMouseDown;
+                    function dragMouseDown(e) {
+                        e = e || window.event;
+                        e.preventDefault();
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
 
-                            if (elmnt.style.bottom != undefined) {
-                                elmnt.style.top = elmnt.offsetTop + "px";
-                                elmnt.style.bottom = null;
-                            }
-
-                            document.onmouseup = closeDragElement;
-                            document.onmousemove = elementDrag;
-                        }
-
-                        function elementDrag(e) {
-                            e = e || window.event;
-                            e.preventDefault();
-                            // calculate the new cursor position:
-                            pos1 = pos3 - e.clientX;
-                            pos2 = pos4 - e.clientY;
-                            pos3 = e.clientX;
-                            pos4 = e.clientY;
-                            // set the element's new position:
+                        if (elmnt.style.bottom != undefined) {
+                            elmnt.style.top = elmnt.offsetTop + "px";
                             elmnt.style.bottom = null;
-                            elmnt.style.right = null
-                            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-                            elmnt.style.position = 'fixed';
-                            elmnt.style.zIndex = 100;
                         }
 
-                        function closeDragElement() {
-                            // stop moving when mouse button is released:
-                            elmnt.onmousedown = null;
-                            elmnt.style.zIndex = null;
-                            document.onmouseup = null;
-                            document.onmousemove = null;
+                        document.onmouseup = closeDragElement;
+                        document.onmousemove = elementDrag;
+                    }
 
-                            let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
-                            let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
+                    function elementDrag(e) {
+                        e = e || window.event;
+                        e.preventDefault();
+                        // calculate the new cursor position:
+                        pos1 = pos3 - e.clientX;
+                        pos2 = pos4 - e.clientY;
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                        // set the element's new position:
+                        elmnt.style.bottom = null;
+                        elmnt.style.right = null
+                        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                        elmnt.style.position = 'fixed';
+                        elmnt.style.zIndex = 100;
+                    }
 
-                            let position = { top: null, bottom: null, left: null, right: null };
-                            if (yPos > (window.innerHeight / 2))
-                                position.bottom = (window.innerHeight - yPos - elmnt.offsetHeight);
-                            else
-                                position.top = yPos + 1;
+                    function closeDragElement() {
+                        // stop moving when mouse button is released:
+                        elmnt.onmousedown = null;
+                        elmnt.style.zIndex = null;
+                        document.onmouseup = null;
+                        document.onmousemove = null;
 
-                            //if (xPos > (window.innerWidth / 2))
-                            //    position.right = (window.innerWidth - xPos);
-                            //else
-                            position.left = xPos + 1;
+                        let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
+                        let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
 
-                            elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
-                            elmnt.style.right = (position.right ? position.right + "px" : null);
-                            elmnt.style.top = (position.top ? position.top + "px" : null);
-                            elmnt.style.left = (position.left ? position.left + "px" : null);
+                        let position = { top: null, bottom: null, left: null, right: null };
+                        if (yPos > (window.innerHeight / 2))
+                            position.bottom = (window.innerHeight - yPos - elmnt.offsetHeight);
+                        else
+                            position.top = yPos + 1;
 
-                            //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
+                        //if (xPos > (window.innerWidth / 2))
+                        //    position.right = (window.innerWidth - xPos);
+                        //else
+                        position.left = xPos + 1;
 
-                            //log(`Setting monks-tokenbar position:`, position);
-                            game.user.setFlag('monks-tokenbar', 'position', position);
-                            this.pos = position;
-                        }
+                        elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
+                        elmnt.style.right = (position.right ? position.right + "px" : null);
+                        elmnt.style.top = (position.top ? position.top + "px" : null);
+                        elmnt.style.left = (position.left ? position.left + "px" : null);
+
+                        //$(elmnt).css({ bottom: (position.bottom || ''), top: (position.top || ''), left: (position.left || ''), right: (position.right || '') });
+
+                        //log(`Setting monks-tokenbar position:`, position);
+                        game.user.setFlag('monks-tokenbar', 'position', position);
+                        this.pos = position;
                     }
                 }
-            });
-        }
+            }
+        });
 
         // Activate context menu
         this._contextMenu(html);
