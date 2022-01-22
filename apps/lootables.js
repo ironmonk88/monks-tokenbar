@@ -53,7 +53,7 @@ export class LootablesApp extends FormApplication {
                 id: t.id,
                 include: true,
                 actor: t.actor,
-                token: t.document,
+                token: t.document || t,
                 items: items,
                 currency: Object.assign({}, currency, curr)
             };
@@ -228,7 +228,7 @@ export class LootablesApp extends FormApplication {
 
         for (let entry of this.entries) {
             let ed = data.tokens[entry.id];
-            entry.currency = mergeObject(entry.currency, ed.currency);
+            entry.currency = mergeObject(entry.currency, ed?.currency || {});
             entry.include = ed.include;
             for (let item of entry.items) {
                 item.included = ed.items[item._id].included;
@@ -280,26 +280,11 @@ export class LootablesApp extends FormApplication {
                 let oldItems = [];
                 let newItems = entry.actor.data.items
                     .filter(item => {
-                        // Weapons are fine, unless they're natural
-                        let result = false;
-                        if (item.included) {
-                            if (item.type == 'weapon') {
-                                result = item.data.data.weaponType != 'natural';
-                            }
-                            // Equipment's fine, unless it's natural armor
-                            else if (item.type == 'equipment') {
-                                if (!item.data.data.armor)
-                                    result = true;
-                                else
-                                    result = item.data.data.armor.type != 'natural';
-                            } else
-                                result = !(['class', 'spell', 'feat'].includes(item.type));
-                        }
-
-                        if (!result)
+                        let itemData = entry.items.find(i => i._id == item.id);
+                        if (!itemData?.included)
                             oldItems.push(item);
 
-                        return result;
+                        return itemData?.included;
                     });
 
                 newActorData.items = newItems;
@@ -520,7 +505,7 @@ export class LootablesApp extends FormApplication {
             actorData.items = duplicate(actor.data.items);
             for (let olditem of actor.getFlag('monks-tokenbar', 'olditems')) {
                 if (actorData.items.findIndex(i => { return i._id == olditem._id; }) < 0)
-                    newItems.push(olditem);
+                    actorData.items.push(olditem);
             }
 
             actorData.flags["monks-tokenbar"].olditems = [];
@@ -528,8 +513,8 @@ export class LootablesApp extends FormApplication {
 
         MonksTokenBar.emit('refreshsheet', { tokenid: app.token?.id } );
 
-        if (newItems.length > 0)
-            await Item.create(newItems, { parent: actor });
+        //if (newItems.length > 0)
+        //    await Item.create(newItems, { parent: actor });
         await actor.update(actorData); /*.then((token) => {
             //if (app._state === Application.RENDER_STATES.CLOSED)
             //    token.actor.sheet.render(true);

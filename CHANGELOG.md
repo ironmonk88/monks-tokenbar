@@ -1,3 +1,9 @@
+## Version 1.0.61
+
+Fixed issues with converting lootables from combat.
+
+Fixed issues with reverting lootables.
+
 ## Version 1.0.60
 
 Fixed issue with additional keys not being passed through properly
