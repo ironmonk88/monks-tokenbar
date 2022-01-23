@@ -31,7 +31,7 @@ export class MonksTokenBarAPI {
         if (!game.user.isGM)
             return;
 
-        options.rollmode = options.rollmode || 'roll';
+        options.rollmode = options.rollmode || options.rollMode || 'roll';
 
         if (typeof tokens == 'string')
             tokens = tokens.split(',').map(function (item) { return item.trim(); });
@@ -56,7 +56,7 @@ export class MonksTokenBarAPI {
         if (!game.user.isGM)
             return;
 
-        options.rollmode = options.rollmode || 'roll';
+        options.rollmode = options.rollmode || options.rollMode || 'roll';
 
         let entries = MonksTokenBar.getTokenEntries([request0, request1]);
 

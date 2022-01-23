@@ -19,6 +19,8 @@ import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
 import { CoC7Rolls } from "./systems/coc7-rolls.js";
 
+export let debugEnabled = 0;
+
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
 };
@@ -349,6 +351,15 @@ export class MonksTokenBar {
                     AudioHelper.play({ src: data.sound }, false);
                 }
             } break;
+            case 'renderLootable': {
+                let entity = fromUuid(data.entityid).then(entity => {
+                    if (game.modules.get('monks-enhanced-journal')?.active && setting('loot-sheet') == 'monks-enhanced-journal') {
+                        if (!game.MonksEnhancedJournal.openJournalEntry(entity))
+                            entity.sheet.render(true);
+                    } else
+                        entity.sheet.render(true);
+                })
+            }
         }
     }
 

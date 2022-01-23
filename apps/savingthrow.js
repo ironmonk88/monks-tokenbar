@@ -17,7 +17,7 @@ export class SavingThrowApp extends Application {
                 return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
             }));
         }
-        this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
+        this.rollmode = (options?.rollmode || options?.rollMode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
         this.request = options.request;
         this.flavor = options.flavor;
@@ -88,8 +88,8 @@ export class SavingThrowApp extends Application {
             //don't add this token a second time
             if (this.entries.includes(e => e.token.id == t.id))
                 return false;
-            if (token.actor == undefined) {
-                failed.push(token.name);
+            if (t.actor == undefined) {
+                failed.push(t.name);
                 return false;
             }
             return true;

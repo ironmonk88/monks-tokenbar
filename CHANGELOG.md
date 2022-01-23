@@ -1,3 +1,17 @@
+## Version 1.0.62
+
+Fixed an issue with macros generated not gettign the correct roll mode when calling a requested roll.
+
+Added Save to Macro for contested rolls.
+
+Fixed an issue when determining if there are previous loot entity when creating the new Loot Entity name.
+
+Fixed up the action text when converting so that it accurately reflects what's happened.
+
+Added the option to open the loot entity once the items have been looted.
+
+Fixed an issue where adding a token to a saving throw was failing.
+
 ## Version 1.0.61
 
 Fixed issues with converting lootables from combat.

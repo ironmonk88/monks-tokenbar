@@ -135,6 +135,8 @@
 	"MonksTokenBar.capture-savingthrows.hint": "Create Saving Throw Chat Card when requesting item saving throw roll",
 	"MonksTokenBar.token-size.name": "Size of tokens",
 	"MonksTokenBar.token-size.hint": "Change the size of the tokens on Tokenbar, in case the attributes disappear off the side.",
+	"MonksTokenBar.open-loot.name": "Open Loot Entity",
+	"MonksTokenBar.open-loot.hint": "Open the loot entity after the entity has been created or items transfered",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -173,6 +175,7 @@
 	"MonksTokenBar.GroupDC": "Group DC",
 	"MonksTokenBar.AssignByCR": "Assign gold by CR",
 	"MonksTokenBar.ConvertToLootable": "Convert to Lootable",
+	"MonksTokenBar.TransferToLootable": "Transfer to Lootable",
 	"MonksTokenBar.Gold": "Gold",
 	"MonksTokenBar.Levelup": "You have enough xp to level up!",
 	"MonksTokenBar.EditStats": "Edit Stats",
@@ -182,5 +185,11 @@
 	"MonksTokenBar.TransferPlus": "Transfer items to single Entity and add link on Scene",
 	"MonksTokenBar.CreateEntityName": "New Entity Name",
 	"MonksTokenBar.ClearCurrentItems": "Clear Current Items",
-	"MonksTokenBar.SaveToMacro": "Save to Macro"
+	"MonksTokenBar.SaveToMacro": "Save to Macro",
+
+	"MonksTokenBar.None": "No one",
+	"MonksTokenBar.GMOnly": "GM Only",
+	"MonksTokenBar.PlayersOnly": "Players",
+	"MonksTokenBar.Everyone": "Everyone"
+
 }

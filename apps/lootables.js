@@ -41,6 +41,7 @@ export class LootablesApp extends FormApplication {
                 }).map(i => {
                     let data = i.toObject();
                     data.included = true;
+                    data.from = t.name;
                     return data;
                 });
 
@@ -79,10 +80,15 @@ export class LootablesApp extends FormApplication {
         else {
             let entityName = "New " + (['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet")) ? "Actor" : "Loot Journal Entry");
             if (setting('loot-entity') != 'create') {
-                let collection = (['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet")) ? game.actors : game.journal);
-                let entity = collection.get(setting('loot-entity'));
-                entityName = entity?.name || "Unknown";
-                hasItems = (entity?.data.items.size || 0) > 0;
+                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet"))){
+                    let entity = game.actors.get(setting('loot-entity'));
+                    entityName = entity?.name || "Unknown";
+                    hasItems = (entity?.data.items.size || 0) > 0;
+                } else {
+                    let entity = game.journal.get(setting('loot-entity'));
+                    entityName = entity?.name || "Unknown";
+                    hasItems = (entity?.getFlag('monks-enhanced-journal', 'items') || []).length > 0;
+                }
             }
             notes = `Transfer items to <${entityName}> using ${sheetName}${setting('loot-type') == 'transferplus' ? `, and create a ${(['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet")) ? "Token" : "Note")} on the Canvas` : ''}`;
         }
@@ -93,7 +99,8 @@ export class LootablesApp extends FormApplication {
             clearEntity: setting('loot-type') != 'convert' && setting('loot-entity') != 'create' && hasItems,
             notes: notes,
             placeholder: this.getLootableName(),
-            entries: this.entries
+            entries: this.entries,
+            actionText: (setting('loot-type') == 'convert' ? i18n('MonksTokenBar.ConvertToLootable') : i18n('MonksTokenBar.TransferToLootable'))
         };
     }
 
@@ -225,6 +232,8 @@ export class LootablesApp extends FormApplication {
 
         let lootType = setting('loot-type');
         let lootSheet = setting('loot-sheet');
+
+        let msg = "";
 
         for (let entry of this.entries) {
             let ed = data.tokens[entry.id];
@@ -361,6 +370,8 @@ export class LootablesApp extends FormApplication {
                     "flags.monks-tokenbar.alpha": oldAlpha
                 });
             }
+
+            msg = `Actors have been converted to lootable`;
         } else {
             let lootentity = setting('loot-entity');
             let collection = (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? game.actors : game.journal);
@@ -374,7 +385,8 @@ export class LootablesApp extends FormApplication {
                     warn("Could not find Loot Entity, defaulting to creating one");
             }
 
-            if (lootentity == 'create' || entity == undefined) {
+            let created = (lootentity == 'create' || entity == undefined);
+            if (created) {
                 //create the entity in the Correct Folder
                 let folder = setting('loot-folder');
 
@@ -445,6 +457,10 @@ export class LootablesApp extends FormApplication {
                 }
             }
 
+            msg = (created ?
+                `${name} has been created, items have been transferred to it` :
+                `Items have been transferred to ${name}`);
+
             if (lootType == 'transferplus') {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
@@ -471,10 +487,27 @@ export class LootablesApp extends FormApplication {
                         await cls.create(data, { parent: canvas.scene });
                     }
                 }
-                ui.notifications.info(`Entity ${name} has been created, items have been transferred to it and a token has been added to the canvas`);
-            } else
-                ui.notifications.info(`Entity ${name} has been created and items have been transferred to it`);
+
+                msg += `and a ${['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? "Token" : "Note"} has been added to the canvas`
+            }
+
+            if (setting('open-loot') != "none" && entity) {
+                if (setting('open-loot') != 'players') {
+                    if (game.modules.get('monks-enhanced-journal')?.active && lootSheet == 'monks-enhanced-journal') {
+                        if (!game.MonksEnhancedJournal.openJournalEntry(entity))
+                            entity.sheet.render(true);
+                    } else
+                        entity.sheet.render(true);
+                }
+                if (setting('open-loot') != 'gm') {
+                    MonksTokenBar.emit("renderLootable", { entityid: entity.uuid });
+                }
+            }
         }
+
+        if(msg != "")
+            ui.notifications.info(msg);
+
         this.close();
     }
 

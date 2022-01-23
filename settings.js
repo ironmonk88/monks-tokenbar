@@ -33,6 +33,13 @@ export const registerSettings = function () {
 		'transferplus': game.i18n.localize("MonksTokenBar.TransferPlus"),
 	};
 
+	let openLootOptions = {
+		'none': game.i18n.localize("MonksTokenBar.None"),
+		'gm': game.i18n.localize("MonksTokenBar.GMOnly"),
+		'players': game.i18n.localize("MonksTokenBar.PlayersOnly"),
+		'everyone': game.i18n.localize("MonksTokenBar.Everyone"),
+    }
+
 	let lootsheetoptions = MonksTokenBar.getLootSheetOptions();
 	let lootentity = {};
 	let lootfolder = {};
@@ -267,6 +274,15 @@ export const registerSettings = function () {
 		config: true,
 		default: "",
 		choices: lootfolder,
+		type: String,
+	});
+	game.settings.register(modulename, "open-loot", {
+		name: game.i18n.localize("MonksTokenBar.open-loot.name"),
+		hint: game.i18n.localize("MonksTokenBar.open-loot.hint"),
+		scope: "world",
+		config: true,
+		default: "none",
+		choices: openLootOptions,
 		type: String,
 	});
 	game.settings.register(modulename, "show-lootable-menu", {

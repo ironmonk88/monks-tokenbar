@@ -5,7 +5,7 @@ export class ContestedRollApp extends Application {
         super(options);
         this.opts = options;
 
-        this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
+        this.rollmode = options?.rollmode || options?.rollMode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
@@ -175,6 +175,7 @@ export class ContestedRollApp extends Application {
 
         $('.dialog-button.request', html).click($.proxy(this.request, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.request, this, true));
+        $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
 
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
             this.flavor = $(e.currentTarget).val();
@@ -191,6 +192,14 @@ export class ContestedRollApp extends Application {
             this.rollmode = $(e.currentTarget).val();
         }, this));
     };
+
+    async saveToMacro() {
+        let name = "Contested Roll";
+
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.id}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.id}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        macro.sheet.render(true);
+    }
 }
 
 export class ContestedRoll {
