@@ -42,7 +42,7 @@ export class Tormenta20Rolls extends BaseRolls {
 
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.data.actor?.hasPlayerOwner).length == app.entries.length);
+        let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
         return (allPlayers ? 'skill:per' : null);
     }
 
@@ -79,7 +79,7 @@ export class Tormenta20Rolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.attributes.nivel.xp.value": actor.data.data.attributes.nivel.xp.value + msgactor.xp
+            "data.attributes.nivel.xp.value": parseInt(actor.data.data.attributes.nivel.xp.value) + parseInt(msgactor.xp)
         });
 
         if (setting("send-levelup-whisper") && actor.data.data.attributes.nivel.xp.value >= actor.data.data.attributes.nivel.xp.proximo) {

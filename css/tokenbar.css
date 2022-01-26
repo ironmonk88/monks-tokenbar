@@ -272,7 +272,8 @@ body #tokenbar-window:first-child{
     word-break: break-all;
 }
 
-#tokenbar .token .context-items li:nth-child(5) {
+#tokenbar .token .context-items li:nth-child(5),
+#tokenbar .token .context-items li:nth-child(7) {
     border-top: 2px groove #444; /*#23221d;*/
 }
 
@@ -375,7 +376,7 @@ body #tokenbar-window:first-child{
     color: #191813;
 }
 
-.monks-tokenbar .item.disabled input,
+.monks-tokenbar .item.disabled input[type="text"],
 .monks-tokenbar .item.disabled select {
     display: none;
 }
@@ -922,6 +923,7 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     align-content: flex-start;
     vertical-align: top;
     flex-direction: column;
+    min-width: 105px;
 }
 
 #tokenbar.vertical #tokenbar-controls {
@@ -979,4 +981,40 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
 
 #tokenbar.vertical #token-action-bar .token-list .token .token-content .resource[resource="2"] {
     top: -2px;
+}
+
+.group-header {
+    font-weight: bold;
+    padding: 8px 20px;
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.included-items {
+    display: grid;
+    grid-template-columns: repeat(3, 33%);
+    box-sizing: content-box;
+}
+
+.included-items > div{
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px;
+    border: 1px solid #C0C0C0;
+    border-radius: 4px;
+    margin:2px;
+}
+
+.included-items > input[type="checkbox"]:checked + div {
+    color: #ff6400;
+}
+
+#lootables .dialog-buttons {
+    flex: 0 0 32px;
+}
+
+#lootables .item-list {
+    max-height: 200px;
+    overflow-y: auto;
+    height: 200px;
 }

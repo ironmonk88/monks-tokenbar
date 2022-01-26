@@ -44,9 +44,9 @@ export class SW5eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.data.actor?.hasPlayerOwner).length == app.entries.length);
+        let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.entries.filter(t => getProperty(t.data.actor, "data.data.attributes.hp.value") == 0).length;
+        let allZeroHP = app.entries.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
         return (allZeroHP == app.entries.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
     }
 
@@ -105,7 +105,7 @@ export class SW5eRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+            "data.details.xp.value": parseInt(actor.data.data.details.xp.value) + parseInt(msgactor.xp)
         });
 
         if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {

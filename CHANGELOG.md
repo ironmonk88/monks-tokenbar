@@ -1,3 +1,70 @@
+## Version 1.0.62
+
+Fixed an issue with macros generated not gettign the correct roll mode when calling a requested roll.
+
+Added Save to Macro for contested rolls.
+
+Fixed an issue when determining if there are previous loot entity when creating the new Loot Entity name.
+
+Fixed up the action text when converting so that it accurately reflects what's happened.
+
+Added the option to open the loot entity once the items have been looted.
+
+Fixed an issue where adding a token to a saving throw was failing.
+
+## Version 1.0.61
+
+Fixed issues with converting lootables from combat.
+
+Fixed issues with reverting lootables.
+
+## Version 1.0.60
+
+Fixed issue with additional keys not being passed through properly
+
+Updated Lootables so you can now specify how much coin each actor is providing, as well as which items are being included in looting.
+It will now also use Enhanced Journals to create a lootable entity.
+
+Added the option to save a Request to a macro.
+
+Reordered the settings menu.
+
+Fixed issues with assigning XP in multiple systems
+
+## Version 1.0.59
+
+Fixed issues with using Ctrl or Alt to add Advantage or Disadvantage to a roll.
+
+Fixed issues with editing custom stats
+
+Fixed issues with Lootables not changing to Loot Sheet properly.
+
+Fixed an issue when a scene has no Tokens attached to it, or if there's no scene added.
+
+Wrapper Scene.prototype.view properly.
+
+Added option to specify Advantage and Disadvantage with the API when requesting rolls.
+
+Added Current Tokens to the options when selecting an entity for requesting a roll.
+
+Added the Resume anchor when deciding what to do with tokens that passed or failed, once those are dealt with you can now resume actions with all tokens.
+
+## Version 1.0.58
+
+Fixed issue with vertical alignment and no tokens.  The tokenbar shrunk improperly.
+
+Added a line between Target Token and Free Movement in the context menu when clicking on a token.
+
+Fixed an issue that was preventing the module from stopping tokens from moving.
+
+Changed the Active Tiles integration so that you can select global movement rather than leaving the entity blank to indicate a global change.
+
+Updated the code with Active Tiles upgrades
+
+Changed the default of allow movement after turn to false.
+
+Fixed up issue with PF2E rolls.
+
 ## Version 1.0.57
 
 Fixed an issue with combat turns in v9.  Refrences to the token involved have changed.

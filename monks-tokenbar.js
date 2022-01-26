@@ -19,6 +19,8 @@ import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
 import { CoC7Rolls } from "./systems/coc7-rolls.js";
 
+export let debugEnabled = 0;
+
 export let debug = (...args) => {
     if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
 };
@@ -86,7 +88,7 @@ export class MonksTokenBar {
 
         let canDrag = function (wrapped, ...args) {
             let result = wrapped(...args);
-            return (MonksTokenBar.allowMovement(this, false) ? result : false);
+            return (MonksTokenBar.allowMovement(this.document, false) ? result : false);
         }
 
         if (game.modules.get("lib-wrapper")?.active) {
@@ -98,13 +100,21 @@ export class MonksTokenBar {
             }
         }
 
-        let oldView = Scene.prototype.view;
-        Scene.prototype.view = async function () {
+        let sceneView = function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
                 MonksTokenBar.tokenbar.tokens = [];
                 MonksTokenBar.tokenbar.render(true);
             }
-            return oldView.call(this);
+            return wrapped(...args);
+        }
+
+        if (game.modules.get("lib-wrapper")?.active) {
+            libWrapper.register("monks-tokenbar", "Scene.prototype.view", sceneView, "WRAPPER");
+        } else {
+            const oldSceneView = Scene.prototype.view;
+            Scene.prototype.view = function (event) {
+                return sceneView.call(this, oldSceneView.bind(this), ...arguments);
+            }
         }
 
         if(setting('token-size') != 50) {
@@ -140,7 +150,7 @@ export class MonksTokenBar {
             if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
                 t = JSON.parse(t);
             if (typeof t == 'object' && t.token && t.constructor.name == 'Object') {
-                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey }, request: t.request, fastForward: t.fastForward };
+                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage }, request: t.request, fastForward: t.fastForward };
             } else {
                 t = { token: findToken(t) };
             }
@@ -341,6 +351,15 @@ export class MonksTokenBar {
                     AudioHelper.play({ src: data.sound }, false);
                 }
             } break;
+            case 'renderLootable': {
+                let entity = fromUuid(data.entityid).then(entity => {
+                    if (game.modules.get('monks-enhanced-journal')?.active && setting('loot-sheet') == 'monks-enhanced-journal') {
+                        if (!game.MonksEnhancedJournal.openJournalEntry(entity))
+                            entity.sheet.render(true);
+                    } else
+                        entity.sheet.render(true);
+                })
+            }
         }
     }
 
@@ -489,7 +508,7 @@ export class MonksTokenBar {
         }
 
         if (!game.user.isGM && token != undefined) {
-            let movement = token.document.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
+            let movement = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
             if (setting('debug'))
                 log('movement ', movement, token);
             if (movement == MTB_MOVEMENT_TYPE.NONE ||
@@ -646,6 +665,22 @@ export class MonksTokenBar {
         this.changeTokenMovement(movement, combatant.token.object);
         $(event.currentTarget).toggleClass('active', movement);
     }
+
+    static getLootSheetOptions(lootType) {
+        let lootsheetoptions = { 'none': 'Do not convert' };
+        if (game.modules.get("lootsheetnpc5e")?.active)
+            lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
+        if (game.modules.get("merchantsheetnpc")?.active)
+            lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
+        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType !='convert')
+            lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
+
+        return lootsheetoptions;
+    }
+
+    static getLootFolder() {
+
+    }
 }
 
 Hooks.once('init', async function () {
@@ -678,8 +713,7 @@ Hooks.on("ready", MonksTokenBar.ready);
 
 Hooks.on('preUpdateToken', (document, update, options, userId) => {
     if ((update.x != undefined || update.y != undefined) && !game.user.isGM) {
-        let token = document.object;
-        let allow = MonksTokenBar.allowMovement(token);
+        let allow = MonksTokenBar.allowMovement(document);
         if (!allow) {
             delete update.x;
             delete update.y;
@@ -688,7 +722,7 @@ Hooks.on('preUpdateToken', (document, update, options, userId) => {
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
-    if (game.user.isGM && setting('show-lootable-menu') && game.modules.get("lootsheetnpc5e")?.active) {
+    if (game.user.isGM && setting('show-lootable-menu') && setting('loot-sheet') != 'none') {
         let tokenControls = controls.find(control => control.name === "token")
         tokenControls.tools.push({
             name: "togglelootable",
@@ -728,6 +762,72 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         });
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
+
+    $('[name="monks-tokenbar.loot-entity"]', html).on('change', () => {
+        //folder is only needed if entity is create
+        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
+        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
+        let list = [];
+        if (type != 'convert') {
+            if (($('[name="monks-tokenbar.loot-entity"]', html).val() || setting('loot-entity')) == 'create') {
+                list.push({ id: '', name: '' });
+                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
+                    //find Actors Folders
+                    for (let entry of game.folders) {
+                        if (entry.data.type == 'Actor')
+                            list.push({ id: entry.id, name: entry.name });
+                    }
+                } else if (sheet == 'monks-enhanced-journal') {
+                    //find Journal Entry Folders
+                    for (let entry of game.folders) {
+                        if (entry.data.type == 'JournalEntry')
+                            list.push({ id: entry.id, name: entry.name });
+                    }
+                }
+            }
+        }
+
+        let folderid = setting('loot-folder');
+        $('[name="monks-tokenbar.loot-folder"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == folderid).html(e.name) }));
+    });
+
+    $('[name="monks-tokenbar.loot-sheet"]', html).on('change', () => {
+        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
+        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
+        let list = [];
+        if (type != 'convert') {
+            list.push({ id: 'create', name: '-- Create new --' });
+            if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
+                //find Actors
+                for (let entry of game.actors) {
+                    if (entry.getFlag('core', 'sheetClass') == (sheet == 'lootsheetnpc5e' ? 'dnd5e.LootSheetNPC5e' : (sheet == 'merchantsheetnpc' ? 'core.a' : '')))
+                        list.push({ id: entry.id, name: entry.name });
+                }
+            } else if (sheet == 'monks-enhanced-journal') {
+                //find Journal Entries
+                for (let entry of game.journal) {
+                    if (entry.getFlag('monks-enhanced-journal', 'type') == 'loot')
+                        list.push({ id: entry.id, name: entry.name });
+                }
+            }
+        }
+
+        let entityid = setting('loot-entity');
+        $('[name="monks-tokenbar.loot-entity"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == entityid).html(e.name) })).change();
+    });
+
+    $('[name="monks-tokenbar.loot-type"]', html).on('change', () => {
+        let sheetid = $('[name="monks-tokenbar.loot-sheet"] ', html).val() || setting('loot-sheet');
+        let list = MonksTokenBar.getLootSheetOptions($('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type'));
+
+        $('[name="monks-tokenbar.loot-sheet"] ', html).empty().append(Object.entries(list).map(([k, v]) => { return $('<option>').attr('value', k).prop('selected', k == sheetid).html(i18n(v)) })).change();
+    }).change();
+
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.request-roll-sound-file"]').parents('div.form-group:first'));
 });
 
 Hooks.on("renderCombatTracker", (app, html, data) => {
@@ -772,6 +872,10 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 });
 
+Hooks.on("setupTileGroups", (groups) => {
+    groups['monks-tokenbar'] = { name: "Monk's Token Bar" }
+});
+
 Hooks.on("setupTileActions", (actions) => {
     return Object.assign(actions, {
         'setmovement': {
@@ -779,12 +883,25 @@ Hooks.on("setupTileActions", (actions) => {
             stop: true,
             ctrls: [
                 {
+                    id: "global",
+                    name: "Change Global Movement",
+                    type: "checkbox",
+                    onClick: (app) => {
+                        app.checkConditional();
+                        app.setPosition({ height: 'auto' });
+                    },
+                    defvalue: true
+                },
+                {
                     id: "entity",
                     name: "Select Entity",
                     type: "select",
                     subtype: "entity",
-                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true, clearValue: true },
-                    restrict: (entity) => { return (entity instanceof Token); }
+                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                    restrict: (entity) => { return (entity instanceof Token); },
+                    conditional: (app) => {
+                        return !$('input[name="data.global"]', app.element).prop('checked');
+                    }
                 },
                 {
                     id: "movement",
@@ -793,6 +910,7 @@ Hooks.on("setupTileActions", (actions) => {
                     type: "list"
                 }
             ],
+            group: 'monks-tokenbar',
             values: {
                 'movement': {
                     "none": 'MonksTokenBar.NoMovement',
@@ -803,7 +921,7 @@ Hooks.on("setupTileActions", (actions) => {
             fn: async (args = {}) => {
                 const { action } = args;
                 
-                if (action.data.entity == undefined || action.data.entity == "")
+                if (!!action.data.global)
                     MonksTokenBar.changeGlobalMovement(action.data.movement);
                 else {
                     let entities = await game.MonksActiveTiles.getEntities(args);
@@ -811,8 +929,9 @@ Hooks.on("setupTileActions", (actions) => {
                     return { tokens: entities };
                 }
             },
-            content: (trigger, action) => {
-                return trigger.name + ' of ' + action.data.entity.name + ' to ' + i18n(trigger.values.movement[action.data?.movement]);
+            content: async (trigger, action) => {
+                let entityName = (!!action.data.global ? 'Everyone' : await game.MonksActiveTiles.entityName(action.data?.entity));
+                return `<span class="action-style">${trigger.name}</span> of <span class="entity-style">${entityName}</span> to <span class="details-style">"${i18n(trigger.values.movement[action.data?.movement])}"</span>`;
             }
         },
         'requestroll': {
@@ -823,14 +942,15 @@ Hooks.on("setupTileActions", (actions) => {
                     name: "Select Entity",
                     type: "select",
                     subtype: "entity",
-                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
                     restrict: (entity) => { return (entity instanceof Token); }
                 },
                 {
                     id: "request",
                     name: "Request",
                     list: () => { return MonksTokenBar.system._requestoptions; },
-                    type: "list"
+                    type: "list",
+                    required: true
                 },
                 {
                     id: "dc",
@@ -891,6 +1011,7 @@ Hooks.on("setupTileActions", (actions) => {
                     "allpass": "All Passed"
                 }
             },
+            group: 'monks-tokenbar',
             fn: async (args = {}) => {
                 const { action, tile } = args;
                 let entities = await game.MonksActiveTiles.getEntities(args);
@@ -933,17 +1054,18 @@ Hooks.on("setupTileActions", (actions) => {
                 //if we got here then we need to pause before continuing and wait until the request has been fulfilled
                 return { pause: true };
             },
-            content: (trigger, action) => {
+            content: async (trigger, action) => {
                 let parts = action.data?.request.split(':');
                 let requesttype = (parts.length > 1 ? parts[0] : '');
                 let request = (parts.length > 1 ? parts[1] : parts[0]);
                 let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-                return name + (action.data?.dc ? ', DC' + action.data?.dc : '') + (action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '');
+                let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+                return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
             }
         },
         'filterrequest': {
-            name: 'Filter Request Results',
-            group: 'filters',
+            name: 'Redirect Request Results',
+            group: 'logic',
             ctrls: [
                 {
                     id: "passed",
@@ -955,20 +1077,36 @@ Hooks.on("setupTileActions", (actions) => {
                     name: "Failed Tokens Goto",
                     type: "text"
                 },
+                {
+                    id: "resume",
+                    name: "Continue to Anchor",
+                    type: "text"
+                },
             ],
+            group: 'monks-tokenbar',
             fn: async (args = {}) => {
                 const { action, value } = args;
 
                 let goto = [];
                 if (action.data.failed) {
-                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed });
+                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
+                    if (data.tokens.length)
+                        goto.push(data);
                 }
-                if (action.data.passed)
-                    goto.push({ tokens: await Promise.all(value.tokenresults.filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed });
+
+                if (action.data.passed) {
+                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
+                    if (data.tokens.length)
+                        goto.push(data);
+                }
+
+                if (action.data.resume)
+                    goto.push({ tokens: value.tokens, tag: action.data.resume });
+
                 return { goto: goto };
             },
-            content: (trigger, action) => {
-                return trigger.name;
+            content: async (trigger, action) => {
+                return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
             }
         }
     });

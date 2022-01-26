@@ -17,7 +17,7 @@ export class SavingThrowApp extends Application {
                 return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
             }));
         }
-        this.rollmode = (options?.rollmode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
+        this.rollmode = (options?.rollmode || options?.rollMode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
         this.request = options.request;
         this.flavor = options.flavor;
@@ -88,8 +88,8 @@ export class SavingThrowApp extends Application {
             //don't add this token a second time
             if (this.entries.includes(e => e.token.id == t.id))
                 return false;
-            if (token.actor == undefined) {
-                failed.push(token.name);
+            if (t.actor == undefined) {
+                failed.push(t.name);
                 return false;
             }
             return true;
@@ -256,6 +256,7 @@ export class SavingThrowApp extends Application {
 
         $('.dialog-button.request', html).click($.proxy(this.requestRoll, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.requestRoll, this, true));
+        $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
 
         $('#monks-tokenbar-savingdc', html).blur($.proxy(function (e) {
             this.dc = $(e.currentTarget).val();
@@ -273,6 +274,19 @@ export class SavingThrowApp extends Application {
             this.rollmode = $(e.currentTarget).val();
         }, this));
     };
+
+    async saveToMacro() {
+        let tokens = this.entries.map(t => { return { token: t.token.id } });
+
+        let parts = this.request.split(':');
+        let requesttype = (parts.length > 1 ? parts[0] : '');
+        let request = (parts.length > 1 ? parts[1] : parts[0]);
+        let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
+
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        macro.sheet.render(true);
+    }
 }
 
 export class SavingThrow {
@@ -327,8 +341,8 @@ export class SavingThrow {
     static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid);
-        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
-        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
+        let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
+        let fastForward = ffwd || (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey);
 
         if (actor != undefined) {
             if (requesttype == 'dice') {
@@ -366,10 +380,20 @@ export class SavingThrow {
             if (msgtoken != undefined && msgtoken.roll == undefined) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    let e = Object.assign({}, evt, msgtoken.keys);
+                    let keys = msgtoken.keys || {};
+                    let e = Object.assign({}, evt);
+                    e.ctrlKey = evt?.ctrlKey;
+                    e.altKey = evt?.altKey;
+                    e.shiftKey = evt?.shiftKey;
+                    e.metaKey = evt?.metaKey;
+
+                    for (let [k, v] of Object.entries(keys))
+                        e[k] = evt[k] || v;
+                    MonksTokenBar.system.parseKeys(e, keys);
+
                     promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e));
                 }
             }
@@ -454,7 +478,7 @@ export class SavingThrow {
                 } else if (update.error === true) {
                     //let actor = game.actors.get(msgtoken.actorid);
                     let tokenOrActor = await fromUuid(msgtoken.uuid);
-                    let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                    let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
 
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
@@ -750,11 +774,11 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
             if (msgtoken) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
-                if (game.user.isGM || actor.isOwner)
+                if (game.user.isGM || actor?.isOwner)
                     $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll')));

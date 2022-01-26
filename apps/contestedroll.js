@@ -5,7 +5,7 @@ export class ContestedRollApp extends Application {
         super(options);
         this.opts = options;
 
-        this.rollmode = options?.rollmode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
+        this.rollmode = options?.rollmode || options?.rollMode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
@@ -175,6 +175,7 @@ export class ContestedRollApp extends Application {
 
         $('.dialog-button.request', html).click($.proxy(this.request, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.request, this, true));
+        $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
 
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
             this.flavor = $(e.currentTarget).val();
@@ -191,6 +192,14 @@ export class ContestedRollApp extends Application {
             this.rollmode = $(e.currentTarget).val();
         }, this));
     };
+
+    async saveToMacro() {
+        let name = "Contested Roll";
+
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.id}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.id}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        macro.sheet.render(true);
+    }
 }
 
 export class ContestedRoll {
@@ -233,8 +242,8 @@ export class ContestedRoll {
     static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid)
-        let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
-        let fastForward = ffwd || (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));       
+        let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
+        let fastForward = ffwd || (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey);
 
         if (actor != undefined) {
             if (requesttype == 'dice') {
@@ -265,11 +274,21 @@ export class ContestedRoll {
             if (msgtoken != undefined && msgtoken.roll == undefined) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
                 if (actor != undefined) {
                     //roll the dice, using standard details from actor
-                    let e = Object.assign({}, evt, msgtoken.modifiers);
-                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, e));
+                    let keys = msgtoken.keys || {};
+                    let e = Object.assign({}, evt);
+                    e.ctrlKey = evt?.ctrlKey;
+                    e.altKey = evt?.altKey;
+                    e.shiftKey = evt?.shiftKey;
+                    e.metaKey = evt?.metaKey;
+
+                    for (let [k, v] of Object.entries(keys))
+                        e[k] = evt[k] || v;
+                    MonksTokenBar.system.parseKeys(e, keys);
+
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, keys, evt));
                 }
             }
         };
@@ -550,11 +569,11 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
             if (msgtoken) {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
-                let actor = tokenOrActor.actor ? tokenOrActor.actor : tokenOrActor;
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
-                if (game.user.isGM || actor.isOwner)
+                if (game.user.isGM || actor?.isOwner)
                     $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id))
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll'))));
