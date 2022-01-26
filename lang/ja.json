@@ -1,5 +1,5 @@
 {
-  "Localization Provided By": "touge",
+	"Localization Provided By": "touge",
 	"MonksTokenBar.EditCharacter": "キャラクターシート",
 	"MonksTokenBar.EditToken": "トークン設定",
 	"MonksTokenBar.TargetToken": "目標に選択",
@@ -58,6 +58,12 @@
 	"MonksTokenBar.UnknownSystem": "Monk's Tokenbarはこのゲームシステムに対応していません。",
 	"MonksTokenBar.ActorNotCombatant": "イニシアチブをロールするためには、戦闘に参加している必要があります。",
 
+	"MonksTokenbar.TokenbarSettings": "トークンバー設定",
+	"MonksTokenbar.IconSettings": "アイコン設定",
+	"MonksTokenbar.MovementSettings": "移動設定",
+	"MonksTokenbar.AfterCombatSettings": "戦闘終了時設定",
+	"MonksTokenbar.RequestRollSettings": "判定リクエスト設定",
+	
 	"MonksTokenBar.notify-on-change.name": "移動モードの変更を通知する",
 	"MonksTokenBar.notify-on-change.hint": "GMが移動モードの設定を変更したとき、すべてのプレイヤーに通知を送ります。",
 	"MonksTokenBar.show-xp-dialog.name": "XPダイアログを表示する",
@@ -97,7 +103,13 @@
 	"MonksTokenBar.change-to-combat.name": "戦闘中の移動モード",
 	"MonksTokenBar.change-to-combat.hint": "戦闘が開始したときに、移動モードを“戦闘ターン”に変更します。",
 	"MonksTokenBar.assign-loot.name": "敵を戦利品に変換する",
-	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵のシートを戦利品に変換します。",
+	"MonksTokenBar.assign-loot.hint": "戦闘終了時に、倒した敵のシートを戦利品に変換するダイアログを表示します。",
+	"MonksTokenBar.loot-type.name": "戦利品の分配方法",
+	"MonksTokenBar.loot-type.hint": "戦利品の分配方法を選択します。",
+	"MonksTokenBar.loot-entity.name": "戦利品エンティティ",
+	"MonksTokenBar.loot-entity.hint": "エンティティを割り当てたときの戦利品の行き先を指定します。",
+	"MonksTokenBar.loot-folder.name": "戦利品フォルダ",
+	"MonksTokenBar.loot-folder.hint": "戦利品エンティティを作成するとき、どのフォルダに作成するかを指定します。",
 	"MonksTokenBar.popout-tokenbar.name": "トークンバーのポップアウト",
 	"MonksTokenBar.popout-tokenbar.hint": "「PopOut!」モジュールが使用できるよう、ダイアログウィンドウにトークンバーを配置します。",
 	"MonksTokenBar.delete-after-grab.name": "取り込み後の個別ロールを削除する",
@@ -124,7 +136,9 @@
 	"MonksTokenBar.capture-savingthrows.hint": "アイテムがセーヴィング・スローを要求するときに判定用のチャットカードを作成します。",
 	"MonksTokenBar.token-size.name": "コマの表示幅",
 	"MonksTokenBar.token-size.hint": "横幅が足りず属性値が表示しきれないケースに対応するため、バー上のコマの横幅を変更します。",
-	
+	"MonksTokenBar.open-loot.name": "戦利品エンティティを開く",
+	"MonksTokenBar.open-loot.hint": "戦利品エンティティが作成された、またはアイテムが転送されたときに、該当のエンティティを自動で開きます。",
+
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "アクター",
 	"MonksTokenBar.Experience": "経験値",
@@ -161,9 +175,21 @@
 	"MonksTokenBar.RollNPC": "NPCをロール",
 	"MonksTokenBar.GroupDC": "集団判定値",
 	"MonksTokenBar.AssignByCR": "CRからGPを割り当てる",
-	"MonksTokenBar.ConvertToLootable": "ルートシートに変換",
+	"MonksTokenBar.ConvertToLootable": "戦利品に変換",
+	"MonksTokenBar.TransferToLootable": "戦利品に転送",
 	"MonksTokenBar.Gold": "GP",
 	"MonksTokenBar.Levelup": "レベルアップ可能なXPに到達しました！",
 	"MonksTokenBar.EditStats": "表示値の編集",
-	"MonksTokenBar.Flavor": "説明文"
+	"MonksTokenBar.Flavor": "説明文",
+	"MonksTokenBar.Convert": "すべてのアクターを個別に戦利品化する",
+	"MonksTokenBar.Transfer": "アイテムを一つのエンティティに転送する",
+	"MonksTokenBar.TransferPlus": "アイテムを一つのエンティティに転送し、シーンにリンクを追加する",
+	"MonksTokenBar.CreateEntityName": "新しいエンティティ名",
+	"MonksTokenBar.ClearCurrentItems": "現在のアイテムを消去",
+	"MonksTokenBar.SaveToMacro": "マクロに保存",
+
+	"MonksTokenBar.None": "無効",
+	"MonksTokenBar.GMOnly": "GMのみ",
+	"MonksTokenBar.PlayersOnly": "プレイヤーのみ",
+	"MonksTokenBar.Everyone": "全員"
 }
