@@ -1,3 +1,13 @@
+## Version 1.0.63
+
+Fixed issue where Lootable currency was being added as a string rather than as numbers.
+
+Fixed issue where a null value in the currency field was causing lootables to ignore that it was there.
+
+Fixed issue with the name change of DnD4e Beta.
+
+Fixed issue with removing second token in contested roll.
+
 ## Version 1.0.62
 
 Fixed an issue with macros generated not gettign the correct roll mode when calling a requested roll.

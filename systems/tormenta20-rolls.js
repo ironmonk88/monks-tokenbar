@@ -4,6 +4,7 @@ import { i18n, log, setting, error } from "../monks-tokenbar.js"
 export class Tormenta20Rolls extends BaseRolls {
     constructor() {
         super();
+        this._config = CONFIG.T20;
 
         this._requestoptions = [
             { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.atributos },

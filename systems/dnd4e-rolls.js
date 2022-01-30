@@ -5,6 +5,8 @@ export class DnD4eRolls extends BaseRolls {
     constructor() {
         super();
 
+        this._config = CONFIG.DND4EBETA || CONFIG.DND4E;
+
         let savingThrow = duplicate(this.config.def);
         delete savingThrow.ac;
 

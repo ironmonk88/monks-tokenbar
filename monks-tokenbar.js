@@ -236,6 +236,7 @@ export class MonksTokenBar {
             case 'd35e':
                 MonksTokenBar.system = new D35eRolls(); break;
             case 'dnd4ebeta':
+            case 'dnd4e':
                 MonksTokenBar.system = new DnD4eRolls(); break;
             case 'pf1':
                 MonksTokenBar.system = new PF1Rolls(); break;

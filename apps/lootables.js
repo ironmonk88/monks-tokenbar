@@ -320,7 +320,7 @@ export class LootablesApp extends FormApplication {
 
                 for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                     if (entry.currency[curr] != undefined)
-                        newActorData[`data.currency.${curr}`] = (entry.actor.data.data.currency[curr].value != undefined ? { value: entry.currency[curr] } : entry.currency[curr]);
+                        newActorData[`data.currency.${curr}`] = (entry.actor.data.data.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
                 }
 
                 newActorData = expandObject(newActorData);
@@ -437,7 +437,7 @@ export class LootablesApp extends FormApplication {
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                         let oldValue = this.getCurrency(entry.actor.data.data.currency[curr]);
                         if (oldValue != undefined) {
-                            let newVal = (currency[curr].value || currency[curr] || 0) + oldValue
+                            let newVal = parseInt(currency[curr].value || currency[curr] || 0) + parseInt(oldValue)
                             currency[curr] = (currency[curr].value != undefined ? { value: newVal } : newVal);
                         }
                     }
@@ -451,7 +451,7 @@ export class LootablesApp extends FormApplication {
 
                     let currency = entity.getFlag("monks-enhanced-journal", "currency") || {};
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                        currency[curr] = (currency[curr] || 0) + (entry.currency[curr] || 0);
+                        currency[curr] = parseInt(currency[curr] || 0) + parseInt(entry.currency[curr] || 0);
                     }
                     await entity.setFlag('monks-enhanced-journal', 'currency', currency);
                 }
