@@ -873,242 +873,239 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 });
 
-Hooks.on("setupTileGroups", (groups) => {
-    groups['monks-tokenbar'] = { name: "Monk's Token Bar" }
-});
-
-Hooks.on("setupTileActions", (actions) => {
-    return Object.assign(actions, {
-        'setmovement': {
-            name: 'Change Movement Mode',
-            stop: true,
-            ctrls: [
-                {
-                    id: "global",
-                    name: "Change Global Movement",
-                    type: "checkbox",
-                    onClick: (app) => {
-                        app.checkConditional();
-                        app.setPosition({ height: 'auto' });
-                    },
-                    defvalue: true
+Hooks.on("setupTileActions", (app) => {
+    app.registerTileGroup('monks-tokenbar', "Monk's Token Bar");
+    app.registerTileAction('monks-tokenbar', 'setmovement', {
+        name: 'Change Movement Mode',
+        stop: true,
+        ctrls: [
+            {
+                id: "global",
+                name: "Change Global Movement",
+                type: "checkbox",
+                onClick: (app) => {
+                    app.checkConditional();
+                    app.setPosition({ height: 'auto' });
                 },
-                {
-                    id: "entity",
-                    name: "Select Entity",
-                    type: "select",
-                    subtype: "entity",
-                    options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
-                    restrict: (entity) => { return (entity instanceof Token); },
-                    conditional: (app) => {
-                        return !$('input[name="data.global"]', app.element).prop('checked');
-                    }
-                },
-                {
-                    id: "movement",
-                    name: "Allow Movement",
-                    list: "movement",
-                    type: "list"
-                }
-            ],
-            group: 'monks-tokenbar',
-            values: {
-                'movement': {
-                    "none": 'MonksTokenBar.NoMovement',
-                    "free": 'MonksTokenBar.FreeMovement',
-                    "combat": 'MonksTokenBar.CombatTurn'
+                defvalue: true
+            },
+            {
+                id: "entity",
+                name: "Select Entity",
+                type: "select",
+                subtype: "entity",
+                options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                restrict: (entity) => { return (entity instanceof Token); },
+                conditional: (app) => {
+                    return !$('input[name="data.global"]', app.element).prop('checked');
                 }
             },
-            fn: async (args = {}) => {
-                const { action } = args;
-                
-                if (!!action.data.global)
-                    MonksTokenBar.changeGlobalMovement(action.data.movement);
-                else {
-                    let entities = await game.MonksActiveTiles.getEntities(args);
-                    MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
-                    return { tokens: entities };
-                }
-            },
-            content: async (trigger, action) => {
-                let entityName = (!!action.data.global ? 'Everyone' : await game.MonksActiveTiles.entityName(action.data?.entity));
-                return `<span class="action-style">${trigger.name}</span> of <span class="entity-style">${entityName}</span> to <span class="details-style">"${i18n(trigger.values.movement[action.data?.movement])}"</span>`;
+            {
+                id: "movement",
+                name: "Allow Movement",
+                list: "movement",
+                type: "list"
+            }
+        ],
+        group: 'monks-tokenbar',
+        values: {
+            'movement': {
+                "none": 'MonksTokenBar.NoMovement',
+                "free": 'MonksTokenBar.FreeMovement',
+                "combat": 'MonksTokenBar.CombatTurn'
             }
         },
-        'requestroll': {
-            name: 'Request Roll',
-            ctrls: [
-                {
-                    id: "entity",
-                    name: "Select Entity",
-                    type: "select",
-                    subtype: "entity",
-                    options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
-                    restrict: (entity) => { return (entity instanceof Token); }
-                },
-                {
-                    id: "request",
-                    name: "Request",
-                    list: () => { return MonksTokenBar.system._requestoptions; },
-                    type: "list",
-                    required: true
-                },
-                {
-                    id: "dc",
-                    name: "DC",
-                    type: "number"
-                },
-                {
-                    id: "flavor",
-                    name: "Flavor Text",
-                    type: "text"
-                },
-                {
-                    id: "rollmode",
-                    name: "Roll Mode",
-                    list: "rollmode",
-                    type: "list"
-                },
-                {
-                    id: "silent",
-                    name: "Bypass Dialog",
-                    type: "checkbox"
-                },
-                {
-                    id: "fastforward",
-                    name: "Auto Roll",
-                    type: "checkbox"
-                },
-                {
-                    id: "usetokens",
-                    name: "Continue with",
-                    list: "usetokens",
-                    type: "list"
-                },
-                {
-                    id: "continue",
-                    name: "Continue if",
-                    list: "continue",
-                    type: "list"
-                }
-            ],
-            values: {
-                'rollmode': {
-                    "roll": i18n('MonksTokenBar.PublicRoll'),
-                    "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
-                    "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
-                    "selfroll": i18n('MonksTokenBar.SelfRoll')
-                },
-                'usetokens': {
-                    "all": "All Tokens",
-                    "fail": "Tokens that Fail",
-                    "succeed": "Tokens that Succeed"
-                },
-                'continue': {
-                    "always": "Always",
-                    "failed": "Any Failed",
-                    "passed": "Any Passed",
-                    "allfail": "All Failed",
-                    "allpass": "All Passed"
-                }
-            },
-            group: 'monks-tokenbar',
-            fn: async (args = {}) => {
-                const { action, tile } = args;
+        fn: async (args = {}) => {
+            const { action } = args;
+
+            if (!!action.data.global)
+                MonksTokenBar.changeGlobalMovement(action.data.movement);
+            else {
                 let entities = await game.MonksActiveTiles.getEntities(args);
-
-                if (entities.length == 0)
-                    return;
-
-                entities = entities.map(e => e.object);
-
-                let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc, flavor: action.data.flavor });
-                savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
-                if (action.data.silent === true) {
-                    let msg = await savingthrow.requestRoll();
-                    if (action.data.fastforward === true) {
-                        //need to delay slightly so the original action has time to save a state properly.
-                        window.setTimeout(function () {
-                            SavingThrow.onRollAll('all', msg);
-                        }, 100);
-                        //let result = await SavingThrow.onRollAll('all', msg);
-                        /*
-                        if (action.data.usetokens == 'fail' || action.data.usetokens == 'succeed') {
-                            result.tokens = result.tokenresults.filter(r => r.passed == (action.data.usetokens == 'succeed'));
-                            for (let i = 0; i < result.tokens.length; i++) {
-                                result.tokens[i] = await fromUuid(result.tokens[i].uuid);
-                            }
-                        }
-
-                        result.continue = action.data.continue == 'always' ||
-                            (action.data.continue == 'passed' && result.passed > 0) ||
-                            (action.data.continue == 'failed' && result.failed > 0) ||
-                            (action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
-                            (action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
-                        //(action.data.continue == 'passed' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
-                        return result;*/
-                    }
-                }
-                else
-                    savingthrow.render(true);
-
-                //if we got here then we need to pause before continuing and wait until the request has been fulfilled
-                return { pause: true };
-            },
-            content: async (trigger, action) => {
-                let parts = action.data?.request.split(':');
-                let requesttype = (parts.length > 1 ? parts[0] : '');
-                let request = (parts.length > 1 ? parts[1] : parts[0]);
-                let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-                let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
-                return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
+                MonksTokenBar.changeTokenMovement((typeof action.data.movement == 'boolean' ? (action.data.movement ? MTB_MOVEMENT_TYPE.FREE : MTB_MOVEMENT_TYPE.NONE) : action.data.movement), entities);
+                return { tokens: entities };
             }
         },
-        'filterrequest': {
-            name: 'Redirect Request Results',
-            group: 'logic',
-            ctrls: [
-                {
-                    id: "passed",
-                    name: "Passed Tokens Goto",
-                    type: "text"
-                },
-                {
-                    id: "failed",
-                    name: "Failed Tokens Goto",
-                    type: "text"
-                },
-                {
-                    id: "resume",
-                    name: "Continue to Anchor",
-                    type: "text"
-                },
-            ],
-            group: 'monks-tokenbar',
-            fn: async (args = {}) => {
-                const { action, value } = args;
+        content: async (trigger, action) => {
+            let entityName = (!!action.data.global ? 'Everyone' : await game.MonksActiveTiles.entityName(action.data?.entity));
+            return `<span class="action-style">${trigger.name}</span> of <span class="entity-style">${entityName}</span> to <span class="details-style">"${i18n(trigger.values.movement[action.data?.movement])}"</span>`;
+        }
+    });
 
-                let goto = [];
-                if (action.data.failed) {
-                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
-                    if (data.tokens.length)
-                        goto.push(data);
-                }
-
-                if (action.data.passed) {
-                    let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
-                    if (data.tokens.length)
-                        goto.push(data);
-                }
-
-                if (action.data.resume)
-                    goto.push({ tokens: value.tokens, tag: action.data.resume });
-
-                return { goto: goto };
+    app.registerTileAction('monks-tokenbar', 'requestroll', {
+        name: 'Request Roll',
+        ctrls: [
+            {
+                id: "entity",
+                name: "Select Entity",
+                type: "select",
+                subtype: "entity",
+                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                restrict: (entity) => { return (entity instanceof Token); }
             },
-            content: async (trigger, action) => {
-                return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
+            {
+                id: "request",
+                name: "Request",
+                list: () => { return MonksTokenBar.system._requestoptions; },
+                type: "list",
+                required: true
+            },
+            {
+                id: "dc",
+                name: "DC",
+                type: "number"
+            },
+            {
+                id: "flavor",
+                name: "Flavor Text",
+                type: "text"
+            },
+            {
+                id: "rollmode",
+                name: "Roll Mode",
+                list: "rollmode",
+                type: "list"
+            },
+            {
+                id: "silent",
+                name: "Bypass Dialog",
+                type: "checkbox"
+            },
+            {
+                id: "fastforward",
+                name: "Auto Roll",
+                type: "checkbox"
+            },
+            {
+                id: "usetokens",
+                name: "Continue with",
+                list: "usetokens",
+                type: "list"
+            },
+            {
+                id: "continue",
+                name: "Continue if",
+                list: "continue",
+                type: "list"
             }
+        ],
+        values: {
+            'rollmode': {
+                "roll": i18n('MonksTokenBar.PublicRoll'),
+                "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
+                "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
+                "selfroll": i18n('MonksTokenBar.SelfRoll')
+            },
+            'usetokens': {
+                "all": "All Tokens",
+                "fail": "Tokens that Fail",
+                "succeed": "Tokens that Succeed"
+            },
+            'continue': {
+                "always": "Always",
+                "failed": "Any Failed",
+                "passed": "Any Passed",
+                "allfail": "All Failed",
+                "allpass": "All Passed"
+            }
+        },
+        group: 'monks-tokenbar',
+        fn: async (args = {}) => {
+            const { action, tile } = args;
+            let entities = await game.MonksActiveTiles.getEntities(args);
+
+            if (entities.length == 0)
+                return;
+
+            entities = entities.map(e => e.object);
+
+            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc, flavor: action.data.flavor });
+            savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
+            if (action.data.silent === true) {
+                let msg = await savingthrow.requestRoll();
+                if (action.data.fastforward === true) {
+                    //need to delay slightly so the original action has time to save a state properly.
+                    window.setTimeout(function () {
+                        SavingThrow.onRollAll('all', msg);
+                    }, 100);
+                    //let result = await SavingThrow.onRollAll('all', msg);
+                    /*
+                    if (action.data.usetokens == 'fail' || action.data.usetokens == 'succeed') {
+                        result.tokens = result.tokenresults.filter(r => r.passed == (action.data.usetokens == 'succeed'));
+                        for (let i = 0; i < result.tokens.length; i++) {
+                            result.tokens[i] = await fromUuid(result.tokens[i].uuid);
+                        }
+                    }
+
+                    result.continue = action.data.continue == 'always' ||
+                        (action.data.continue == 'passed' && result.passed > 0) ||
+                        (action.data.continue == 'failed' && result.failed > 0) ||
+                        (action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
+                        (action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
+                    //(action.data.continue == 'passed' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
+                    return result;*/
+                }
+            }
+            else
+                savingthrow.render(true);
+
+            //if we got here then we need to pause before continuing and wait until the request has been fulfilled
+            return { pause: true };
+        },
+        content: async (trigger, action) => {
+            let parts = action.data?.request.split(':');
+            let requesttype = (parts.length > 1 ? parts[0] : '');
+            let request = (parts.length > 1 ? parts[1] : parts[0]);
+            let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+            return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
+        }
+    });
+
+    app.registerTileAction('monks-tokenbar', 'filterrequest', {
+        name: 'Redirect Request Results',
+        group: 'logic',
+        ctrls: [
+            {
+                id: "passed",
+                name: "Passed Tokens Goto",
+                type: "text"
+            },
+            {
+                id: "failed",
+                name: "Failed Tokens Goto",
+                type: "text"
+            },
+            {
+                id: "resume",
+                name: "Continue to Anchor",
+                type: "text"
+            },
+        ],
+        group: 'filters',
+        fn: async (args = {}) => {
+            const { action, value } = args;
+
+            let goto = [];
+            if (action.data.failed) {
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
+                if (data.tokens.length)
+                    goto.push(data);
+            }
+
+            if (action.data.passed) {
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
+                if (data.tokens.length)
+                    goto.push(data);
+            }
+
+            if (action.data.resume)
+                goto.push({ tokens: value.tokens, tag: action.data.resume });
+
+            return { goto: goto };
+        },
+        content: async (trigger, action) => {
+            return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
         }
     });
 })

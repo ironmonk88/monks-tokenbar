@@ -8,6 +8,8 @@ Fixed issue with the name change of DnD4e Beta.
 
 Fixed issue with removing second token in contested roll.
 
+Updated integration with Active Tiles.
+
 ## Version 1.0.62
 
 Fixed an issue with macros generated not gettign the correct roll mode when calling a requested roll.
