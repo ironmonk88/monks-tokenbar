@@ -33,6 +33,8 @@ export class ContestedRollApp extends Application {
             return e;
         });
 
+        this.callback = options.callback
+
         /*
         this.item0 = item0 || {token: null, request: null};
         this.item0.token = (this.item0.token || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null));
@@ -150,6 +152,7 @@ export class ContestedRollApp extends Application {
             msg.mtb_callback = this.opts.callback;
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll' && roll !== false)
                 MonksTokenBar.playSound(setting('request-roll-sound-file'), requestedPlayers);
+            this.requestingResults = true;
             this.close();
 
             if (this['active-tiles'])
@@ -248,7 +251,7 @@ export class ContestedRoll {
         if (actor != undefined) {
             if (requesttype == 'dice') {
                 //roll the dice
-                return ContestedRoll.rollDice(request).then((roll) => { return returnRoll(roll); });
+                return ContestedRoll.rollDice(request).then((roll) => { return ContestedRoll.returnRoll(data.id, roll, actor, rollmode); });
             } else {
                 if (MonksTokenBar.system._supportedSystem) { //game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
                     return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
@@ -293,7 +296,7 @@ export class ContestedRoll {
             }
         };
 
-        Promise.all(promises).then(response => {
+        return Promise.all(promises).then(async (response) => {
             log('roll all finished', response);
             if (!game.user.isGM) {
                 let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
@@ -313,7 +316,7 @@ export class ContestedRoll {
                 }
             } else {
                 const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-                ContestedRoll.updateMessage(response, message, revealDice);
+                return await ContestedRoll.updateMessage(response, message, revealDice);
             }
         });
 
@@ -372,7 +375,7 @@ export class ContestedRoll {
             }
         }
 
-        message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } }).then(() => {
+        await message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } }).then(() => {
             ContestedRoll.checkResult(message);
         });
 
@@ -382,6 +385,30 @@ export class ContestedRoll {
                 ContestedRoll.finishRolling(response, message);
             });
         }
+
+        let total = 0;
+        let tokenresults = Object.entries(message.data.flags['monks-tokenbar'])
+            .filter(([k, v]) => {
+                return k.startsWith('token')
+            })
+            .map(([k, token]) => {
+                //let pass = null;
+                if (token.roll) total += token.roll.total;
+
+                return {
+                    id: token.id,
+                    uuid: token.uuid,
+                    roll: token.roll,
+                    name: token.name,
+                    //passed: pass,
+                    actor: game.actors.get(token.actorid)
+                }
+            });
+
+        let result = {tokenresults: tokenresults};
+        if (message.mtb_callback) message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
+        return result;
+
 
         /*
         let actorid = responses[0].actorid;
