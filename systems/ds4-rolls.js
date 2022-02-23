@@ -6,10 +6,11 @@ export class DS4Rolls extends BaseRolls {
         super();
 
         this._config = CONFIG.DS4
-
+        /* TODO: No point in exposing, until rolling dice is fixed
         this._requestoptions = [
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.i18nKeys.checks },
         ].concat(this._requestoptions);
+        */
     }
 
     get _supportedSystem() {
@@ -21,7 +22,7 @@ export class DS4Rolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.data.data.progression.experiencePoints;
+        return actor.data.data.progression?.experiencePoints || 0;
     }
 
     get defaultStats() {
@@ -30,7 +31,7 @@ export class DS4Rolls extends BaseRolls {
         { stat: "checks.perception", icon: "fa-eye" }];
     }
 
-    /*  TODO: Rolls work in general, but results are not evaluated by monks-tokenbar
+    /*  TODO: Rolls technically work, but results are not returned by the DS4 system (Promise<void>)
 
         defaultRequest(app) {
             let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
