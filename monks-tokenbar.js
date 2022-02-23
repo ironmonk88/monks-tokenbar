@@ -7,6 +7,7 @@ import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
 
 import { BaseRolls } from "./systems/base-rolls.js";
+import { DS4Rolls } from "./systems/ds4-rolls.js";
 import { DnD5eRolls } from "./systems/dnd5e-rolls.js";
 import { DnD4eRolls } from "./systems/dnd4e-rolls.js";
 import { D35eRolls } from "./systems/d35e-rolls.js";
@@ -66,7 +67,7 @@ export class MonksTokenBar {
     static tokenbar = null;
 
     static init() {
-	    log("initializing");
+        log("initializing");
         // element statics
         //CONFIG.debug.hooks = true;
 
@@ -117,20 +118,20 @@ export class MonksTokenBar {
             }
         }
 
-        if(setting('token-size') != 50) {
+        if (setting('token-size') != 50) {
             let innerHTML = `
 #tokenbar .token {
     flex: 0 0 ${setting('token-size')}px;
     width: ${setting('token-size')};
 }
 `;
-        let style = document.createElement("style");
-        style.id = "monkstokenbar-css-changes";
+            let style = document.createElement("style");
+            style.id = "monkstokenbar-css-changes";
 
-        style.innerHTML = innerHTML;
-        if (innerHTML != '')
-            document.querySelector("head").appendChild(style);
-    }
+            style.innerHTML = innerHTML;
+            if (innerHTML != '')
+                document.querySelector("head").appendChild(style);
+        }
     }
 
     static getTokenEntries(tokens) {
@@ -171,7 +172,7 @@ export class MonksTokenBar {
         if (!setting('capture-savingthrows'))
             return;
 
-        let _getChatCardActor = async function(card) {
+        let _getChatCardActor = async function (card) {
             // Case 1 - a synthetic actor from a Token
             if (card.dataset.tokenId) {
                 const token = await fromUuid(card.dataset.tokenId);
@@ -184,7 +185,7 @@ export class MonksTokenBar {
             return game.actors.get(actorId) || null;
         }
 
-        let _getChatCardTargets = function(card) {
+        let _getChatCardTargets = function (card) {
             let targets = canvas.tokens.controlled.filter(t => !!t.actor);
             if (!targets.length && game.user.character) targets = targets.concat(game.user.character.getActiveTokens());
             if (!targets.length) ui.notifications.warn(game.i18n.localize("DND5E.ActionWarningNoToken"));
@@ -252,6 +253,8 @@ export class MonksTokenBar {
                 MonksTokenBar.system = new SwadeRolls(); break;
             case 'coc7':
                 MonksTokenBar.system = new CoC7Rolls(); break;
+            case 'ds4':
+                MonksTokenBar.system = new DS4Rolls(); break;
         }
 
         MonksTokenBar.system.constructor.activateHooks();
@@ -366,7 +369,7 @@ export class MonksTokenBar {
 
     static manageTokenControl(tokens, options) {
         let { shiftKey, force } = options;
-        
+
         //if !shift then release all currently selected
         if (!shiftKey || force)
             canvas.tokens.releaseAll();
@@ -611,7 +614,7 @@ export class MonksTokenBar {
             MonksTokenBar.grabmessage = null;
         else {
             MonksTokenBar.grabmessage = message;
-            if(message != undefined)
+            if (message != undefined)
                 $('#chat-log .chat-message[data-message-id="' + MonksTokenBar.grabmessage.id + '"]').addClass('grabbing');
         }
 
@@ -673,7 +676,7 @@ export class MonksTokenBar {
             lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
         if (game.modules.get("merchantsheetnpc")?.active)
             lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
-        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType !='convert')
+        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType != 'convert')
             lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
 
         return lootsheetoptions;
@@ -855,7 +858,7 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
     if (game.user.isGM) {
         let include = app.token.getFlag('monks-tokenbar', 'include') || 'default';
         include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-            //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
+        //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
         $('<div>')
             .addClass('form-group')
             .append($('<label>').html('Show on Tokenbar'))
