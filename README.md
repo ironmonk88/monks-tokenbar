@@ -39,7 +39,7 @@ Guide to Roll Mode:
 Public Roll will show everyone who's involved and their roll.  
 Private GM Roll will show the player everyone else involved but will only reveal their own roll/success.  
 Blind Roll will only show the player that they're involved and will not show the result of the roll.  
-Blind mode won't show the players at all.  The GM will have to roll the dice themselves.
+Self Roll won't show the players at all.  The GM will have to roll the dice themselves.
 
 ### Assign XP Dialog
 ![monks-tokenbar](screenshots/AssignXP.webp)
