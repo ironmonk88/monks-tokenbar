@@ -65,7 +65,9 @@ Please feel free to contact me on discord if you have any questions or concerns.
 ## Support
 
 If you feel like being generous, stop by my <a href="https://www.patreon.com/ironmonk">patreon</a>.
+
 Or my Ko-fi [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R6R7BH5MT)
+
 Not necessary but definitely appreciated.
 
 ## License
