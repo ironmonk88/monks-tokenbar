@@ -180,6 +180,7 @@
 	"MonksTokenBar.Levelup": "You have enough xp to level up!",
 	"MonksTokenBar.EditStats": "Edit Stats",
 	"MonksTokenBar.Flavor": "Flavor",
+	"MonksTokenBar.UseDegreesOfSuccess": "Use degrees of success",
 	"MonksTokenBar.Convert": "Convert all Actors to be individually lootable",
 	"MonksTokenBar.Transfer": "Transfer items to single Entity",
 	"MonksTokenBar.TransferPlus": "Transfer items to single Entity and add link on Scene",

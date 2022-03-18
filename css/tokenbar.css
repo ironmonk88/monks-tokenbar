@@ -413,7 +413,7 @@ body #tokenbar-window:first-child{
     flex: 2;
 }
 
-.monks-tokenbar .sheet .items-list .item-name h3, 
+.monks-tokenbar .sheet .items-list .item-name h3,
 .monks-tokenbar .sheet .items-list .item-name h4 {
     margin: 0;
     white-space: nowrap;
@@ -683,6 +683,10 @@ body #tokenbar-window:first-child{
     justify-content: flex-end;
 }
 
+.monks-tokenbar .sheet.actor .inventory-list .success-degrees {
+    flex: 1.4;
+}
+
 .monks-tokenbar .sheet.actor .items-list .item .item-name {
     cursor: pointer;
 }
@@ -763,11 +767,13 @@ body #tokenbar-window:first-child{
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.result-passed.selected,
+.monks-tokenbar li.item .dice-roll .dice-total a.result-crit-passed.selected,
 .monks-tokenbar li.item .dice-roll .dice-total .dice-result.success .total{
     color: #468847;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.result-failed.selected,
+.monks-tokenbar li.item .dice-roll .dice-total a.result-crit-failed.selected,
 .monks-tokenbar li.item .dice-roll .dice-total .dice-result.fail .total {
     color: #b94a48;
 }

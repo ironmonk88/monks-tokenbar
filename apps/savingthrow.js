@@ -21,6 +21,10 @@ export class SavingThrowApp extends Application {
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
         this.request = options.request;
         this.flavor = options.flavor;
+        this.degrees = options.degrees;
+        if(this.degrees === undefined && game.system.id == 'pf2e') {
+            this.degrees = true;
+        }
 
         //find best match for request
         if (options.request) {
@@ -63,6 +67,7 @@ export class SavingThrowApp extends Application {
             request: this.request,
             rollmode: this.rollmode,
             flavor: this.flavor,
+            degrees: this.degrees,
             dc: this.dc, 
             dclabel: MonksTokenBar.system.dcLabel,
             options: this.requestoptions
@@ -174,10 +179,12 @@ export class SavingThrowApp extends Application {
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
             let flavor = this.flavor;
+            let degrees = this.degrees;
             let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
                 dc: this.dc || (request == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
+                degrees: degrees,
                 name: name,
                 requesttype: requesttype,
                 request: request,
@@ -273,6 +280,9 @@ export class SavingThrowApp extends Application {
         $('#savingthrow-rollmode', html).change($.proxy(function (e) {
             this.rollmode = $(e.currentTarget).val();
         }, this));
+        $('#monks-tokenbar-degreesofsuccess', html).change($.proxy(function (e) {
+            this.degrees = e.currentTarget.checked;
+        }, this));
     };
 
     async saveToMacro() {
@@ -283,7 +293,7 @@ export class SavingThrowApp extends Application {
         let request = (parts.length > 1 ? parts[1] : parts[0]);
         let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
 
-        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}, degrees: ${this.degrees}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
         macro.sheet.render(true);
     }
@@ -432,6 +442,7 @@ export class SavingThrow {
         if (updates == undefined) return;
 
         let dc = message.getFlag('monks-tokenbar', 'dc');
+        let degrees = message.getFlag('monks-tokenbar', 'degrees');
         let content = $(message.data.content);
 
         let flags = {};
@@ -454,23 +465,55 @@ export class SavingThrow {
                         Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
                     }
 
-                    if (dc != '')
-                        msgtoken.passed = (msgtoken.total >= dc);
+                    if (dc != '') {
+                        let successDegree = (msgtoken.total >= dc) ? 1 : 0;
+                        if((Math.abs(msgtoken.total - dc) >= 10)) {
+                            if(successDegree > 0) {
+                                successDegree++;
+                            } else {
+                                successDegree--;
+                            }
+                        }
+                        if (game.system.id == 'pf2e') {
+                            const firstDieResult = msgtoken.roll.terms[0]?.results[0]?.result;
+                            if(firstDieResult === 1) {
+                                successDegree--;
+                            }
+                            if(firstDieResult === 20) {
+                                successDegree++;
+                            }
+                        }
 
+                        msgtoken.passed = successDegree > 0;
+                        if(degrees) {
+                            msgtoken.crit = successDegree > 1 || successDegree < 0;
+                        } else {
+                            msgtoken.crit = false;
+                        }
+                    }
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
                     $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
+                    if(degrees) {
+                        $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).addClass('success-degrees');
+                    }
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
                         `<div class="dice-total flexrow noselect" style="display:none;">
                         <div class="dice-result noselect ${(msgtoken.reveal ? 'reveal' : '')}"><span class="smoke-screen">...</span><span class="total">${msgtoken.total}</span></div >
+                        ${degrees ? `<a class="item-control result-crit-passed gm-only" title="${i18n("MonksTokenBar.RollCritPassed")}" data-control="rollCritPassed">
+                            <i class="fas fa-check-double"></i>
+                        </a>` : ''}
                         <a class="item-control result-passed gm-only" title="${i18n("MonksTokenBar.RollPassed")}" data-control="rollPassed">
                             <i class="fas fa-check"></i>
                         </a>
                         <a class="item-control result-failed gm-only" title="${i18n("MonksTokenBar.RollFailed")}" data-control="rollFailed">
                             <i class="fas fa-times"></i>
                         </a>
+                        ${degrees ? `<a class="item-control result-crit-failed gm-only" title="${i18n("MonksTokenBar.RollCritFailed")}" data-control="rollCritFailed">
+                            <i class="fas fa-ban"></i>
+                        </a>` : ''}
                         <div class="dice-text player-only"></div>
                     </div >`);
                     flags["token" + update.id] = msgtoken;
@@ -651,14 +694,18 @@ export class SavingThrow {
         }
     }
 
-    static async setRollSuccess(tokenid, message, success) {
+    static async setRollSuccess(tokenid, message, success, crit = false) {
         //let actors = JSON.parse(JSON.stringify(message.getFlag('monks-tokenbar', 'actors')));
         let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + tokenid)); //actors.find(a => { return a.id == actorid; });
 
-        if (msgtoken.passed === success)
+        if (msgtoken.passed === success && msgtoken.crit === crit) {
             msgtoken.passed = null;
-        else
+            msgtoken.crit = null;
+        }
+        else {
             msgtoken.passed = success;
+            msgtoken.crit = crit;
+        }
 
         await message.setFlag('monks-tokenbar', 'token' + tokenid, msgtoken);
     }
@@ -742,6 +789,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
 
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);
+    $('#monks-tokenbar-degreesofsuccess', html)[0].checked = app.degrees;
 
     //$('.item-control[data-type="monster"]', html).hide();
 });
@@ -807,8 +855,11 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     //    $('.dice-tooltip', item).empty().append(tooltip);
                     //}
                     $('.dice-tooltip', item).toggleClass('noshow', !showroll);
-                    $('.result-passed', item).toggle(request != 'init').toggleClass('recommended', dc != '' && roll.total >= dc).toggleClass('selected', msgtoken.passed === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
-                    $('.result-failed', item).toggle(request != 'init').toggleClass('recommended', dc != '' && roll.total < dc).toggleClass('selected', msgtoken.passed === false).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
+                    const dcNumber = Number.parseInt(dc);
+                    $('.result-passed', item).toggle(request != 'init').toggleClass('recommended', dcNumber != '' && roll.total >= dcNumber && !msgtoken.crit).toggleClass('selected', msgtoken.passed === true && !msgtoken.crit).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true, false));
+                    $('.result-failed', item).toggle(request != 'init').toggleClass('recommended', dcNumber != '' && roll.total < dcNumber && !msgtoken.crit).toggleClass('selected', msgtoken.passed === false && !msgtoken.crit).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false, false));
+                    $('.result-crit-passed', item).toggle(request != 'init').toggleClass('recommended', dcNumber != '' && roll.total >= dcNumber + 10).toggleClass('selected', msgtoken.passed === true && msgtoken.crit === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true, true));
+                    $('.result-crit-failed', item).toggle(request != 'init').toggleClass('recommended', dcNumber != '' && roll.total < dcNumber - 10).toggleClass('selected', msgtoken.passed === false && msgtoken.crit === true).click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false, true));
 
                     //let dicetext = (request == 'death' && !msgtoken.assigned ? i18n("MonksTokenBar.XPAdd") : (msgtoken.passed === true ? i18n("MonksTokenBar.Passed") : msgtoken.passed === false ? i18n("MonksTokenBar.Failed") : ''));
                     let dicetext = (msgtoken.passed === true ? '<i class="fas fa-check"></i>' : msgtoken.passed === false ? '<i class="fas fa-times"></i>' : ''); //i18n("MonksTokenBar.Passed")

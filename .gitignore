@@ -1,2 +1,5 @@
 .svn/
 .vs/
+.idea/
+*.iml
+*.lock
