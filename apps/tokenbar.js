@@ -1,4 +1,5 @@
-import { MonksTokenBar, log, error, i18n, setting, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, debug, i18n, setting, MTB_MOVEMENT_TYPE } from "../monks-tokenbar.js";
+import { SavingThrowApp } from "./savingthrow.js";
 import { EditStats } from "./editstats.js";
 
 export class TokenBar extends Application {
@@ -171,9 +172,14 @@ export class TokenBar extends Application {
                 let include = t.getFlag('monks-tokenbar', 'include');
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
 
-                return t.actor != undefined &&
-                    (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER")) &&
-                    ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include');
+                let hasActor = (t.actor != undefined);
+                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER"));
+                let disp = ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include')
+
+                let addToken = hasActor && canView && disp;
+                debug("Checking token", t, addToken, hasActor, canView, disp, include);
+
+                return addToken;
             })
             .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => {
@@ -412,7 +418,7 @@ export class TokenBar extends Application {
                         !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
                     )
                     .map(u => {
-                        return u.name;
+                        return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);
                     });
                     $("#chat-message").val('/w ' + players.join(' ') + ' ');
                     $("#chat-message").focus();
@@ -547,12 +553,20 @@ export class TokenBar extends Application {
         const li = event.currentTarget;
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
-        let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
+        let that = this;
+        if (!this.dbltimer) {
+            this.dbltimer = window.setTimeout(function () {
+                if (that.doubleclick !== true) {
+                    let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
 
-        if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
-            animate = false;
-
-        return (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                    if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
+                        animate = false;
+                    (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                }
+                that.doubleclick = false;
+                delete that.dbltimer;
+            }, 200);
+        }
     }
 
     async _onDblClickToken(event) {
@@ -560,8 +574,14 @@ export class TokenBar extends Application {
         const li = event.currentTarget;
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
-        if (entry.token.actor)
-            entry.token.actor.sheet.render(true);
+        if (setting("dblclick-action") == "request") {
+            let entries = MonksTokenBar.getTokenEntries([entry.token._object]);
+            new SavingThrowApp(entries).render(true);
+        } else {
+            if (entry.token.actor)
+                entry.token.actor.sheet.render(true);
+        }
+        this.doubleclick = true;
     }
 
     _onHoverToken(event) {

@@ -28,6 +28,10 @@ export class SwadeRolls extends BaseRolls {
         return false;
     }
 
+    get hasSound() {
+        return false;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             log(message);

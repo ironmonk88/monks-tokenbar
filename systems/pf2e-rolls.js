@@ -49,6 +49,26 @@ export class PF2eRolls extends BaseRolls {
         return actor.data.data.details.xp;
     }
 
+    get useDegrees() {
+        return true;
+    }
+
+    rollSuccess(roll, dc) {
+        let total = roll.total;
+        let success = (total >= dc) ? 1 : 0;
+        if (total >= dc + 10) success++;
+        if (total <= dc - 10) success--;
+
+        const diceResult = roll.terms[0]?.results?.find(r => r.active)?.result;
+        if (diceResult === 1) success--;
+        if (diceResult === 20) success++;
+
+        if (success > 0)
+            return (success > 1 ? "success" : true);
+        else
+            return (success < 0 ? "failed" : false);
+    }
+
     roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = request;
@@ -71,7 +91,8 @@ export class PF2eRolls extends BaseRolls {
                     speaker: ChatMessage.getSpeaker({
                         actor: actor
                     }),
-                    rollType: 'ignore'
+                    rollType: 'ignore',
+                    shipDialog: fastForward
                 });
             }
         }
@@ -89,7 +110,8 @@ export class PF2eRolls extends BaseRolls {
                     data: data,
                     title: title,
                     speaker: speaker,
-                    rollType: 'ignore'
+                    rollType: 'ignore',
+                    shipDialog: fastForward
                 });
             }
         }
@@ -107,7 +129,8 @@ export class PF2eRolls extends BaseRolls {
                     speaker: ChatMessage.getSpeaker({
                         actor: actor
                     }),
-                    rollType: 'ignore'
+                    rollType: 'ignore',
+                    shipDialog: fastForward
                 })
             }
         }

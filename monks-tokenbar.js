@@ -20,14 +20,12 @@ import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
 import { CoC7Rolls } from "./systems/coc7-rolls.js";
 
-export let debugEnabled = 0;
-
 export let debug = (...args) => {
-    if (debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
+    if (MonksTokenBar.debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
 };
 export let log = (...args) => console.log("monks-tokenbar | ", ...args);
 export let warn = (...args) => {
-    if (debugEnabled > 0) console.warn("monks-tokenbar | ", ...args);
+    if (MonksTokenBar.debugEnabled > 0) console.warn("monks-tokenbar | ", ...args);
 };
 export let error = (...args) => console.error("monks-tokenbar | ", ...args);
 export let i18n = key => {
@@ -66,12 +64,30 @@ export class MonksTokenBar {
     static tracker = false;
     static tokenbar = null;
 
+    static debugEnabled = 0;
+
     static init() {
         log("initializing");
         // element statics
         //CONFIG.debug.hooks = true;
 
         MonksTokenBar.SOCKET = "module.monks-tokenbar";
+
+        game.keybindings.register('monks-tokenbar', 'request-roll', {
+            name: 'MonksTokenBar.RequestRoll',
+            editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT] }],
+            onDown: (data) => {
+                new SavingThrowApp().render(true);
+            },
+        });
+
+        game.keybindings.register('monks-tokenbar', 'request-roll-gm', {
+            name: 'MonksTokenBar.RequestRollGM',
+            editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.SHIFT] }],
+            onDown: (data) => {
+                new SavingThrowApp(null, {rollmode: "selfroll"}).render(true);
+            },
+        });
 
         registerSettings();
 
@@ -104,7 +120,7 @@ export class MonksTokenBar {
         let sceneView = function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
                 MonksTokenBar.tokenbar.tokens = [];
-                MonksTokenBar.tokenbar.render(true);
+                MonksTokenBar.tokenbar.refresh();
             }
             return wrapped(...args);
         }
@@ -140,8 +156,8 @@ export class MonksTokenBar {
 
         let findToken = function (t) {
             if (typeof t == 'string') {
-                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t);
-            } else if (!(t instanceof Token))
+                t = canvas.tokens.placeables.find(p => p.name == t || p.id == t) || game.actors.find(p => p.name == t || p.id == t);
+            } else if (!(t instanceof Token || t instanceof Actor))
                 t = null;
 
             return t;
@@ -210,7 +226,7 @@ export class MonksTokenBar {
 
             const targets = _getChatCardTargets(card);
             const entries = MonksTokenBar.getTokenEntries(targets);
-            if (tokens.length) {
+            if (entries.length) {
                 let savingthrow = new SavingThrowApp(entries, { request: 'save:' + button.dataset.ability, dc: item.data.data.save.dc });
                 savingthrow.requestRoll();
 
@@ -227,37 +243,6 @@ export class MonksTokenBar {
 
     static ready() {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
-
-        MonksTokenBar.system = new BaseRolls();
-        switch (game.system.id.toLowerCase()) {
-            case 'dnd5e':
-                MonksTokenBar.system = new DnD5eRolls(); break;
-            case 'sw5e':
-                MonksTokenBar.system = new SW5eRolls(); break;
-            case 'd35e':
-                MonksTokenBar.system = new D35eRolls(); break;
-            case 'dnd4ebeta':
-            case 'dnd4e':
-                MonksTokenBar.system = new DnD4eRolls(); break;
-            case 'pf1':
-                MonksTokenBar.system = new PF1Rolls(); break;
-            case 'pf2e':
-                MonksTokenBar.system = new PF2eRolls(); break;
-            case 'tormenta20':
-                MonksTokenBar.system = new Tormenta20Rolls(); break;
-            case 'sfrpg':
-                MonksTokenBar.system = new SFRPGRolls(); break;
-            case 'ose':
-                MonksTokenBar.system = new OSERolls(); break;
-            case 'swade':
-                MonksTokenBar.system = new SwadeRolls(); break;
-            case 'coc7':
-                MonksTokenBar.system = new CoC7Rolls(); break;
-            case 'ds4':
-                MonksTokenBar.system = new DS4Rolls(); break;
-        }
-
-        MonksTokenBar.system.constructor.activateHooks();
 
         game.settings.settings.get("monks-tokenbar.stats").default = MonksTokenBar.system.defaultStats;
 
@@ -391,7 +376,7 @@ export class MonksTokenBar {
     }
 
     static getDiceSound(hasMaestroSound = false) {
-        const has3DDiceSound = game.dice3d ? game.settings.get("dice-so-nice", "settings").enabled : false;
+        const has3DDiceSound = game.dice3d ? game.modules.get("dice-so-nice").active : false;
         const playRollSounds = true; //game.settings.get("betterrolls5e", "playRollSounds")
 
         if (playRollSounds && !has3DDiceSound && !hasMaestroSound) {
@@ -676,7 +661,9 @@ export class MonksTokenBar {
             lootsheetoptions['lootsheetnpc5e'] = "Loot Sheet NPC 5e";
         if (game.modules.get("merchantsheetnpc")?.active)
             lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
-        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType != 'convert')
+        if (game.modules.get("item-piles")?.active)
+            lootsheetoptions['item-piles'] = "Item Piles";
+        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType !='convert')
             lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
 
         return lootsheetoptions;
@@ -711,6 +698,37 @@ Hooks.on("updateCombat", function (combat, delta) {
             MonksTokenBar.changeGlobalMovement(MTB_MOVEMENT_TYPE.COMBAT);
         }
     }
+});
+
+Hooks.on("setup", () => {
+    MonksTokenBar.system = new BaseRolls();
+    switch (game.system.id.toLowerCase()) {
+        case 'dnd5e':
+            MonksTokenBar.system = new DnD5eRolls(); break;
+        case 'sw5e':
+            MonksTokenBar.system = new SW5eRolls(); break;
+        case 'd35e':
+            MonksTokenBar.system = new D35eRolls(); break;
+        case 'dnd4ebeta':
+        case 'dnd4e':
+            MonksTokenBar.system = new DnD4eRolls(); break;
+        case 'pf1':
+            MonksTokenBar.system = new PF1Rolls(); break;
+        case 'pf2e':
+            MonksTokenBar.system = new PF2eRolls(); break;
+        case 'tormenta20':
+            MonksTokenBar.system = new Tormenta20Rolls(); break;
+        case 'sfrpg':
+            MonksTokenBar.system = new SFRPGRolls(); break;
+        case 'ose':
+            MonksTokenBar.system = new OSERolls(); break;
+        case 'swade':
+            MonksTokenBar.system = new SwadeRolls(); break;
+        case 'coc7':
+            MonksTokenBar.system = new CoC7Rolls(); break;
+    }
+
+    MonksTokenBar.system.constructor.activateHooks();
 });
 
 Hooks.on("ready", MonksTokenBar.ready);
@@ -884,7 +902,7 @@ Hooks.on("setupTileActions", (app) => {
         ctrls: [
             {
                 id: "global",
-                name: "Change Global Movement",
+                name: "Change Movement",
                 type: "checkbox",
                 onClick: (app) => {
                     app.checkConditional();
@@ -1031,22 +1049,6 @@ Hooks.on("setupTileActions", (app) => {
                     window.setTimeout(function () {
                         SavingThrow.onRollAll('all', msg);
                     }, 100);
-                    //let result = await SavingThrow.onRollAll('all', msg);
-                    /*
-                    if (action.data.usetokens == 'fail' || action.data.usetokens == 'succeed') {
-                        result.tokens = result.tokenresults.filter(r => r.passed == (action.data.usetokens == 'succeed'));
-                        for (let i = 0; i < result.tokens.length; i++) {
-                            result.tokens[i] = await fromUuid(result.tokens[i].uuid);
-                        }
-                    }
-
-                    result.continue = action.data.continue == 'always' ||
-                        (action.data.continue == 'passed' && result.passed > 0) ||
-                        (action.data.continue == 'failed' && result.failed > 0) ||
-                        (action.data.continue == 'allpass' && result.passed == result.tokenresults.length) ||
-                        (action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
-                    //(action.data.continue == 'passed' ? !result.passed : (action.data.checkdc == 'fail' ? result.passed : null));
-                    return result;*/
                 }
             }
             else
@@ -1062,6 +1064,139 @@ Hooks.on("setupTileActions", (app) => {
             let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
             let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
             return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
+        }
+    });
+
+    app.registerTileAction('monks-tokenbar', 'requestcontested', {
+        name: 'Request Contested Roll',
+        ctrls: [
+            {
+                id: "entity1",
+                name: "Select Entity",
+                type: "select",
+                subtype: "entity",
+                required: true,
+                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                restrict: (entity) => { return (entity instanceof Token); },
+                defaultType: 'tokens',
+                placeholder: "Please select a token"
+            },
+            {
+                id: "request1",
+                name: "Request",
+                list: () => { return MonksTokenBar.system.contestedoptions; },
+                type: "list",
+                required: true
+            },
+            {
+                id: "entity2",
+                name: "Select Entity",
+                type: "select",
+                subtype: "entity",
+                required: true,
+                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                restrict: (entity) => { return (entity instanceof Token); },
+                defaultType: 'tokens',
+                placeholder: "Please select a token"
+            },
+            {
+                id: "request2",
+                name: "Request",
+                list: () => { return MonksTokenBar.system.contestedoptions; },
+                type: "list",
+                required: true
+            },
+            {
+                id: "flavor",
+                name: "Flavor Text",
+                type: "text"
+            },
+            {
+                id: "rollmode",
+                name: "Roll Mode",
+                list: "rollmode",
+                type: "list"
+            },
+            {
+                id: "silent",
+                name: "Bypass Dialog",
+                type: "checkbox"
+            },
+            {
+                id: "fastforward",
+                name: "Auto Roll",
+                type: "checkbox"
+            },
+            {
+                id: "usetokens",
+                name: "Continue with",
+                list: "usetokens",
+                type: "list"
+            }
+        ],
+        values: {
+            'rollmode': {
+                "roll": i18n('MonksTokenBar.PublicRoll'),
+                "gmroll": i18n('MonksTokenBar.PrivateGMRoll'),
+                "blindroll": i18n('MonksTokenBar.BlindGMRoll'),
+                "selfroll": i18n('MonksTokenBar.SelfRoll')
+            },
+            'usetokens': {
+                "all": "All Tokens",
+                "fail": "Tokens that Fail",
+                "succeed": "Tokens that Succeed"
+            },
+        },
+        group: 'monks-tokenbar',
+        fn: async (args = {}) => {
+            const { action, tile } = args;
+            let entities1 = await game.MonksActiveTiles.getEntities(args, action.data.entity1.id);
+            let entities2 = await game.MonksActiveTiles.getEntities(args, action.data.entity2.id);
+
+            if (entities1.length == 0 || entities2.length == 0)
+                return;
+
+            let entity1 = entities1[0].object;
+            let entity2 = entities2[0].object;
+            if (entity1.id == entity2.id && entities2.length > 1)
+                entity2 = entities2[1].object;
+
+            if (entity1.id == entity2.id)
+                return;
+
+            let contested = new ContestedRollApp(
+                { request: action.data.request1, token: MonksTokenBar.getTokenEntries(entity1) },
+                { request: action.data.request2, token: MonksTokenBar.getTokenEntries(entity2) },
+                { rollmode: action.data.rollmode, request: action.data.request, flavor: action.data.flavor });
+            contested['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
+            if (action.data.silent === true) {
+                let msg = await contested.requestRoll();
+                if (action.data.fastforward === true) {
+                    //need to delay slightly so the original action has time to save a state properly.
+                    window.setTimeout(function () {
+                        ContestedRoll.onRollAll('all', msg);
+                    }, 100);
+                }
+            }
+            else
+                contested.render(true);
+
+            //if we got here then we need to pause before continuing and wait until the request has been fulfilled
+            return { pause: true };
+        },
+        content: async (trigger, action) => {
+            let parts = action.data?.request1.split(':');
+            let requesttype = (parts.length > 1 ? parts[0] : '');
+            let request = (parts.length > 1 ? parts[1] : parts[0]);
+            let name1 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            parts = action.data?.request2.split(':');
+            requesttype = (parts.length > 1 ? parts[0] : '');
+            request = (parts.length > 1 ? parts[1] : parts[0]);
+            let name2 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            
+            let entityName1 = await game.MonksActiveTiles.entityName(action.data?.entity1);
+            let entityName2 = await game.MonksActiveTiles.entityName(action.data?.entity2);
+            return `<span class="action-style">Contested Roll</span> <span class="entity-style">${entityName1}</span> <span class="details-style">"${name1}"</span> vs. <span class="entity-style">${entityName2}</span> <span class="details-style">"${name2}"</span> ${(action.data?.usetokens != 'all' ? ", Continue with " + trigger.values.usetokens[action.data?.usetokens] : '')}`;
         }
     });
 

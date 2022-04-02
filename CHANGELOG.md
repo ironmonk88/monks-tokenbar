@@ -1,3 +1,37 @@
+## Version 1.0.64
+
+Added checks for saving throw and contested roll request to make sure the roll mode is valid
+
+Added code to use silent and fastForward when requesting a Contested Roll, thank you thatlonelybugbear
+
+Added the contested roll to the actions that can be called using Active Tiles.
+
+Added the option to not play sounds when it's just the GM rolling
+
+Added Item Piles support for TokenBar
+
+Fixed some issue when converting to lootables
+
+Added the option to show the DC to layers when requesting a saving throw
+
+Saving a requested roll to a macro will now use Token names, so if the token is destroyed, or if you're on a diferent scene you can still use the macro.
+
+Added the option to use degrees of success, thank you rlach
+
+Added a little bit of clarity as to how tokenbar is selecting tokens.  So you can turn on debugging now and see whay tokens are getting included and excluded.
+
+Fixed whisper to fromt he tokenbar for layers that have a space in their name.
+
+Fixed issue where double-clicking a token on the tokenbar was also registering as a single click.  I just found it a bit annoying.
+
+Added the option to change what actions are performed when double clicking the token on the tokenbar.
+
+Added key bindings so you can request a roll by pressing Alt-R and a GM only Roll by pressing Shift-R.
+
+Fixed an issue where the tokenbar would disappear when you changed scenes.
+
+Fixed an issue when trying to grab a saving throw chat message.
+
 ## Version 1.0.63
 
 Fixed issue where Lootable currency was being added as a string rather than as numbers.

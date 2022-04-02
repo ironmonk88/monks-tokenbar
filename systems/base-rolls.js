@@ -30,6 +30,18 @@ export class BaseRolls {
         return this._config;
     }
 
+    get hasSound() {
+        return true;
+    }
+
+    get useDegrees() {
+        return false;
+    }
+
+    rollSuccess(roll, dc) {
+        return roll.total >= dc;
+    }
+
     get showXP() {
         return true;
     }

@@ -74,13 +74,20 @@ export class LootablesApp extends FormApplication {
     getData(options) {
         let notes = "";
         let hasItems = false;
-        let sheetName = (setting('loot-sheet') == 'lootsheetnpc5e' ? "Loot Sheet NPC 5e" : (setting('loot-sheet') == 'merchantsheetnpc' ? "Merchant Sheet" : (setting('loot-sheet') == 'monks-enhanced-journal' ? "Monk's Enhanced Journal" : "")));
+        let lootsheet = setting('loot-sheet');
+        let sheetName = "";
+        switch (lootsheet) {
+            case 'lootsheetnpc5e': sheetName = "Loot Sheet NPC 5e"; break;
+            case 'merchantsheetnpc': sheetName = "Merchant Sheet"; break;
+            case 'monks-enhanced-journal': sheetName = "Monk's Enhanced Journal"; break;
+            case 'item-piles': sheetName = "Item Piles"; break;
+        }
         if (setting('loot-type') == 'convert')
             notes = `Convert tokens to lootable using ${sheetName}`;
         else {
-            let entityName = "New " + (['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet")) ? "Actor" : "Loot Journal Entry");
+            let entityName = "New " + (this.isLootActor(lootsheet) ? "Actor" : "Loot Journal Entry");
             if (setting('loot-entity') != 'create') {
-                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet"))){
+                if (this.isLootActor(lootsheet)){
                     let entity = game.actors.get(setting('loot-entity'));
                     entityName = entity?.name || "Unknown";
                     hasItems = (entity?.data.items.size || 0) > 0;
@@ -90,7 +97,7 @@ export class LootablesApp extends FormApplication {
                     hasItems = (entity?.getFlag('monks-enhanced-journal', 'items') || []).length > 0;
                 }
             }
-            notes = `Transfer items to <${entityName}> using ${sheetName}${setting('loot-type') == 'transferplus' ? `, and create a ${(['lootsheetnpc5e', 'merchantsheetnpc'].includes(setting("loot-sheet")) ? "Token" : "Note")} on the Canvas` : ''}`;
+            notes = `Transfer items to <${entityName}> using ${sheetName}${setting('loot-type') == 'transferplus' ? `, and create a ${(this.isLootActor(lootsheet) ? "Token" : "Note")} on the Canvas` : ''}`;
         }
         return {
             usecr: this.usecr,
@@ -102,6 +109,10 @@ export class LootablesApp extends FormApplication {
             entries: this.entries,
             actionText: (setting('loot-type') == 'convert' ? i18n('MonksTokenBar.ConvertToLootable') : i18n('MonksTokenBar.TransferToLootable'))
         };
+    }
+
+    isLootActor(lootsheet) {
+        return ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
     }
 
     getCurrency(currency) {
@@ -204,7 +215,7 @@ export class LootablesApp extends FormApplication {
 
     getLootableName() {
         let lootSheet = setting('loot-sheet');
-        let collection = (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? game.actors : game.journal)
+        let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal)
 
         let folder = setting('loot-folder');
 
@@ -245,136 +256,141 @@ export class LootablesApp extends FormApplication {
         }
 
         if (lootType == 'convert') {
-            for (let entry of this.entries) {
-                if (entry.include === false)
-                    continue;
+            if (lootSheet == "item-piles") {
+                let tokens = this.entries.map(t => t.token);
+                ItemPiles.API.turnTokensIntoItemPiles(tokens);
+            } else {
+                for (let entry of this.entries) {
+                    if (entry.include === false)
+                        continue;
 
-                // Don't run this on PC tokens by mistake
-                if (entry.actor.data.type === 'character')
-                    continue;
+                    // Don't run this on PC tokens by mistake
+                    if (entry.actor.data.type === 'character')
+                        continue;
 
-                // Change sheet to lootable, and give players permissions.
-                let newActorData = {};
-                if (lootSheet == 'lootsheetnpc5e') {
-                    newActorData = {
-                        'flags': {
-                            'core': {
-                                'sheetClass': 'dnd5e.LootSheetNPC5e'
-                            },
-                            'lootsheetnpc5e': {
-                                'lootsheettype': 'Loot'
-                            },
-                            'monks-tokenbar': {
-                                'converted': true
-                            }
-                        }
-                    };
-                } else if (lootSheet == 'merchantsheetnpc') {
-                    newActorData = {
-                        'flags': {
-                            'core': {
-                                'sheetClass': 'core.a'
-                            },
-                            'monks-tokenbar': {
-                                'converted': true
-                            }
-                        }
-                    };
-                }
-
-                if (!['dnd5e.LootSheet5eNPC', 'core.a'].includes(entry.actor.data?.flags?.core?.sheetClass))
-                    newActorData.flags['monks-tokenbar'].oldsheetClass = entry.actor.data?.flags?.core?.sheetClass; //token.actor._getSheetClass();
-
-                // Remove items that shouldn't be lootable
-                let oldItems = [];
-                let newItems = entry.actor.data.items
-                    .filter(item => {
-                        let itemData = entry.items.find(i => i._id == item.id);
-                        if (!itemData?.included)
-                            oldItems.push(item);
-
-                        return itemData?.included;
-                    });
-
-                newActorData.items = newItems;
-                //only store the old items if the there are old items to avoid overwriting a second time
-                if (oldItems.length > 0) {
-                    if (entry.actor.getFlag('monks-tokenbar', 'olditems') != undefined)
-                        oldItems = oldItems.concat(entry.actor.getFlag('monks-tokenbar', 'olditems'));
-                    newActorData.flags["monks-tokenbar"].olditems = oldItems;
-                }
-                //await token.actor.update(newActorData);
-
-                // This section is a workaround for the fact that the LootSheetNPC module
-                // currently uses an older currency schema, compared to current 5e expectations.
-                // Need to convert the actor's currency data to the LS schema here to avoid
-                // breakage. If there is already currency on the actor, it is retained.
-
-                /*
-                for (let curr of ['cp', 'sp', 'ep', 'gp', 'pp']) {
-                    if (typeof (entry.actor.data.data.currency[curr]) === "number" || entry.actor.data.data.currency[curr] == undefined) {
-                        let oldCurrencyData = entry.actor.data.data.currency[curr];
-                        newActorData[`data.currency.${curr}`] = { 'value': oldCurrencyData || 0 };
-                    }
-                }*/
-
-                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                    if (entry.currency[curr] != undefined)
-                        newActorData[`data.currency.${curr}`] = (entry.actor.data.data.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
-                }
-
-                newActorData = expandObject(newActorData);
-
-                entry.actor._sheet = null;
-
-                MonksTokenBar.emit('refreshsheet', { tokenid: entry?.id });
-                await entry.actor.update(newActorData);
-
-                let oldIds = oldItems.map(i => i.id);
-                if (oldIds.length > 0) {
-                    for (let id of oldIds) {
-                        let item = entry.actor.items.find(i => i.id == id);
-                        if (item)
-                            await item.delete();
-                    }
-                    //await Item.deleteDocuments(oldIds, {parent: token.actor});
-                }
-
-                // Update permissions to level 2, so players can loot
-                let permissions = {};
-                Object.assign(permissions, entry.actor.data.permission);
-                lootingUsers.forEach(user => {
-                    permissions[user.id] = CONST.ENTITY_PERMISSIONS.OBSERVER;
-                });
-
-                // If using Combat Utility Belt, need to remove any of its condition overlays
-                // before we can add the chest icon overlay.
-                if (game.modules.get("combat-utility-belt")?.active) {
-                    await game.cub.removeAllConditions(entry.actor);
-                }
-
-                let oldAlpha = entry.token.data.alpha;
-                await entry.token.update({
-                    "overlayEffect": 'icons/svg/chest.svg',
-                    "alpha": 0.6,
-                    "actorData": {
-                        "actor": {
-                            "flags": {
-                                "loot": {
-                                    "playersPermission": 2
+                    // Change sheet to lootable, and give players permissions.
+                    let newActorData = {};
+                    if (lootSheet == 'lootsheetnpc5e') {
+                        newActorData = {
+                            'flags': {
+                                'core': {
+                                    'sheetClass': 'dnd5e.LootSheetNPC5e'
+                                },
+                                'lootsheetnpc5e': {
+                                    'lootsheettype': 'Loot'
+                                },
+                                'monks-tokenbar': {
+                                    'converted': true
                                 }
                             }
+                        };
+                    } else if (lootSheet == 'merchantsheetnpc') {
+                        newActorData = {
+                            'flags': {
+                                'core': {
+                                    'sheetClass': 'core.a'
+                                },
+                                'monks-tokenbar': {
+                                    'converted': true
+                                }
+                            }
+                        };
+                    }
+
+                    if (!['dnd5e.LootSheet5eNPC', 'core.a'].includes(entry.actor.data?.flags?.core?.sheetClass))
+                        newActorData.flags['monks-tokenbar'].oldsheetClass = entry.actor.data?.flags?.core?.sheetClass; //token.actor._getSheetClass();
+
+                    // Remove items that shouldn't be lootable
+                    let oldItems = [];
+                    let newItems = entry.actor.data.items
+                        .filter(item => {
+                            let itemData = entry.items.find(i => i._id == item.id);
+                            if (!itemData?.included)
+                                oldItems.push(item);
+
+                            return itemData?.included;
+                        });
+
+                    newActorData.items = newItems;
+                    //only store the old items if the there are old items to avoid overwriting a second time
+                    if (oldItems.length > 0) {
+                        if (entry.actor.getFlag('monks-tokenbar', 'olditems') != undefined)
+                            oldItems = oldItems.concat(entry.actor.getFlag('monks-tokenbar', 'olditems'));
+                        newActorData.flags["monks-tokenbar"].olditems = oldItems;
+                    }
+                    //await token.actor.update(newActorData);
+
+                    // This section is a workaround for the fact that the LootSheetNPC module
+                    // currently uses an older currency schema, compared to current 5e expectations.
+                    // Need to convert the actor's currency data to the LS schema here to avoid
+                    // breakage. If there is already currency on the actor, it is retained.
+
+                    /*
+                    for (let curr of ['cp', 'sp', 'ep', 'gp', 'pp']) {
+                        if (typeof (entry.actor.data.data.currency[curr]) === "number" || entry.actor.data.data.currency[curr] == undefined) {
+                            let oldCurrencyData = entry.actor.data.data.currency[curr];
+                            newActorData[`data.currency.${curr}`] = { 'value': oldCurrencyData || 0 };
+                        }
+                    }*/
+
+                    for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                        if (entry.currency[curr] != undefined)
+                            newActorData[`data.currency.${curr}`] = (entry.actor.data.data.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
+                    }
+
+                    newActorData = expandObject(newActorData);
+
+                    entry.actor._sheet = null;
+
+                    MonksTokenBar.emit('refreshsheet', { tokenid: entry?.id });
+                    await entry.actor.update(newActorData);
+
+                    let oldIds = oldItems.map(i => i.id);
+                    if (oldIds.length > 0) {
+                        for (let id of oldIds) {
+                            let item = entry.actor.items.find(i => i.id == id);
+                            if (item)
+                                await item.delete();
+                        }
+                        //await Item.deleteDocuments(oldIds, {parent: token.actor});
+                    }
+
+                    // Update permissions to level 2, so players can loot
+                    let permissions = {};
+                    Object.assign(permissions, entry.actor.data.permission);
+                    lootingUsers.forEach(user => {
+                        permissions[user.id] = CONST.ENTITY_PERMISSIONS.OBSERVER;
+                    });
+
+                    // If using Combat Utility Belt, need to remove any of its condition overlays
+                    // before we can add the chest icon overlay.
+                    if (game.modules.get("combat-utility-belt")?.active) {
+                        await game.cub.removeAllConditions(entry.actor);
+                    }
+
+                    let oldAlpha = entry.token.data.alpha;
+                    await entry.token.update({
+                        "overlayEffect": 'icons/svg/chest.svg',
+                        "alpha": 0.6,
+                        "actorData": {
+                            "actor": {
+                                "flags": {
+                                    "loot": {
+                                        "playersPermission": 2
+                                    }
+                                }
+                            },
+                            "permission": permissions
                         },
-                        "permission": permissions
-                    },
-                    "flags.monks-tokenbar.alpha": oldAlpha
-                });
+                        "flags.monks-tokenbar.alpha": oldAlpha
+                    });
+                }
             }
 
             msg = `Actors have been converted to lootable`;
         } else {
             let lootentity = setting('loot-entity');
-            let collection = (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? game.actors : game.journal);
+            let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
 
             let entity;
             if (lootentity != 'create'){
@@ -394,7 +410,7 @@ export class LootablesApp extends FormApplication {
                     name = this.getLootableName();
 
                 const cls = collection.documentClass;
-                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet)) {
+                if (this.isLootActor(lootSheet)) {
                     entity = await cls.create({ folder: folder, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, permission: { 'default': CONST.ENTITY_PERMISSIONS.OBSERVER } });
                     ui.actors.render();
                 } else {
@@ -409,7 +425,7 @@ export class LootablesApp extends FormApplication {
                 return ui.notifications.warn("Could not find Loot Entity");
 
             if (clear && lootentity != 'create') {
-                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet)) {
+                if (this.isLootActor(lootSheet)) {
                     for (let item of entity.items) {
                         await item.delete();
                     }
@@ -419,6 +435,8 @@ export class LootablesApp extends FormApplication {
             }
 
             let ptAvg = { x: 0, y: 0, count: 0 };
+            let items = [];
+            let currency = {};
 
             for (let entry of this.entries) {
                 if (entry.disabled === true)
@@ -428,49 +446,59 @@ export class LootablesApp extends FormApplication {
                 ptAvg.y += entry.token.data.y;
                 ptAvg.count++;
 
-                let items = entry.items.filter(i => i.included);
+                let loot = entry.items.filter(i => i.included);
+                items = items.concat(loot);
 
-                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet)) {
+                let entryCurr = this.getCurrency(entry.actor.data.data.currency[curr]);
+                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                    currency[curr] = (currency[curr] || 0) + parseInt(entryCurr || 0);
+                }
+            }
+
+            if (this.isLootActor(lootSheet)) {
+                if (lootSheet == "item-piles") {
+                    let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
+                    ItemPiles.API.createItemPile(pt, { items });
+                } else {
                     entity.createEmbeddedDocuments("Item", items);
 
-                    let currency = entity.data.data.currency || {};
+                    let entityCurr = entity.data.data.currency || {};
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                        let oldValue = this.getCurrency(entry.actor.data.data.currency[curr]);
-                        if (oldValue != undefined) {
-                            let newVal = parseInt(currency[curr].value || currency[curr] || 0) + parseInt(oldValue)
-                            currency[curr] = (currency[curr].value != undefined ? { value: newVal } : newVal);
+                        if (currency[curr] != undefined) {
+                            let value = entityCurr[curr].value ?? entityCurr[curr];
+                            value = parseInt(currency[curr] || 0) + parseInt(value || 0);
+                            entityCurr[curr] = (entityCurr[curr].hasOwnProperty("value") ? { value: value } : value);
                         }
                     }
-                    
-                    if (Object.keys(newcurr).length > 0)
-                        entity.update({ data: { currency: newcurr } });
-                } else if (lootSheet == 'monks-enhanced-journal') {
-                    let loot = duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
-                    loot = loot.concat(items);
-                    await entity.setFlag('monks-enhanced-journal', 'items', loot);
 
-                    let currency = entity.getFlag("monks-enhanced-journal", "currency") || {};
-                    for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                        currency[curr] = parseInt(currency[curr] || 0) + parseInt(entry.currency[curr] || 0);
-                    }
-                    await entity.setFlag('monks-enhanced-journal', 'currency', currency);
+                    entity.update({ data: { currency: entityCurr } });
                 }
+            } else if (lootSheet == 'monks-enhanced-journal') {
+                let entityItems = duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
+                entityItems = entityItems.concat(items);
+                await entity.setFlag('monks-enhanced-journal', 'items', entityItems);
+
+                let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
+                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                    entityCurr[curr] = parseInt(currency[curr] || 0) + parseInt(entityCurr[curr] || 0);
+                }
+                await entity.setFlag('monks-enhanced-journal', 'currency', currency);
             }
 
             msg = (created ?
                 `${name} has been created, items have been transferred to it` :
                 `Items have been transferred to ${name}`);
 
-            if (lootType == 'transferplus') {
+            if (lootType == 'transferplus' && lootSheet !== "item-piles") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
-                let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
+                let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
                 pt.x = snap.x;
                 pt.y = snap.y;
 
                 // Validate the final position
                 if (canvas.dimensions.rect.contains(pt.x, pt.y)) {
-                    if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet)) {
+                    if (this.isLootActor(lootSheet)) {
                         const td = await entity.getTokenData(pt);
 
                         const cls = getDocumentClass("Token");
@@ -488,7 +516,7 @@ export class LootablesApp extends FormApplication {
                     }
                 }
 
-                msg += `and a ${['lootsheetnpc5e', 'merchantsheetnpc'].includes(lootSheet) ? "Token" : "Note"} has been added to the canvas`
+                msg += `and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
             }
 
             if (setting('open-loot') != "none" && entity) {

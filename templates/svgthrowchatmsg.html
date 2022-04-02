@@ -3,7 +3,7 @@
         <h3 class="item-name">{{name}}</h3>
         {{#if dc}}
         <div class="item-controls flexrow" style="text-align: right;flex: 0 0 55px;">
-            <h3 class="gm-only">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>
+            <h3 class="{{#unless showdc}}gm-only{{/unless}}">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>
         </div>
         {{/if}}
     </header>

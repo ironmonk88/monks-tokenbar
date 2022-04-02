@@ -6,6 +6,8 @@ export class ContestedRollApp extends Application {
         this.opts = options;
 
         this.rollmode = options?.rollmode || options?.rollMode || (game.user.getFlag("monks-tokenbar", "lastmodeCR") || 'roll');
+        if (!["roll", "gmroll", "blindroll", "selfroll"].includes(this.rollmode))
+            this.rollmode = "roll";
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
@@ -32,6 +34,8 @@ export class ContestedRollApp extends Application {
             }
             return e;
         });
+
+        this.callback = options.callback;
 
         /*
         this.item0 = item0 || {token: null, request: null};
@@ -71,7 +75,7 @@ export class ContestedRollApp extends Application {
         this.render(true);
     }
 
-    async request(roll) {
+    async requestRoll(roll) {
         let msg = null;
         if (this.entries[0].token != undefined && this.entries[1].token != undefined) {
             let msgEntries = this.entries.map((item, index) => {
@@ -150,6 +154,7 @@ export class ContestedRollApp extends Application {
             msg.mtb_callback = this.opts.callback;
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll' && roll !== false)
                 MonksTokenBar.playSound(setting('request-roll-sound-file'), requestedPlayers);
+            this.requestingResults = true;
             this.close();
 
             if (this['active-tiles'])
@@ -173,8 +178,8 @@ export class ContestedRollApp extends Application {
 
         $('.item-delete', html).click($.proxy(this.removeToken, this));
 
-        $('.dialog-button.request', html).click($.proxy(this.request, this));
-        $('.dialog-button.request-roll', html).click($.proxy(this.request, this, true));
+        $('.dialog-button.request', html).click($.proxy(this.requestRoll, this));
+        $('.dialog-button.request-roll', html).click($.proxy(this.requestRoll, this, true));
         $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
 
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
@@ -196,7 +201,7 @@ export class ContestedRollApp extends Application {
     async saveToMacro() {
         let name = "Contested Roll";
 
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.id}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.id}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.name}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.name}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
         macro.sheet.render(true);
     }
@@ -226,13 +231,13 @@ export class ContestedRoll {
             if (rollmode == 'gmroll' && !game.user.isGM)
                 whisper.push(game.user.id);
 
-            if (game.dice3d != undefined && roll instanceof Roll) { // && !fastForward) {
+            if (game.dice3d != undefined && roll instanceof Roll && MonksTokenBar.system.hasSound) { // && !fastForward) {
                 finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
                 });
             }
             const sound = MonksTokenBar.getDiceSound();
-            if (sound != undefined)
+            if (sound != undefined && (rollmode != 'selfroll' || setting('gm-sound')))
                 MonksTokenBar.playSound(sound, (rollmode == 'roll' || rollmode == 'gmroll' ? 'all' : whisper));
 
             return { id: id, roll: roll, finish: finishroll };
@@ -248,7 +253,9 @@ export class ContestedRoll {
         if (actor != undefined) {
             if (requesttype == 'dice') {
                 //roll the dice
-                return ContestedRoll.rollDice(request).then((roll) => { return returnRoll(roll); });
+                return ContestedRoll.rollDice(request).then((roll) => {
+                    return ContestedRoll.returnRoll(data.id, roll, actor, rollmode);
+                });
             } else {
                 if (MonksTokenBar.system._supportedSystem) { //game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
                     return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
@@ -293,7 +300,7 @@ export class ContestedRoll {
             }
         };
 
-        Promise.all(promises).then(response => {
+        return Promise.all(promises).then(async (response) => {
             log('roll all finished', response);
             if (!game.user.isGM) {
                 let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
@@ -313,7 +320,7 @@ export class ContestedRoll {
                 }
             } else {
                 const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
-                ContestedRoll.updateMessage(response, message, revealDice);
+                return await ContestedRoll.updateMessage(response, message, revealDice);
             }
         });
 
@@ -372,7 +379,7 @@ export class ContestedRoll {
             }
         }
 
-        message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } }).then(() => {
+        await message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } }).then(() => {
             ContestedRoll.checkResult(message);
         });
 
@@ -383,37 +390,51 @@ export class ContestedRoll {
             });
         }
 
-        /*
-        let actorid = responses[0].actorid;
-        let roll = responses[0].roll;
+        let count = 0;
+        let winner = null;
+        let tokenresults = Object.entries(message.data.flags['monks-tokenbar'])
+            .filter(([k, v]) => {
+                return k.startsWith('token')
+            })
+            .map(([k, token]) => {
+                if (token.roll) count++;
 
-        let actors = duplicate(message.getFlag('monks-tokenbar', 'actors'));
-        let msgactor = actors.find(a => { return a.id == actorid; });
-        log('updating contested roll', msgactor, roll);
+                if (!winner || winner.result < token.roll.total)
+                    winner = { id: token.id, result: token.roll.total };
 
-        msgactor.roll = roll.toJSON();
-        msgactor.reveal = msgactor.reveal || reveal;//!fastForward;
-        msgactor.total = roll.total;
+                return {
+                    id: token.id,
+                    uuid: token.uuid,
+                    roll: token.roll,
+                    name: token.name,
+                    actor: game.actors.get(token.actorid)
+                }
+            });
 
-        let tooltip = await roll.getTooltip();
+        if (count == tokenresults.length) {
+            // Set the winner
+            let tkn = tokenresults.find(t => t.id == winner.id);
+            tkn.passed = true;
 
-        Hooks.callAll('tokenBarUpdateRoll', this, message, actorid, roll);
+            let result = { tokenresults: tokenresults, passed: winner };
+            if (message.getFlag('monks-tokenbar', 'active-tiles')) {
+                let restart = message.getFlag('monks-tokenbar', 'active-tiles');
+                let tile = await fromUuid(restart.tile);
 
-        ContestedRoll.checkResult(actors);
+                if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
+                    result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
+                    for (let i = 0; i < result.tokens.length; i++) {
+                        result.tokens[i] = await fromUuid(result.tokens[i].uuid);
+                    }
+                }
 
-        let content = $(message.data.content);
-        $(tooltip).insertAfter($('.item[data-item-id="' + actorid + '"] .item-row', content));
-        $('.item[data-item-id="' + actorid + '"] .item-row .item-roll', content).remove();
-        $('.item[data-item-id="' + actorid + '"] .item-row .roll-controls', content).append(
-            `<div class="dice-total flexrow" style="display:none;">
-                <div class= "dice-result">${msgactor.total}</div >
-                <a class="item-control roll-result" title="${i18n("MonksTokenBar.RollResult")}" data-control="rollResult">
-                    <i class="fas"></i>
-                </a>
-            </div >`);
-
-        message.update({ content: content[0].outerHTML });
-        await message.setFlag('monks-tokenbar', 'actors', actors);*/
+                tile.resumeActions(restart.id, result);
+            } else {
+                if (message.mtb_callback)
+                    message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
+                return result;
+            }
+        }
     }
 
     static async finishRolling(updates, message) {

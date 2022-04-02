@@ -9,6 +9,9 @@ export class MonksTokenBarAPI {
         game.MonksTokenBar = MonksTokenBarAPI;
     }
 
+    static get debugEnabled() { return MonksTokenBar.debugEnabled; }
+    static set debugEnabled(value) { MonksTokenBar.debugEnabled = value; }
+
     static TokenBar() {
         return MonksTokenBar.tokenbar;
     }
@@ -62,9 +65,11 @@ export class MonksTokenBarAPI {
 
         let contestedroll = new ContestedRollApp(entries, options);
         if (options?.silent === true) {
-            let msg = await contestedroll.request();
-            if (options.fastForward === true)
-                ContestedRoll.onRollAll('all', msg, options);
+            let msg = await contestedroll.requestRoll();
+            if (msg && options.fastForward === true)
+                return ContestedRoll.onRollAll('all', msg, options);
+            else
+                return msg;
         }
         else
             contestedroll.render(true);

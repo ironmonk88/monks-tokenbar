@@ -27,6 +27,11 @@ export const registerSettings = function () {
 		'ignore': game.i18n.localize("MonksTokenBar.Ignore"),
 	};
 
+	let dblclickoptions = {
+		'sheet': game.i18n.localize("MonksTokenBar.OpenCharacterSheet"),
+		'request': game.i18n.localize("MonksTokenBar.RequestSavingThrow"),
+	};
+
 	let lootoptions = {
 		'convert': game.i18n.localize("MonksTokenBar.Convert"),
 		'transfer': game.i18n.localize("MonksTokenBar.Transfer"),
@@ -95,6 +100,17 @@ export const registerSettings = function () {
 		onChange: debouncedReload
 	});
 
+	game.settings.register(modulename, "dblclick-action", {
+		name: game.i18n.localize("MonksTokenBar.dblclick-action.name"),
+		hint: game.i18n.localize("MonksTokenBar.dblclick-action.hint"),
+		scope: "world",
+		config: true,
+		default: 'sheet',
+		choices: dblclickoptions,
+		type: String,
+		onChange: debouncedReload
+	});
+
 	//------------------------------------Icon settings--------------------------------------------
 
 	game.settings.register(modulename, "token-size", {
@@ -137,6 +153,7 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
 	});
 	game.settings.register(modulename, "show-disable-panning-option", {
 		name: game.i18n.localize("MonksTokenBar.show-disable-panning-option.name"),
@@ -311,6 +328,14 @@ export const registerSettings = function () {
 		config: true,
 		default: "modules/monks-tokenbar/sounds/RollRequestAlert.ogg",
 		type: String,
+	});
+	game.settings.register(modulename, "gm-sound", {
+		name: game.i18n.localize("MonksTokenBar.gm-sound.name"),
+		hint: game.i18n.localize("MonksTokenBar.gm-sound.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
 	});
 	game.settings.register(modulename, "delete-after-grab", {
 		name: game.i18n.localize("MonksTokenBar.delete-after-grab.name"),
