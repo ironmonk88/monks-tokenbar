@@ -20,7 +20,7 @@ Added the option to use degrees of success, thank you rlach
 
 Added a little bit of clarity as to how tokenbar is selecting tokens.  So you can turn on debugging now and see whay tokens are getting included and excluded.
 
-Fixed whisper to fromt he tokenbar for layers that have a space in their name.
+Fixed whisper to from the tokenbar for layers that have a space in their name.
 
 Fixed issue where double-clicking a token on the tokenbar was also registering as a single click.  I just found it a bit annoying.
 

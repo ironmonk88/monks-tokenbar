@@ -55,6 +55,10 @@ export class DnD5eRolls extends BaseRolls {
         return actor.data.data.details.xp;
     }
 
+    get useDegrees() {
+        return true;
+    }
+
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
