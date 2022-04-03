@@ -221,7 +221,7 @@ export class ContestedRoll {
         return r;
     }
 
-    static async returnRoll (id, roll, actor, rollmode) {
+    static async returnRoll (id, roll, actor, rollmode, msgId) {
         log("Roll", roll, actor);
 
         if (roll != undefined) {
@@ -231,8 +231,8 @@ export class ContestedRoll {
             if (rollmode == 'gmroll' && !game.user.isGM)
                 whisper.push(game.user.id);
 
-            if (game.dice3d != undefined && roll instanceof Roll && MonksTokenBar.system.hasSound) { // && !fastForward) {
-                finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+            if (game.dice3d != undefined && roll instanceof Roll && MonksTokenBar.system.showRoll) { // && !fastForward) {
+                finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, false, (rollmode == 'selfroll' ? msgId : null)).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
                 });
             }
@@ -244,7 +244,7 @@ export class ContestedRoll {
         }
     }
 
-    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e, msgId) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid)
         let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
@@ -259,7 +259,7 @@ export class ContestedRoll {
             } else {
                 if (MonksTokenBar.system._supportedSystem) { //game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
                     return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
-                        return ContestedRoll.returnRoll(data.id, roll, actor, rollmode);
+                        return ContestedRoll.returnRoll(data.id, roll, actor, rollmode, msgId);
                     }, e);
                 } else
                     ui.notifications.warn(i18n("MonksTokenBar.UnknownSystem"));
@@ -295,7 +295,7 @@ export class ContestedRoll {
                         e[k] = evt[k] || v;
                     MonksTokenBar.system.parseKeys(e, keys);
 
-                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, keys, evt));
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, evt, message.id));
                 }
             }
         };

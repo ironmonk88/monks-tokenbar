@@ -40,9 +40,9 @@ export class OSERolls extends BaseRolls {
         return 'scores:str';
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
-        let options = { fastForward: fastForward, chatMessage: false, event: e };
+        let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, event: e };
         if (requesttype == 'scores') {
             rollfn = actor.rollCheck;
         } else if (requesttype == 'save') {

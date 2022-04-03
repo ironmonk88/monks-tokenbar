@@ -28,7 +28,7 @@ export class SwadeRolls extends BaseRolls {
         return false;
     }
 
-    get hasSound() {
+    get showRoll() {
         return false;
     }
 
@@ -79,9 +79,9 @@ export class SwadeRolls extends BaseRolls {
         return [{ id: 'skill', text: 'Skills', groups: skills }];
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = { event: e, chatMessage: false };
+        let opts = { rollMode: rollMode, event: e, chatMessage: false };
         if (requesttype == 'ability') {
             rollfn = actor.rollAttribute;
         }

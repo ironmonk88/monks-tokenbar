@@ -47,11 +47,15 @@
             </ol>
         </div>
     </div>
-    <footer class="card-footer gm-only">
-        <span class="message-mode">{{modename}}</span><span> {{localize 'MonksTokenBar.GroupDC'}}: <span class="group-dc"></span></span>
-        {{#if canGrab}}<button type="button" class="grab-message footer-button" title="{{localize 'MonksTokenBar.GrabMessage'}}"><i class="fas fa-hand-sparkles"></i></button>{{/if}}
-        <button type="button" class="select-failed footer-button" title="{{localize 'MonksTokenBar.SelectFailed'}}"><i class="fas fa-user-times"></i></button>
-        <button type="button" class="select-saved footer-button" title="{{localize 'MonksTokenBar.SelectSaved'}}"><i class="fas fa-user-check"></i></button>
-        <button type="button" class="select-all footer-button" title="{{localize 'MonksTokenBar.SelectAll'}}"><i class="fas fa-users"></i></button>
+    <footer class="card-footer gm-only flexcol">
+        <div class="flexrow" style="justify-content:flex-end">
+            <button type="button" class="select-all footer-button" title="{{localize 'MonksTokenBar.SelectAll'}}"><i class="fas fa-users"></i></button>
+            <button type="button" class="select-saved footer-button" title="{{localize 'MonksTokenBar.SelectSaved'}}"><i class="fas fa-user-check"></i></button>
+            <button type="button" class="select-failed footer-button" title="{{localize 'MonksTokenBar.SelectFailed'}}"><i class="fas fa-user-times"></i></button>
+            {{#if canGrab}}<button type="button" class="grab-message footer-button" title="{{localize 'MonksTokenBar.GrabMessage'}}"><i class="fas fa-hand-sparkles"></i></button>{{/if}}
+        </div>
+        <div style="overflow:hidden;white-space:nowrap;">
+            <span class="message-mode">{{modename}}</span><span> {{localize 'MonksTokenBar.GroupDC'}}: <span class="group-dc"></span></span>
+        </div>
     </footer>
 </div>

@@ -333,7 +333,7 @@ export const registerSettings = function () {
 		name: game.i18n.localize("MonksTokenBar.gm-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.gm-sound.hint"),
 		scope: "world",
-		config: true,
+		config: !game.modules.get("dice-so-nice")?.active,
 		default: true,
 		type: Boolean,
 	});

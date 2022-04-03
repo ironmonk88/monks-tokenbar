@@ -375,15 +375,9 @@ export class MonksTokenBar {
         return movement != undefined && MTB_MOVEMENT_TYPE[movement.toUpperCase()] != undefined;
     }
 
-    static getDiceSound(hasMaestroSound = false) {
-        const has3DDiceSound = game.dice3d ? game.modules.get("dice-so-nice").active : false;
-        const playRollSounds = true; //game.settings.get("betterrolls5e", "playRollSounds")
-
-        if (playRollSounds && !has3DDiceSound && !hasMaestroSound) {
-            return CONFIG.sounds.dice;
-        }
-
-        return null;
+    static getDiceSound() {
+        const has3DDiceSound = game.modules.get("dice-so-nice")?.active;
+        return (!has3DDiceSound ? CONFIG.sounds.dice : null);
     }
 
     static async changeGlobalMovement(movement) {

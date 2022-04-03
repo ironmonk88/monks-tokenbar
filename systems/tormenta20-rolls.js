@@ -51,9 +51,9 @@ export class Tormenta20Rolls extends BaseRolls {
         return 'ability:for';
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
-        let options = {event: e, message:false};
+        let options = { rollMode: rollMode, event: e, message:false};
 
         if (requesttype == 'ability') {
             rollfn = actor.rollAtributo;

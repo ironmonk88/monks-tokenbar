@@ -59,9 +59,9 @@ export class DnD4eRolls extends BaseRolls {
         return 'ability:str';
     }
 
-    roll({id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
-        let options = { fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
+        let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
         let context = actor;
         if (requesttype == 'ability') {
             rollfn = actor.rollAbility

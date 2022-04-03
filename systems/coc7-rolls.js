@@ -81,7 +81,7 @@ export class CoC7Rolls extends BaseRolls {
         return [{ id: 'skill', text: 'Skills', groups: skills }];
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         /*
         let rollfn = null;
         let options = { fastForward: fastForward, chatMessage: false, event: e };

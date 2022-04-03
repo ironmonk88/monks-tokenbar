@@ -69,7 +69,7 @@ export class PF2eRolls extends BaseRolls {
             return (success < 0 ? "failed" : false);
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = request;
         if (requesttype == 'attribute') {
@@ -83,6 +83,7 @@ export class PF2eRolls extends BaseRolls {
 
                 return game.pf2e.Dice.d20Roll({
                     event,
+                    rollMode,
                     parts,
                     data: {
                         mod: attribute.value
@@ -106,6 +107,7 @@ export class PF2eRolls extends BaseRolls {
                     });
                 return game.pf2e.Dice.d20Roll({
                     event,
+                    rollMode,
                     parts: ["@bonus"],
                     data: data,
                     title: title,
@@ -121,6 +123,7 @@ export class PF2eRolls extends BaseRolls {
                     flavor = `${game.i18n.localize(CONFIG.PF2E.saves[saveName])} Save Check`;
                 return game.pf2e.Dice.d20Roll({
                     event,
+                    rollMode,
                     parts: ["@mod", "@itemBonus"],
                     data: {
                         mod: save.value

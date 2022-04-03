@@ -30,7 +30,7 @@ export class BaseRolls {
         return this._config;
     }
 
-    get hasSound() {
+    get showRoll() {
         return true;
     }
 

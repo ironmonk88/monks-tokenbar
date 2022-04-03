@@ -307,7 +307,7 @@ export class SavingThrow {
         return r;
     }
 
-    static async returnRoll (id, roll, actor, rollmode) {
+    static async returnRoll (id, roll, actor, rollmode, msgId) {
         log("Roll", roll, actor);
         if (roll != undefined) {
             if (roll instanceof Combat) {
@@ -332,8 +332,8 @@ export class SavingThrow {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
                     whisper.push(game.user.id);
-                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.hasSound) {// && !fastForward) {
-                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, (rollmode == 'blindroll' && !game.user.isGM)).then(() => {
+                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll) {// && !fastForward) {
+                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, false, (rollmode == 'selfroll' ? msgId : null)).then(() => {
                         return { id: id, reveal: true, userid: game.userId };
                     });
                 }
@@ -346,7 +346,7 @@ export class SavingThrow {
         }
     }
 
-    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e) {
+    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e, msgId) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid);
         let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
@@ -360,8 +360,8 @@ export class SavingThrow {
                 });
             } else {
                 if (MonksTokenBar.system._supportedSystem) {//game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
-                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
-                        return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
+                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, rollMode: rollmode, requesttype: requesttype, fastForward: fastForward }, function (roll) {
+                        return SavingThrow.returnRoll(data.id, roll, actor, rollmode, msgId);
                     }, e);
                 }
                 else {
@@ -402,7 +402,7 @@ export class SavingThrow {
                         e[k] = evt[k] || v;
                     MonksTokenBar.system.parseKeys(e, keys);
 
-                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e));
+                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e, message.id));
                 }
             }
         };

@@ -1,3 +1,11 @@
+## Version 1.0.65
+
+Fixed an issue with the chat card buttons displaying strangely
+
+Fixed an issue with the sounds still playing when the GM has turned them off for self rolls
+
+Fixed an issue with lootables when currency is involved.
+
 ## Version 1.0.64
 
 Added checks for saving throw and contested roll request to make sure the roll mode is valid

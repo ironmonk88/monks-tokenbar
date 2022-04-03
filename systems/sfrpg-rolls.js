@@ -55,7 +55,7 @@ export class SFRPGRolls extends BaseRolls {
         return actor.data.data.details.xp;
     }
 
-    roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
         /*
         let rollfn = null;
         let opts = { event: e };
@@ -111,7 +111,7 @@ export class SFRPGRolls extends BaseRolls {
             */
 
         let rollfn = null;
-        let options = { fastForward: fastForward, chatMessage: false, event: e };
+        let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, event: e };
         let context = actor;
         if (requesttype == 'abilities') {
             rollfn = actor.rollAbility;
