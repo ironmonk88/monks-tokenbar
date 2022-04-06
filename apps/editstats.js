@@ -11,7 +11,7 @@ export class EditStats extends FormApplication {
         //let's just grab the first player character we can find
         let player = game.actors.find(a => a.type == 'character');
         if (player) {
-            let attributes = TokenDocument.getTrackedAttributes(player.data.data ?? {});
+            let attributes = CONFIG.Token.documentClass.getTrackedAttributes(player.data.data ?? {});
             if (attributes)
                 this.attributes = attributes.value.concat(attributes.bar).map(a => a.join('.'));
         }
