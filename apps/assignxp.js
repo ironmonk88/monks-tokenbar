@@ -37,16 +37,46 @@ export class AssignXPApp extends Application {
 
             //get the monster xp
             let combatxp = 0;
+            let numberOfEnemyCombatants = 0;
             for (let combatant of entity.combatants) {
                 if (combatant.token?.data.disposition != 1) {
+                    numberOfEnemyCombatants++;
                     if (game.system.id == 'pf2e') {
                         let monstLevel = parseInt(combatant?.actor.data.data.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;
-                    }else
+                    } else {
                         combatxp += (combatant.actor?.data.data.details?.xp?.value || 0);
+                    }
                 }
             };
+
+            if (game.system.id === "dnd5e")
+            {
+                let encounterMultiplier = 1;
+                if (numberOfEnemyCombatants === 2)
+                {
+                    encounterMultiplier = 1.5;
+                }
+                else if (numberOfEnemyCombatants >= 3 && numberOfEnemyCombatants <= 6)
+                {
+                    encounterMultiplier = 2;
+                }
+                else if (numberOfEnemyCombatants >= 7 && numberOfEnemyCombatants <= 10)
+                {
+                    encounterMultiplier = 2.5;
+                }
+                else if (numberOfEnemyCombatants >= 11 && numberOfEnemyCombatants <= 14)
+                {
+                    encounterMultiplier = 3;
+                }
+                else if (numberOfEnemyCombatants >= 15)
+                {
+                    encounterMultiplier = 4;
+                }
+                combatxp = combatxp * encounterMultiplier;
+            }
+
             //xp += (combatant?.actor.data.data.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.data.data.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
             this.xp = this.xp || combatxp;
             this.reason = this.reason || i18n("MonksTokenBar.CombatExperience");
