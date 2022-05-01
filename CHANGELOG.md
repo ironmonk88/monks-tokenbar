@@ -1,3 +1,21 @@
+## Version 1.0.66
+
+Fixed an issue with Contested Roll trying to find a winner when not all rolls were received.
+
+Fixed an issue where editing stats was crashign in PF2E.
+
+Fixed an issue in lootables where it wasn't getting the correct value for currency
+
+Added the option to pass in the name property to the Request Roll macro and have it replace the name of the roll being rolled.
+
+Switched the request roll keyboard shortcut from using Shift to Alt Shift
+
+Fixed issue with tokenbar trying to find tokens when no tokens were passed to it.
+
+Changed the Active Tiles action to clarify Global Movement rather than just Movement.
+
+Changed the contested roll chat message to display the buttons the same way the requested roll does.
+
 ## Version 1.0.65
 
 Fixed an issue with the chat card buttons displaying strangely

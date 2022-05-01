@@ -83,7 +83,7 @@ export class MonksTokenBar {
 
         game.keybindings.register('monks-tokenbar', 'request-roll-gm', {
             name: 'MonksTokenBar.RequestRollGM',
-            editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.SHIFT] }],
+            editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT, KeyboardManager.MODIFIER_KEYS?.SHIFT] }],
             onDown: (data) => {
                 new SavingThrowApp(null, {rollmode: "selfroll"}).render(true);
             },
@@ -163,7 +163,7 @@ export class MonksTokenBar {
             return t;
         }
 
-        tokens = tokens.map(t => {
+        tokens = (tokens || []).map(t => {
             if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
                 t = JSON.parse(t);
             if (typeof t == 'object' && t.token && t.constructor.name == 'Object') {
@@ -896,7 +896,7 @@ Hooks.on("setupTileActions", (app) => {
         ctrls: [
             {
                 id: "global",
-                name: "Change Movement",
+                name: "Change Global Movement",
                 type: "checkbox",
                 onClick: (app) => {
                     app.checkConditional();

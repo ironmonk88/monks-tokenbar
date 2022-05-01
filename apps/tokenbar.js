@@ -177,7 +177,7 @@ export class TokenBar extends Application {
                 let disp = ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include')
 
                 let addToken = hasActor && canView && disp;
-                debug("Checking token", t, addToken, hasActor, canView, disp, include);
+                debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include);
 
                 return addToken;
             })

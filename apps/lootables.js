@@ -449,7 +449,7 @@ export class LootablesApp extends FormApplication {
                 let loot = entry.items.filter(i => i.included);
                 items = items.concat(loot);
 
-                let entryCurr = entry.actor.data.data.currency;
+                let entryCurr = entry.currency;
                 for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                     currency[curr] = (currency[curr] || 0) + parseInt(this.getCurrency(entryCurr[curr]) || 0);
                 }

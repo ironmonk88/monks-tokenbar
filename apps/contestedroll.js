@@ -397,10 +397,12 @@ export class ContestedRoll {
                 return k.startsWith('token')
             })
             .map(([k, token]) => {
-                if (token.roll) count++;
+                if (token.roll) {
+                    count++;
 
-                if (!winner || winner.result < token.roll.total)
-                    winner = { id: token.id, result: token.roll.total };
+                    if (!winner || winner.result < token.roll?.total)
+                        winner = { id: token.id, result: token.roll.total };
+                }
 
                 return {
                     id: token.id,

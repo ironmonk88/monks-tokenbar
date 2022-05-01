@@ -178,7 +178,7 @@ export class SavingThrowApp extends Application {
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
             let flavor = this.flavor;
-            let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
+            let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
             
             let requestdata = {
                 dc: this.dc || (request == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
