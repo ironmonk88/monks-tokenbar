@@ -706,6 +706,8 @@ Hooks.on("setup", () => {
         case 'dnd4ebeta':
         case 'dnd4e':
             MonksTokenBar.system = new DnD4eRolls(); break;
+        case 'ds4':
+            MonksTokenBar.system = new DS4Rolls(); break;
         case 'pf1':
             MonksTokenBar.system = new PF1Rolls(); break;
         case 'pf2e':
