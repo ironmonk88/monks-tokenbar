@@ -1,3 +1,21 @@
+## Version 1.0.67
+
+Fixed blind rolls being shown when using Dice So Nice.
+
+Fixed issue when hover over was showing the results even though they were supposed to be hidden.
+
+Added the option to drag and drop stats.
+
+Fixed issue with finding tokens when passing null to request roll.
+
+Added the option to set the resolution of the token bar images.
+
+Fixed inspiration positioning when using vertical orientation.
+
+Restricted the keys used to open a request roll.
+
+Fixed issue when using Active Tiles to request a contested roll.
+
 ## Version 1.0.66
 
 Fixed an issue with Contested Roll trying to find a winner when not all rolls were received.
