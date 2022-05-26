@@ -25,6 +25,7 @@ export class EditStats extends FormApplication {
             width: 400,
             closeOnSubmit: true,
             popOut: true,
+            dragDrop: [{ dragSelector: ".icon", dropSelector: ".item-list" }]
         });
     }
 
@@ -49,9 +50,9 @@ export class EditStats extends FormApplication {
     }
 
     removeStat() {
-        let statid = event.currentTarget.closest('.form-group').dataset.id;
+        let statid = event.currentTarget.closest('.item').dataset.id;
         this.stats.findSplice(s => s.id === statid);
-        $('.form-group[data-id="' + statid + '"]', this.element).remove();
+        $('.item[data-id="' + statid + '"]', this.element).remove();
     }
 
     resetStats() {
@@ -68,19 +69,19 @@ export class EditStats extends FormApplication {
     }
 
     changeIcon(event) {
-        this.statid = event.currentTarget.closest('.form-group').dataset.id;
+        this.statid = event.currentTarget.closest('.item').dataset.id;
         $('.font-picker', this.element).css({top: $(event.currentTarget).position().top}).show();
     }
 
     selectIcon(event) {
         let stat = this.stats.find(s => s.id == this.statid);
         stat.icon = event.currentTarget.dataset.value;
-        $('.form-group[data-id="' + this.statid + '"] .icon i', this.element).attr('class', 'fas ' + stat.icon);
+        $('.item[data-id="' + this.statid + '"] .icon i', this.element).attr('class', 'fas ' + stat.icon);
         $('.font-picker', this.element).hide();
     }
 
     changeText(event) {
-        let statid = event.currentTarget.closest('.form-group').dataset.id;
+        let statid = event.currentTarget.closest('.item').dataset.id;
         let stat = this.stats.find(s => s.id == statid);
         stat.stat = $(event.currentTarget).val();
         if (!this.submitting)
@@ -95,8 +96,8 @@ export class EditStats extends FormApplication {
 
         $('div.icon', html).click(this.changeIcon.bind(this));
         $('.stat-text', html).blur(this.changeText.bind(this));
-        $('div.remove', html).click(this.removeStat.bind(this));
-        $('div.add', html).click(this.addStat.bind(this));
+        $('.remove', html).click(this.removeStat.bind(this));
+        $('.item-add', html).click(this.addStat.bind(this));
 
         $('.font-picker .close-picker', html).on('click', function (event) { $('.font-picker', html).hide(); event.preventDefault(); });
 
@@ -137,6 +138,45 @@ export class EditStats extends FormApplication {
             );
         }
     };
+
+    _onDragStart(event) {
+        let li = event.currentTarget.closest(".item");
+        const dragData = { id: li.dataset.id };
+        event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+    }
+
+    _canDragStart(selector) {
+        return true;
+    }
+
+    _onDrop(event) {
+        // Try to extract the data
+        let data;
+        try {
+            data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        }
+        catch (err) {
+            return false;
+        }
+
+        // Identify the drop target
+        const target = event.target.closest(".item") || null;
+
+        // Call the drop handler
+        if (target && target.dataset.id) {
+            if (data.id === target.dataset.id) return; // Don't drop on yourself
+
+            let from = this.stats.findIndex(a => a.id == data.id);
+            let to = this.stats.findIndex(a => a.id == target.dataset.id);
+            log('from', from, 'to', to);
+            this.stats.splice(to, 0, this.stats.splice(from, 1)[0]);
+
+            if (from < to)
+                $('.item-list .item[data-id="' + data.id + '"]', this.element).insertAfter(target);
+            else
+                $('.item-list .item[data-id="' + data.id + '"]', this.element).insertBefore(target);
+        }
+    }
 }
 
 Hooks.on("renderEditStats", (app, html, data) => {

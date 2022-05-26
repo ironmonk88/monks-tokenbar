@@ -265,7 +265,7 @@ export class TokenBar extends Application {
             let thumb = this.thumbnails[diff.img];
             if (!thumb) {
                 try {
-                    thumb = await ImageHelper.createThumbnail(diff.img, { width: 48, height: 48 });
+                    thumb = await ImageHelper.createThumbnail(diff.img, { width: setting("resolution-size"), height: setting("resolution-size") });
                     this.thumbnails[diff.img] = (thumb?.thumb || thumb);
                 } catch {
                     thumb = 'icons/svg/mystery-man.svg';

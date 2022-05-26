@@ -1,17 +1,33 @@
 <div class="monks-tokenbar flexcol editstats">
     <form>
-        <div class="dialog-content" style="flex: 0 0 200px;height:200px;overflow-y:auto;">
+        <div class="dialog-content sheet" style="flex: 0 0 200px;height:200px;">
+            <ol class="items-list" style="overflow: visible;">
+                <li class="items-header flexrow" style="position: relative;">
+                    <div class="item-controls"></div>
+                    <div class="item-name" style="text-align: left;">Name</div>
+                    <div class="item-controls flexrow" style="text-align: center;">
+                        <a class="item-control item-add"><i class="fas fa-plus"></i> Add</a>
+                    </div>
+                </li>
 
-            {{#each stats}}
-            <div class="form-group" data-id="{{this.id}}">
-                <div class="icon" style="flex: 0 0 30px;padding: 8px;"><i class="fas {{this.icon}}"></i></div>
-                <input type="text" class="stat-text typeahead" autocomplete="off" value="{{this.stat}}" />
-                <div class="remove" style="flex: 0 0 30px;padding: 8px;"><i class="fas fa-trash"></i></div>
-            </div>
-            {{/each}}
-            <div class="form-group">
-                <div class="add" style="flex: 0 0 30px;padding: 8px;"><i class="fas fa-plus"></i></div>
-            </div>
+                <ol class="item-list" style="padding-left: 0px; max-height: 500px;">
+                    {{#each stats}}
+                    <li class="item flexrow" data-id="{{this.id}}" style="position:relative;">
+                        <div class="item-controls icon" style="text-align: center;">
+                            <i class="fas {{this.icon}}"></i>
+                        </div>
+
+                        <div class="item-name stat-name" style="overflow:visible">
+                            <input type="text" class="stat-text typeahead" autocomplete="off" value="{{this.stat}}" />
+                        </div>
+
+                        <div class="item-controls flexrow">
+                            <a class="item-control remove"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ol>
+            </ol>
 
             <div class="font-picker">
                 <header class="flexrow">

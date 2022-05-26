@@ -76,6 +76,7 @@ export class MonksTokenBar {
         game.keybindings.register('monks-tokenbar', 'request-roll', {
             name: 'MonksTokenBar.RequestRoll',
             editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT] }],
+            restricted: true,
             onDown: (data) => {
                 new SavingThrowApp().render(true);
             },
@@ -84,6 +85,7 @@ export class MonksTokenBar {
         game.keybindings.register('monks-tokenbar', 'request-roll-gm', {
             name: 'MonksTokenBar.RequestRollGM',
             editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT, KeyboardManager.MODIFIER_KEYS?.SHIFT] }],
+            restricted: true,
             onDown: (data) => {
                 new SavingThrowApp(null, {rollmode: "selfroll"}).render(true);
             },
@@ -1160,9 +1162,11 @@ Hooks.on("setupTileActions", (app) => {
             if (entity1.id == entity2.id)
                 return;
 
+            let request1 = mergeObject((MonksTokenBar.getTokenEntries([entity1])[0] || {}), { request: action.data.request1 });
+            let request2 = mergeObject((MonksTokenBar.getTokenEntries([entity2])[0] || {}), { request: action.data.request2 });
+
             let contested = new ContestedRollApp(
-                { request: action.data.request1, token: MonksTokenBar.getTokenEntries(entity1) },
-                { request: action.data.request2, token: MonksTokenBar.getTokenEntries(entity2) },
+                [request1, request2],
                 { rollmode: action.data.rollmode, request: action.data.request, flavor: action.data.flavor });
             contested['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
             if (action.data.silent === true) {

@@ -8,7 +8,10 @@ export class SavingThrowApp extends Application {
 
         if (entries != undefined && !$.isArray(entries))
             entries = [entries];
-        this.entries = (entries || MonksTokenBar.getTokenEntries(canvas.tokens.controlled.filter(t => t.actor != undefined)));
+        if (entries == undefined || entries.length == 0)
+            this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.controlled.filter(t => t.actor != undefined));
+        else
+            this.entries = entries;
 
         if (this.entries.length == 0) {   //if none have been selected then default to the party
             this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
@@ -332,8 +335,8 @@ export class SavingThrow {
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
                 if (rollmode == 'gmroll' && !game.user.isGM)
                     whisper.push(game.user.id);
-                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll) {// && !fastForward) {
-                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, false, (rollmode == 'selfroll' ? msgId : null)).then(() => {
+                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll) {
+                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, rollmode !== 'roll' && !game.user.isGM, (rollmode == 'selfroll' ? msgId : null)).then(() => { //
                         return { id: id, reveal: true, userid: game.userId };
                     });
                 }
@@ -792,14 +795,15 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     }
 
                     let diceicon = "";
-                    let dicetext = ";"
+                    let dicetext = "";
                     switch (msgtoken.passed) {
                         case true: diceicon = '<i class="fas fa-check"></i>'; dicetext = i18n("MonksTokenBar.RollPassed");break;
                         case "success": diceicon = '<i class="fas fa-check-double"></i>'; dicetext = i18n("MonksTokenBar.RollCritPassed"); break;
                         case false: diceicon = '<i class="fas fa-times"></i>'; dicetext = i18n("MonksTokenBar.RollFailed"); break;
                         case "failed": diceicon = '<i class="fas fa-ban"></i>'; dicetext = i18n("MonksTokenBar.RollCritFailed"); break;
                     }
-                    $('.dice-total', item).attr("title", dicetext);
+                    if (game.user.isGM || rollmode == 'roll')
+                        $('.dice-total', item).attr("title", dicetext);
                     $('.dice-text', item)
                         .toggle(showroll && msgtoken.passed != undefined)
                         //.toggleClass('clickable', request == 'death' && !msgtoken.assigned)

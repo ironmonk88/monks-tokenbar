@@ -128,6 +128,21 @@ export const registerSettings = function () {
 		onChange: debouncedReload
 	});
 
+	game.settings.register(modulename, "resolution-size", {
+		name: game.i18n.localize("MonksTokenBar.resolution-size.name"),
+		hint: game.i18n.localize("MonksTokenBar.resolution-size.hint"),
+		scope: "world",
+		config: true,
+		range: {
+			min: 30,
+			max: 200,
+			step: 5,
+		},
+		default: 50,
+		type: Number,
+		onChange: debouncedReload
+	});
+
 	game.settings.register(modulename, "show-resource-bars", {
 		name: game.i18n.localize("MonksTokenBar.show-resource-bars.name"),
 		hint: game.i18n.localize("MonksTokenBar.show-resource-bars.hint"),

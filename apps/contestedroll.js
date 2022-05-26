@@ -202,6 +202,7 @@ export class ContestedRollApp extends Application {
         let name = "Contested Roll";
 
         let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.name}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.name}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
         macro.sheet.render(true);
     }
@@ -228,11 +229,11 @@ export class ContestedRoll {
             let finishroll;
 
             let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-            if (rollmode == 'gmroll' && !game.user.isGM)
-                whisper.push(game.user.id);
+            //if (rollmode == 'gmroll' && !game.user.isGM)
+            //    whisper.push(game.user.id);
 
             if (game.dice3d != undefined && roll instanceof Roll && MonksTokenBar.system.showRoll) { // && !fastForward) {
-                finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, false, (rollmode == 'selfroll' ? msgId : null)).then(() => {
+                finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, rollmode !== 'roll' && !game.user.isGM, (rollmode == 'selfroll' ? msgId : null)).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
                 });
             }
@@ -357,7 +358,7 @@ export class ContestedRoll {
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
                         `<div class="dice-total flexrow noselect" style="display:none;">
                         <div class= "dice-result noselect">${msgtoken.total}</div >
-                        <a class="item-control roll-result" title="${i18n("MonksTokenBar.RollResult")}" data-control="rollResult">
+                        <a class="item-control roll-result" title="${(game.user.isGM || rollmode == 'roll' ? i18n("MonksTokenBar.RollResult") : '')}" data-control="rollResult">
                             <i class="fas"></i>
                         </a>
                     </div >`);

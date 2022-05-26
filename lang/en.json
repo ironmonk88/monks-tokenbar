@@ -146,6 +146,8 @@
 	"MonksTokenBar.gm-sound.hint": "Play Sound when GM rolls a hidden request",
 	"MonksTokenBar.dblclick-action.name": "Double-click action",
 	"MonksTokenBar.dblclick-action.hint": "Action to perform when double-clicking on a token",
+	"MonksTokenBar.resolution-size.name": "Token Resolution",
+	"MonksTokenBar.resolution-size.hint": "Set the resolution of the tokens, the larger the number the clearer the image, but the longer it will take to load.",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
