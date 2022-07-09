@@ -571,11 +571,11 @@ export class SavingThrow {
                     (restart.action.data.continue == 'allfail' && result.failed == result.tokenresults.length);
 
                 tile.resumeActions(restart.id, result);
-            } else {
-                if (message.mtb_callback)
-                    message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
-                return result;
             }
+            if (message.mtb_callback)
+                message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
+
+            return result;
         }
     }
 

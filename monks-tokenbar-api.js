@@ -31,7 +31,7 @@ export class MonksTokenBarAPI {
     }
 
     static async requestRoll(tokens, options = {}) {
-        if (!game.user.isGM)
+        if (!game.user.isGM && !setting("allow-roll"))
             return;
 
         options.rollmode = options.rollmode || options.rollMode || 'roll';
@@ -56,7 +56,7 @@ export class MonksTokenBarAPI {
     }
 
     static async requestContestedRoll(request0, request1, options = {}) {
-        if (!game.user.isGM)
+        if (!game.user.isGM && !setting("allow-roll"))
             return;
 
         options.rollmode = options.rollmode || options.rollMode || 'roll';

@@ -1,3 +1,23 @@
+## Version 1.0.68
+
+Update assign xp so it only adds actors that are owned by players.
+
+Fixed issue with adjusting xp manually
+
+Fixed issue with contested roll macro command when tokens don't exist.
+
+Fixed issue with contested roll and saving throw, passing in a callback function.
+
+Added setting to allow players to roll.
+
+Fixed issue with finding default tokens for contested roll
+
+Fixed issue with PF2E and the token bar dropdown no longer being shown.
+
+Fixed issue with contested roll Active Tile command.
+
+Added assign xp action to Active Tiles.
+
 ## Version 1.0.67
 
 Fixed blind rolls being shown when using Dice So Nice.

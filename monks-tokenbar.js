@@ -1,4 +1,4 @@
-﻿import { registerSettings } from "./settings.js";
+﻿import { registerSettings, divideXpOptions } from "./settings.js";
 import { TokenBar } from "./apps/tokenbar.js";
 import { AssignXP, AssignXPApp } from "./apps/assignxp.js";
 import { SavingThrow, SavingThrowApp } from "./apps/savingthrow.js";
@@ -168,11 +168,13 @@ export class MonksTokenBar {
         tokens = (tokens || []).map(t => {
             if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
                 t = JSON.parse(t);
-            if (typeof t == 'object' && t.token && t.constructor.name == 'Object') {
-                t = { token: findToken(t.token), keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage }, request: t.request, fastForward: t.fastForward };
-            } else {
-                t = { token: findToken(t) };
-            }
+
+            t = {
+                token: findToken(typeof t == 'object' && t.token && t.constructor.name == 'Object' ? t.token : t),
+                keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage },
+                request: t.request,
+                fastForward: t.fastForward
+            };
 
             Object.defineProperty(t, 'id', {
                 get: function () {
@@ -180,7 +182,7 @@ export class MonksTokenBar {
                 }
             });
 
-            return (t.token == undefined ? null : t);
+            return (!!t.token || !!t.request ? t: null);
         }).filter(c => !!c);
 
         return tokens;
@@ -322,7 +324,6 @@ export class MonksTokenBar {
             case 'movementchange': {
                 if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.isOwner) {
                     ui.notifications.warn(data.msg);
-                    log('movement change');
                     if (MonksTokenBar.tokenbar != undefined) {
                         MonksTokenBar.tokenbar.render(true);
                     }
@@ -875,14 +876,15 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
         let include = app.token.getFlag('monks-tokenbar', 'include') || 'default';
         include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
         //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
-        $('<div>')
+        let group = $('<div>')
             .addClass('form-group')
             .append($('<label>').html('Show on Tokenbar'))
             .append($('<select>').attr('name', 'flags.monks-tokenbar.include')
                 .append($('<option>').attr('value', 'default').html('Default').prop('selected', include == 'default'))
                 .append($('<option>').attr('value', 'include').html('Include').prop('selected', include == 'include'))
-                .append($('<option>').attr('value', 'exclude').html('Exclude').prop('selected', include == 'exclude')))
-            .insertAfter($('[name="disposition"]', html).parent());
+                .append($('<option>').attr('value', 'exclude').html('Exclude').prop('selected', include == 'exclude')));
+
+        $('div[data-tab="character"]', html).append(group);
 
         app.setPosition();
     }
@@ -1033,8 +1035,8 @@ Hooks.on("setupTileActions", (app) => {
             const { action, tile } = args;
             let entities = await game.MonksActiveTiles.getEntities(args);
 
-            if (entities.length == 0)
-                return;
+            //if (entities.length == 0)
+            //    return;
 
             entities = entities.map(e => e.object);
 
@@ -1148,11 +1150,11 @@ Hooks.on("setupTileActions", (app) => {
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
             const { action, tile } = args;
-            let entities1 = await game.MonksActiveTiles.getEntities(args, action.data.entity1.id);
-            let entities2 = await game.MonksActiveTiles.getEntities(args, action.data.entity2.id);
+            let entities1 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity1);
+            let entities2 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity2);
 
-            if (entities1.length == 0 || entities2.length == 0)
-                return;
+            //if (entities1.length == 0 || entities2.length == 0)
+            //    return;
 
             let entity1 = entities1[0].object;
             let entity2 = entities2[0].object;
@@ -1193,7 +1195,7 @@ Hooks.on("setupTileActions", (app) => {
             requesttype = (parts.length > 1 ? parts[0] : '');
             request = (parts.length > 1 ? parts[1] : parts[0]);
             let name2 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
-            
+
             let entityName1 = await game.MonksActiveTiles.entityName(action.data?.entity1);
             let entityName2 = await game.MonksActiveTiles.entityName(action.data?.entity2);
             return `<span class="action-style">Contested Roll</span> <span class="entity-style">${entityName1}</span> <span class="details-style">"${name1}"</span> vs. <span class="entity-style">${entityName2}</span> <span class="details-style">"${name2}"</span> ${(action.data?.usetokens != 'all' ? ", Continue with " + trigger.values.usetokens[action.data?.usetokens] : '')}`;
@@ -1216,7 +1218,7 @@ Hooks.on("setupTileActions", (app) => {
             },
             {
                 id: "resume",
-                name: "Continue to Anchor",
+                name: "Continue to Landing",
                 type: "text"
             },
         ],
@@ -1246,4 +1248,48 @@ Hooks.on("setupTileActions", (app) => {
             return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
         }
     });
-})
+
+    app.registerTileAction('monks-tokenbar', 'assignxp', {
+        name: 'Assign XP',
+        ctrls: [
+            {
+                id: "entity",
+                name: "Select Entity",
+                type: "select",
+                subtype: "entity",
+                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                restrict: (entity) => { return (entity instanceof Token); }
+            },
+            {
+                id: "xp",
+                name: "XP",
+                type: "number"
+            },
+            {
+                id: "reason",
+                name: "Reason",
+                type: "text"
+            },
+            {
+                id: "dividexp",
+                name: "Divide XP",
+                list: () => {
+                    return divideXpOptions
+                },
+                type: "list"
+            }
+        ],
+        group: 'monks-tokenbar',
+        fn: async (args = {}) => {
+            const { action, tile } = args;
+            let entities = await game.MonksActiveTiles.getEntities(args);
+
+            if (entities.length == 0)
+                return;
+        },
+        content: async (trigger, action) => {
+            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+            return `<span class="action-style">${trigger.name}</span> <span class="details-style">"${action.data?.xp}XP"</span> to <span class="entity-style">${entityName}</span>`;
+        }
+    });
+});

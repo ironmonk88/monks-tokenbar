@@ -2,7 +2,7 @@
 	"name": "monks-tokenbar",
 	"title": "Monk's TokenBar",
 	"description": "Add a bar with all the current player tokens.  Limit movement, roll saving throws, assign XP.",
-	"version": "1.0.67",
+	"version": "1.0.68",
 	"minimumCoreVersion": "9",
 	"compatibleCoreVersion": "9",
 	"author": "IronMonk",
@@ -65,7 +65,7 @@
 	"styles": [ "css/tokenbar.css" ],
 	"packs": [],
 	"url": "https://github.com/ironmonk88/monks-tokenbar",
-	"download": "https://github.com/ironmonk88/monks-tokenbar/archive/1.0.67.zip",
+	"download": "https://github.com/ironmonk88/monks-tokenbar/archive/1.0.68.zip",
 	"manifest": "https://github.com/ironmonk88/monks-tokenbar/releases/latest/download/module.json",
 	"bugs": "https://github.com/ironmonk88/monks-tokenbar/issues",
 	"allowBugReporter": true

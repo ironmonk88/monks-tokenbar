@@ -273,7 +273,7 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .token .context-items li:nth-child(5),
-#tokenbar .token .context-items li:nth-child(7) {
+#tokenbar .token .context-items li:nth-child(6) {
     border-top: 2px groove #444; /*#23221d;*/
 }
 

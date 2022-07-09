@@ -18,8 +18,9 @@ export class AssignXPApp extends Application {
             var apl = { count: 0, levels: 0 };
 
             //get the actors
+            let monsters = [];
             for (let combatant of entity.combatants) {
-                if (combatant.token?.data.disposition == 1 && combatant.actor) {
+                if (combatant.token?.data.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
                     let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
                     this.actors.push({
                         actor: actor,
@@ -29,7 +30,8 @@ export class AssignXPApp extends Application {
 
                     apl.count = apl.count + 1;
                     apl.levels = apl.levels + (actor.data.data.details.level?.value || actor.data.data.details.level);
-                }
+                } else
+                    monsters.push(combatant);
             };
             var calcAPL = 0;
             if (apl.count > 0)
@@ -37,8 +39,8 @@ export class AssignXPApp extends Application {
 
             //get the monster xp
             let combatxp = 0;
-            for (let combatant of entity.combatants) {
-                if (combatant.token?.data.disposition != 1) {
+            for (let combatant of monsters) {
+                if (combatant.token?.data.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
                     if (game.system.id == 'pf2e') {
                         let monstLevel = parseInt(combatant?.actor.data.data.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
@@ -53,16 +55,25 @@ export class AssignXPApp extends Application {
         } else {
             if (entity != undefined && !$.isArray(entity))
                 entity = [entity];
-            this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables).filter(t => {
-                return t.actor?.hasPlayerOwner && (t.actor?.data.type == 'character' || t.actor?.data.type == 'Player Character')
-            })).map(t => {
-                let actor = (t.actor.isPolymorphed ? game.actors.find(a => a.id == t.actor.getFlag(game.system.id, 'originalActor')) : t.actor);
-                return {
-                    actor: actor,
-                    disabled: false,
-                    xp: 0
-                };
-            });
+            this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables))
+                .map(t => {
+                    if (!t.actor)
+                        return null;
+                    return (t.actor.hasPlayerOwner && (t.actor.data.type == 'character' || t.actor?.data.type == 'Player Character') ? t.actor : null)
+                })
+                .filter((a, index, self) => {
+                    if (!a)
+                        return false;
+                    return self.findIndex((i) => { return i?.id == a.id }) === index;
+                })
+                .map(actor => {
+                    actor = (actor.isPolymorphed ? game.actors.find(a => a.id == actor.getFlag(game.system.id, 'originalActor')) : actor);
+                    return {
+                        actor: actor,
+                        disabled: false,
+                        xp: 0
+                    };
+                });
         }
 
         this.changeXP();
@@ -221,7 +232,17 @@ export class AssignXPApp extends Application {
             that.changeXP.call(that, that.xp);
             that.render(true);
         });
+
+        $('.charxp', html).blur(this.adjustCharXP.bind(this));
     };
+
+    adjustCharXP(event) {
+        let id = $(event.currentTarget).closest(".item")[0].dataset["itemId"];
+        let actor = this.actors.find(a => a.actor.id == id);
+        if (actor)
+            actor.xp = parseInt($(event.currentTarget).val())
+        this.render(true);
+    }
 }
 
 export class AssignXP {

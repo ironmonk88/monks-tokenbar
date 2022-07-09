@@ -201,7 +201,7 @@ export class ContestedRollApp extends Application {
     async saveToMacro() {
         let name = "Contested Roll";
 
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token.name}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token.name}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token?.name}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token?.name}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
 
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
         macro.sheet.render(true);
@@ -432,11 +432,11 @@ export class ContestedRoll {
                 }
 
                 tile.resumeActions(restart.id, result);
-            } else {
-                if (message.mtb_callback)
-                    message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
-                return result;
             }
+
+            if (message.mtb_callback)
+                message.mtb_callback.call(message, result, message.getFlag('monks-tokenbar', 'options'));
+            return result;
         }
     }
 

@@ -28,7 +28,7 @@
 
                     <ol class="item-list">
                         {{#each actors}}
-                        <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.actor.id}}" draggable="true">
+                        <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.actor.id}}" draggable="false">
                             <div class="item-name flexrow rollable">
                                 <div class="item-image" style="background-image: url('{{this.actor.data.img}}')">
                                     <video width="30" height="30"><source src="{{this.actor.data.img}}" /></video>

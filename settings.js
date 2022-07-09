@@ -327,7 +327,14 @@ export const registerSettings = function () {
 	});
 
 	//------------------------------------Request Roll settings--------------------------------------------
-
+	game.settings.register(modulename, "allow-roll", {
+		name: game.i18n.localize("MonksTokenBar.allow-roll.name"),
+		hint: game.i18n.localize("MonksTokenBar.allow-roll.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "request-roll-sound", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
