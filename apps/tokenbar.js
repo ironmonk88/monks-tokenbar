@@ -24,7 +24,9 @@ export class TokenBar extends Application {
         });
 
         Hooks.on('updateToken', (document, data, options) => {
-            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+            if ((game.user.isGM || setting("allow-player")) && getProperty(data, "flags.monks-tokenbar.include") != undefined) {
+                this.refresh();
+            } else if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let tkn = this.tokens.find(t => t.token.id == document.id);
                 if (tkn)
                     this.updateToken(tkn, options.ignoreRefresh !== true)
@@ -45,7 +47,7 @@ export class TokenBar extends Application {
                 let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
                 if (tkn != undefined) {
                     this.updateToken(tkn)
-                } else if (data.permission != undefined) {
+                } else if (data.ownership != undefined) {
                     this.refresh();
                 }
             }
@@ -174,7 +176,7 @@ export class TokenBar extends Application {
 
                 let hasActor = (t.actor != undefined);
                 let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER"));
-                let disp = ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include')
+                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include')
 
                 let addToken = hasActor && canView && disp;
                 debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include);
@@ -188,7 +190,7 @@ export class TokenBar extends Application {
                     token: t,
                     img: null,
                     thumb: null,
-                    movement: t.data.flags["monks-tokenbar"]?.movement,
+                    movement: t.flags["monks-tokenbar"]?.movement,
                     stats: { },
                     resource1: { },
                     resource2: { }
@@ -205,7 +207,7 @@ export class TokenBar extends Application {
 
     getResourceBar(token, bar) {
         let resource = {};
-        if (token.data.displayBars > 0) {
+        if (token.displayBars > 0) {
             const attr = token.getBarAttribute(bar);
 
             if (attr != undefined && attr.type == "bar") {
@@ -237,7 +239,7 @@ export class TokenBar extends Application {
         let viewstats = tkn.token.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
         for (let stat of viewstats) {
-            let value = TokenBar.processStat(stat.stat, tkn.token.actor.data.data);
+            let value = TokenBar.processStat(stat.stat, tkn.token.actor.system) || TokenBar.processStat(stat.stat, tkn.token.data);
 
             if (tkn.stats[stat.stat] == undefined) {
                 tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (value == undefined) };
@@ -260,8 +262,8 @@ export class TokenBar extends Application {
             diff.stats = diffstats;
         }
 
-        if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img)) {
-            diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.data.img : tkn.token.data.img);
+        if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.img : tkn.token.texture.src)) {
+            diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.img : tkn.token.texture.src);
             let thumb = this.thumbnails[diff.img];
             if (!thumb) {
                 try {
@@ -275,16 +277,16 @@ export class TokenBar extends Application {
             diff.thumb = (thumb?.thumb || thumb);
         }
 
-        if (tkn.movement != tkn.token.data.flags['monks-tokenbar']?.movement) {
-            diff.movement = tkn.token.data.flags['monks-tokenbar']?.movement;
+        if (tkn.movement != tkn.token.flags['monks-tokenbar']?.movement) {
+            diff.movement = tkn.token.flags['monks-tokenbar']?.movement;
         }
 
-        if (tkn.inspiration != (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration')))
-            diff.inspiration = (tkn.token.actor.data?.data?.attributes?.inspiration && setting('show-inspiration'));
+        if (tkn.inspiration != (tkn.token.actor.system?.attributes?.inspiration && setting('show-inspiration')))
+            diff.inspiration = (tkn.token.actor.system?.attributes?.inspiration && setting('show-inspiration'));
 
         if (setting("show-disable-panning-option")) {
-            if (tkn.nopanning != tkn.token.data.flags['monks-tokenbar']?.nopanning) {
-                diff.nopanning = tkn.token.data.flags['monks-tokenbar']?.nopanning;
+            if (tkn.nopanning != tkn.token.flags['monks-tokenbar']?.nopanning) {
+                diff.nopanning = tkn.token.flags['monks-tokenbar']?.nopanning;
             }
         } else {
             diff.nopanning = false;
@@ -407,7 +409,7 @@ export class TokenBar extends Application {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     let players = game.users.contents
                         .filter(u =>
-                            !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
+                            !u.isGM && (entry.token.actor.ownership[u.id] == 3 || entry.token.actor.ownership.default == 3)
                     );
                     return players.length > 0;
                 },
@@ -415,7 +417,7 @@ export class TokenBar extends Application {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     let players = game.users.contents
                     .filter(u =>
-                        !u.isGM && (entry.token.actor.data.permission[u.id] == 3 || entry.token.actor.data.permission.default == 3)
+                        !u.isGM && (entry.token.actor.ownership[u.id] == 3 || entry.token.actor.ownership.default == 3)
                     )
                     .map(u => {
                         return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);

@@ -30,12 +30,12 @@
                         {{#each actors}}
                         <li class="item flexrow{{#if this.disabled}} disabled{{/if}}" data-item-id="{{this.actor.id}}" draggable="false">
                             <div class="item-name flexrow rollable">
-                                <div class="item-image" style="background-image: url('{{this.actor.data.img}}')">
-                                    <video width="30" height="30"><source src="{{this.actor.data.img}}" /></video>
+                                <div class="item-image" style="background-image: url('{{this.actor.img}}')">
+                                    <video width="30" height="30"><source src="{{this.actor.img}}" /></video>
                                     <i class="fas fa-ban"></i>
                                 </div>
                                 <h4>
-                                    {{this.actor.data.name}}
+                                    {{this.actor.name}}
                                 </h4>
                             </div>
                             <div style="flex:0 0 60px;">

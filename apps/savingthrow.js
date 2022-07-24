@@ -17,7 +17,7 @@ export class SavingThrowApp extends Application {
             this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
                 let include = t.document.getFlag('monks-tokenbar', 'include');
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-                return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
+                return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
             }));
         }
         this.rollmode = (options?.rollmode || options?.rollMode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
@@ -117,7 +117,7 @@ export class SavingThrowApp extends Application {
                 this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
                     let include = t.document.getFlag('monks-tokenbar', 'include');
                     include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-                    return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.data.disposition == 1 && include != 'exclude') || include === 'include'));
+                    return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
                 }));
                 this.render(true);
                 break;
@@ -160,7 +160,7 @@ export class SavingThrowApp extends Application {
                     id: t.token.id,
                     uuid: t.token.document.uuid,
                     actorid: t.token.actor.id,
-                    icon: (t.token.data.img.endsWith('webm') ? t.token.actor.data.img : t.token.data.img),
+                    icon: (t.token.document.texture.src.endsWith('webm') ? t.token.actor.img : t.token.document.texture.src),
                     name: t.token.name,
                     keys: t.keys,
                 };
@@ -207,8 +207,8 @@ export class SavingThrowApp extends Application {
             for (let i = 0; i < this.entries.length; i++) {
                 let token = this.entries[i].token;
                 if (token.actor != undefined) {
-                    for (var key in token.actor.data.permission) {
-                        if (key != 'default' && token.actor.data.permission[key] >= CONST.ENTITY_PERMISSIONS.OWNER) {
+                    for (var key in Object.keys(token.actor.ownership)) {
+                        if (key != 'default' && token.actor.ownership[key] >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
                             if (whisper.find(t => t == key) == undefined)
                                 whisper.push(key);
                         }
@@ -294,8 +294,13 @@ export class SavingThrowApp extends Application {
         let request = (parts.length > 1 ? parts[1] : parts[0]);
         let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
 
+        let folder = game.folders.find(f => { return f.type == "Macro" && f.name == "Monk's Tokenbar" });
+        if (!folder) {
+            folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
+        }
+
         let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
-        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
     }
 }
@@ -316,7 +321,7 @@ export class SavingThrow {
             if (roll instanceof Combat) {
                 let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
                 if (combatant != undefined) {
-                    let initTotal = combatant.actor.data.data.attributes.init.total;
+                    let initTotal = combatant.actor.system.attributes.init.total;
                     let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
                     let fakeroll = Roll.fromJSON(jsonRoll);
                     return { id: id, roll: fakeroll, finish: null, reveal: true };
@@ -379,7 +384,7 @@ export class SavingThrow {
         if (!$.isArray(ids))
             ids = [ids];
 
-        let flags = message.data.flags['monks-tokenbar'];
+        let flags = message.flags['monks-tokenbar'];
 
         let request = message.getFlag('monks-tokenbar', 'request');
         let requesttype = message.getFlag('monks-tokenbar', 'requesttype');
@@ -446,7 +451,7 @@ export class SavingThrow {
         if ($.isNumeric(dc))
             dc = parseInt(dc);
 
-        let content = $(message.data.content);
+        let content = $(message.content);
 
         let flags = {};
 
@@ -522,7 +527,7 @@ export class SavingThrow {
         let total = 0;
         let failed = 0;
         let passed = 0;
-        let tokenresults = Object.entries(message.data.flags['monks-tokenbar'])
+        let tokenresults = Object.entries(message.flags['monks-tokenbar'])
             .filter(([k, v]) => {
                 return k.startsWith('token')
             })
@@ -607,7 +612,7 @@ export class SavingThrow {
 
     static async onRollAll(tokentype, message, e) {
         if (game.user.isGM) {
-            let flags = message.data.flags['monks-tokenbar'];
+            let flags = message.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)
                 .filter(key => key.startsWith('token'))
                 .map(key => flags[key]);
@@ -615,7 +620,7 @@ export class SavingThrow {
             let ids = tokens.filter(t => {
                 if (t.roll != undefined) return false;
                 let actor = game.actors.get(t.actorid);
-                return (actor != undefined && (tokentype == 'all' || actor.data.type != 'character'));
+                return (actor != undefined && (tokentype == 'all' || actor.type != 'character'));
             }).map(a => a.id);
 
             return SavingThrow.onRollAbility(ids, message, true, e);
@@ -654,9 +659,9 @@ export class SavingThrow {
                 msgtoken = duplicate(msgtoken);
 
                 let actor = game.actors.get(msgtoken.actorid);
-                let attr = 'data.attributes.death.' + (msgtoken.passed === true || msgtoken.passed === "success" ? 'success' : 'failure');
+                let attr = 'system.attributes.death.' + (msgtoken.passed === true || msgtoken.passed === "success" ? 'success' : 'failure');
                 let roll = Roll.fromData(msgtoken.roll);
-                let val = (getProperty(actor.data, attr) || 0) + (roll.dice[0].total == roll.dice[0].options.critical || roll.dice[0].total == roll.dice[0].options.fumble ? 2 : 1);
+                let val = (getProperty(actor, attr) || 0) + (roll.dice[0].total == roll.dice[0].options.critical || roll.dice[0].total == roll.dice[0].options.fumble ? 2 : 1);
                 let update = {};
                 update[attr] = val;
                 await actor.update(update);
@@ -696,7 +701,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = 0;
         if (game.system.id == "dnd5e" || game.system.id == "sw5e"  )
-            allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
+            allZeroHP = app.tokens.filter(t => getProperty(t.actor, "system.attributes.hp.value") == 0).length;
         let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) ||
             (allPlayers ? (game.system.id == "dnd5e" || game.system.id == "sw5e"  ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
             SavingThrow.lastRequest ||
@@ -833,7 +838,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
         //$('.message-mode', html).html(modename);
 
-        //let content = duplicate(message.data.content);
+        //let content = duplicate(message.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
         $('.grab-message', html).off('click.grabbing').on('click.grabbing', MonksTokenBar.setGrabMessage.bind(MonksTokenBar, message));
@@ -841,10 +846,6 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, (ti) => ti));
         $('.select-saved', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === true || ti?.passed === "success"));
         $('.select-failed', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === false || ti?.passed === "failed"));
-    } else if (message._roll != undefined && message.data.type == 5){
-        //check grab this roll
-        if(game.system.id == 'dnd5e' || game.system.id == 'sw5e')
-            $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
     }
 });
 

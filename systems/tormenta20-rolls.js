@@ -31,13 +31,13 @@ export class Tormenta20Rolls extends BaseRolls {
     }
 
     getLevel(actor){
-        return actor.data.data.attributes?.nivel?.value;
+        return actor.system.attributes?.nivel?.value;
     }
 
     getXP(actor){
         return {
-            value: actor.data.data.attributes?.nivel?.xp.value,
-            max: actor.data.data.attributes?.nivel?.xp.proximo
+            value: actor.system.attributes?.nivel?.xp.value,
+            max: actor.system.attributes?.nivel?.xp.proximo
         };
     }
 
@@ -80,14 +80,14 @@ export class Tormenta20Rolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.attributes.nivel.xp.value": parseInt(actor.data.data.attributes.nivel.xp.value) + parseInt(msgactor.xp)
+            "system.attributes.nivel.xp.value": parseInt(actor.system.attributes.nivel.xp.value) + parseInt(msgactor.xp)
         });
 
-        if (setting("send-levelup-whisper") && actor.data.data.attributes.nivel.xp.value >= actor.data.data.attributes.nivel.xp.proximo) {
+        if (setting("send-levelup-whisper") && actor.system.attributes.nivel.xp.value >= actor.system.attributes.nivel.xp.proximo) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
-                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
             }).then(() => { });
         }
     }

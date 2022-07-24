@@ -18,11 +18,11 @@ export class DS4Rolls extends BaseRolls {
     }
 
     getLevel(actor) {
-        return actor.data.data.progression?.level || 0;
+        return actor.system.progression?.level || 0;
     }
 
     getXP(actor) {
-        return actor.data.data.progression?.experiencePoints || 0;
+        return actor.system.progression?.experiencePoints || 0;
     }
 
     get defaultStats() {
@@ -60,7 +60,7 @@ export class DS4Rolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.progression.experiencePoints": parseInt(actor.data.data.progression.experiencePoints) + parseInt(msgactor.xp)
+            "system.progression.experiencePoints": parseInt(actor.system.progression.experiencePoints) + parseInt(msgactor.xp)
         });
     }
 }

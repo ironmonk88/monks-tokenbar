@@ -37,8 +37,8 @@ export class DnD5eRolls extends BaseRolls {
 
     getLevel(actor) {
         let levels = 0;
-        if (actor.data.data?.classes) {
-            levels = Object.values(actor.data.data?.classes).reduce((a, b) => {
+        if (actor.system?.classes) {
+            levels = Object.values(actor.system?.classes).reduce((a, b) => {
                 return a + (b?.levels || b?.level || 0);
             }, 0);
         } else
@@ -52,7 +52,7 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.data.data.details.xp;
+        return actor.system.details.xp;
     }
 
     get useDegrees() {
@@ -62,7 +62,7 @@ export class DnD5eRolls extends BaseRolls {
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "data.data.attributes.hp.value") == 0).length;
+        let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "system.attributes.hp.value") == 0).length;
         return (allZeroHP == app.entries.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
     }
 
@@ -82,8 +82,8 @@ export class DnD5eRolls extends BaseRolls {
         for (let item of entries[0].token.actor.items) {
             if (item.type == 'tool') {
                 let sourceID = item.getFlag("core", "sourceId") || item.id;
-                //let toolid = item.data.name.toLowerCase().replace(/[^a-z]/gi, '');
-                tools[sourceID] = item.data.name;
+                //let toolid = item.name.toLowerCase().replace(/[^a-z]/gi, '');
+                tools[sourceID] = item.name;
             }
         }
         //see if the other tokens have these tools
@@ -150,14 +150,14 @@ export class DnD5eRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": parseInt(actor.data.data.details.xp.value) + parseInt(msgactor.xp)
+            "system.details.xp.value": parseInt(actor.system.details.xp.value) + parseInt(msgactor.xp)
         });
 
-        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+        if (setting("send-levelup-whisper") && actor.system.details.xp.value >= actor.system.details.xp.max) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
-                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
             }).then(() => { });
         }
     }

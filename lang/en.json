@@ -107,7 +107,7 @@
 	"MonksTokenBar.change-to-combat.name": "Change movement to combat",
 	"MonksTokenBar.change-to-combat.hint": "Change movement to combat when combat starts",
 	"MonksTokenBar.assign-loot.name": "Distribute enemies loot",
-	"MonksTokenBar.assign-loot.hint": "Once the combat is over, provide a dialog to convert the fallen enemies to lootable",
+	"MonksTokenBar.assign-loot.hint": "Once the combat is over, provide a dialog to convert the fallen enemies to lootable, requires additional modules",
 	"MonksTokenBar.loot-type.name": "How to distribute",
 	"MonksTokenBar.loot-type.hint": "How would you like the loot distributed",
 	"MonksTokenBar.loot-entity.name": "Loot Entity",
@@ -148,7 +148,7 @@
 	"MonksTokenBar.dblclick-action.hint": "Action to perform when double-clicking on a token",
 	"MonksTokenBar.resolution-size.name": "Token Resolution",
 	"MonksTokenBar.resolution-size.hint": "Set the resolution of the tokens, the larger the number the clearer the image, but the longer it will take to load.",
-	"MonksTokenBar.allow-roll.name": "Allow Roll",
+	"MonksTokenBar.allow-roll.name": "Allow Players Roll",
 	"MonksTokenBar.allow-roll.hint": "Allow players to request rolls",
 
 	"MonksTokenBar.XP": "XP",

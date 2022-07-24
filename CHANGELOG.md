@@ -1,3 +1,7 @@
+## Version 1.0.69
+
+Added v10 support.
+
 ## Version 1.0.68
 
 Update assign xp so it only adds actors that are owned by players.

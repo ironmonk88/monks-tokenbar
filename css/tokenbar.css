@@ -832,36 +832,7 @@ body #tokenbar-window:first-child{
     cursor: pointer;
 }
 
-.monks-tokenbar.editstats .font-picker {
-    position: absolute;
-    top: 0px;
-    left: 30px;
-    width: 308px;
-    height: 200px;
-    border: 1px solid #C0C0C0;
-    background: url(../../../ui/denim075.png) repeat;
-    border-radius: 5px;
-    box-shadow: 0 0 20px #000;
-    display: none;
-}
-
-.monks-tokenbar.editstats .font-picker header {
-    flex: 0 0 18px;
-    overflow: hidden;
-    padding: 0 8px;
-    line-height: 18px;
-    border-bottom: 1px solid #000;
-    color: #f0f0e0;
-    justify-content: flex-end;
-}
-
-.monks-tokenbar.editstats .font-picker section {
-    background: url(../../../ui/parchment.jpg) repeat;
-    overflow-y: auto;
-    height: calc(100% - 20px);
-}
-
-.monks-tokenbar.editstats .font-picker section > div {
+.monks-tokenbar.pick-icon .font-picker .icon {
     display: inline-block;
     width: 30px;
     height: 30px;
@@ -1030,4 +1001,14 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
 
 .monks-tokenbar.editstats .sheet .stat-name input[type="text"] {
     text-align:left;
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
 }

@@ -57,7 +57,7 @@ export class SwadeRolls extends BaseRolls {
         //get the first token's tools
         for (let item of entries[0].token.actor.items) {
             if (item.type == 'skill') {
-                skills[item.data.name] = item.data.name;
+                skills[item.name] = item.name;
             }
         }
         //see if the other tokens have these tools
@@ -65,7 +65,7 @@ export class SwadeRolls extends BaseRolls {
             for (let i = 1; i < entries.length; i++) {
                 for (let [k, v] of Object.entries(skills)) {
                     let skill = entries[i].token.actor.items.find(t => {
-                        return t.type == 'skill' && t.data.name == k;
+                        return t.type == 'skill' && t.name == k;
                     });
                     if (skill == undefined)
                         delete skills[k];
@@ -86,7 +86,7 @@ export class SwadeRolls extends BaseRolls {
             rollfn = actor.rollAttribute;
         }
         else if (requesttype == 'skill') {
-            let item = actor.items.find(i => i.data.name == request && i.type == 'skill');
+            let item = actor.items.find(i => i.name == request && i.type == 'skill');
             request = item.id;
             rollfn = actor.rollSkill;
         } else {
@@ -121,14 +121,14 @@ export class SwadeRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": actor.data.data.details.xp.value + msgactor.xp
+            "system.details.xp.value": actor.system.details.xp.value + msgactor.xp
         });
 
-        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+        if (setting("send-levelup-whisper") && actor.system.details.xp.value >= actor.system.details.xp.max) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
-                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
             }).then(() => { });
         }
     }*/

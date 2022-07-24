@@ -51,7 +51,7 @@ export class BaseRolls {
     }
 
     getLevel(actor) {
-        return actor.data.data.details?.level?.value || actor.data.data.details?.level || 0;
+        return actor.system.details?.level?.value || actor.system.details?.level || 0;
     }
 
     get dcLabel() {

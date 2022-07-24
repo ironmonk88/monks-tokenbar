@@ -94,10 +94,10 @@ export class ContestedRollApp extends Application {
                     requesttype: requesttype,
                     request: request,
                     requestname: requestname,
-                    icon: (VideoHelper.hasVideoExtension(item.token.data.img) ? item.token.actor.data.img : item.token.data.img),
+                    icon: (VideoHelper.hasVideoExtension(item.token.document.texture.src) ? item.token.actor.img : item.token.document.texture.src),
                     name: item.token.name,
                     showname: item.token.actor.hasPlayerOwner || this.hidenpcname !== true,
-                    showtoken: item.token.actor.hasPlayerOwner || item.token.data.hidden !== true,
+                    showtoken: item.token.actor.hasPlayerOwner || item.token.document.hidden !== true,
                     npc: item.token.actor.hasPlayerOwner,
                     passed: 'waiting',
                     keys: item.keys,
@@ -128,8 +128,8 @@ export class ContestedRollApp extends Application {
             for (let i = 0; i < 2; i++) {
                 let token = this.entries[i].token;
                 if (token.actor != undefined) {
-                    for (var key in token.actor.data.permission) {
-                        if (key != 'default' && token.actor.data.permission[key] >= CONST.ENTITY_PERMISSIONS.OWNER) {
+                    for (var key in token.actor.ownership) {
+                        if (key != 'default' && token.actor.ownership[key] >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
                             if (requestedPlayers.find(t => t == key) == undefined)
                                 requestedPlayers.push(key);
                         }
@@ -201,9 +201,14 @@ export class ContestedRollApp extends Application {
     async saveToMacro() {
         let name = "Contested Roll";
 
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:'${this.entries[0].token?.name}', request:'${this.entries[0].request}'},{token:'${this.entries[1].token?.name}', request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let folder = game.folders.find(f => { return f.type == "Macro" && f.name == "Monk's Tokenbar" });
+        if (!folder) {
+            folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
+        }
 
-        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd });
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:'${this.entries[0].request}'},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+
+        const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
     }
 }
@@ -273,7 +278,7 @@ export class ContestedRoll {
         if (!$.isArray(ids))
             ids = [ids];
 
-        let flags = message.data.flags['monks-tokenbar'];
+        let flags = message.flags['monks-tokenbar'];
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
 
         let promises = [];
@@ -330,7 +335,7 @@ export class ContestedRoll {
     static async updateMessage(updates, message, reveal = true) {
         if (updates == undefined) return;
 
-        let content = $(message.data.content);
+        let content = $(message.content);
 
         let flags = {};
         let promises = [];
@@ -393,7 +398,7 @@ export class ContestedRoll {
 
         let count = 0;
         let winner = null;
-        let tokenresults = Object.entries(message.data.flags['monks-tokenbar'])
+        let tokenresults = Object.entries(message.flags['monks-tokenbar'])
             .filter(([k, v]) => {
                 return k.startsWith('token')
             })
@@ -468,7 +473,7 @@ export class ContestedRoll {
 
     static getTokens(message) {
         let tokens = [];
-        for (let [k, v] of Object.entries(message.data.flags['monks-tokenbar'])) {
+        for (let [k, v] of Object.entries(message.flags['monks-tokenbar'])) {
             if (k.startsWith('token')) tokens.push(v);
         }
         return tokens;
@@ -526,7 +531,7 @@ export class ContestedRoll {
 
     static async onRollAll(tokentype, message, e) {
         if (game.user.isGM) {
-            let flags = message.data.flags['monks-tokenbar'];
+            let flags = message.flags['monks-tokenbar'];
             let tokens = Object.keys(flags)
                 .filter(key => key.startsWith('token'))
                 .map(key => flags[key]);

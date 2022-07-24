@@ -46,7 +46,7 @@ export class PF2eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.data.data.details.xp;
+        return actor.system.details.xp;
     }
 
     get useDegrees() {
@@ -74,7 +74,7 @@ export class PF2eRolls extends BaseRolls {
         let opts = request;
         if (requesttype == 'attribute') {
             rollfn = function (event, attributeName) {
-                const attribute = actor.data.data.attributes[attributeName];
+                const attribute = actor.system.attributes[attributeName];
                 if (!attribute)
                     return;
                 const parts = ["@mod", "@itemBonus"],
@@ -99,7 +99,7 @@ export class PF2eRolls extends BaseRolls {
         }
         else if (requesttype == 'ability') {
             rollfn = function (event, abilityName) {
-                const bonus = actor.data.data.abilities[abilityName].mod,
+                const bonus = actor.system.abilities[abilityName].mod,
                     title = game.i18n.localize(`PF2E.AbilityCheck.${abilityName}`),
                     data = { bonus },
                     speaker = ChatMessage.getSpeaker({
@@ -119,7 +119,7 @@ export class PF2eRolls extends BaseRolls {
         }
         else if (requesttype == 'save') {
             rollfn = function (event, saveName) {
-                const save = actor.data.data.saves[saveName],
+                const save = actor.system.saves[saveName],
                     flavor = `${game.i18n.localize(CONFIG.PF2E.saves[saveName])} Save Check`;
                 return game.pf2e.Dice.d20Roll({
                     event,
@@ -138,9 +138,9 @@ export class PF2eRolls extends BaseRolls {
             }
         }
         else if (requesttype == 'skill') {
-            if (actor.data.data?.skills[request]?.roll) {
+            if (actor.system?.skills[request]?.roll) {
                 opts = actor.getRollOptions(["all", "skill-check", request]);
-                rollfn = actor.data.data.skills[request].roll;
+                rollfn = actor.system.skills[request].roll;
             } else
                 rollfn = actor.rollSkill;
         }
@@ -166,14 +166,14 @@ export class PF2eRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": parseInt(actor.data.data.details.xp.value) + parseInt(msgactor.xp)
+            "system.details.xp.value": parseInt(actor.system.details.xp.value) + parseInt(msgactor.xp)
         });
 
-        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+        if (setting("send-levelup-whisper") && actor.system.details.xp.value >= actor.system.details.xp.max) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
-                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
             }).then(() => { });
         }
     }

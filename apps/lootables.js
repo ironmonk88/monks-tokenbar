@@ -8,7 +8,7 @@ export class LootablesApp extends FormApplication {
         let tokens = [];
         if (entity != undefined && entity instanceof Combat) {
             tokens = entity.combatants.filter(c => {
-                return c.actor?.token && c.token?.data.disposition != 1
+                return c.actor?.token && c.token?.document.disposition != 1
             }).map(c => {
                 return c.token;
             });
@@ -21,19 +21,19 @@ export class LootablesApp extends FormApplication {
         let currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {}).reduce((a, v) => ({ ...a, [v]: 0 }), {});
 
         this.entries = tokens.map(t => {
-            let items = t.actor.data.items
+            let items = t.actor.items
                 .filter(item => {
                     // Weapons are fine, unless they're natural
                     let result = false;
                     if (item.type == 'weapon') {
-                        result = item.data.data.weaponType != 'natural';
+                        result = item.system.weaponType != 'natural';
                     }
                     // Equipment's fine, unless it's natural armor
                     else if (item.type == 'equipment') {
-                        if (!item.data.data.armor)
+                        if (!item.system.armor)
                             result = true;
                         else
-                            result = item.data.data.armor.type != 'natural';
+                            result = item.system.armor.type != 'natural';
                     } else
                         result = !(['class', 'spell', 'feat', 'action', 'lore'].includes(item.type));
 
@@ -45,8 +45,8 @@ export class LootablesApp extends FormApplication {
                     return data;
                 });
 
-            let curr = Object.keys(t.actor.data.data.currency).reduce((a, v) => {
-                a[v] = this.getCurrency(t.actor.data.data.currency[v]);
+            let curr = Object.keys(t.actor.system.currency).reduce((a, v) => {
+                a[v] = this.getCurrency(t.actor.system.currency[v]);
                 return a;
             }, {});
 
@@ -90,7 +90,7 @@ export class LootablesApp extends FormApplication {
                 if (this.isLootActor(lootsheet)){
                     let entity = game.actors.get(setting('loot-entity'));
                     entityName = entity?.name || "Unknown";
-                    hasItems = (entity?.data.items.size || 0) > 0;
+                    hasItems = (entity?.items.size || 0) > 0;
                 } else {
                     let entity = game.journal.get(setting('loot-entity'));
                     entityName = entity?.name || "Unknown";
@@ -162,7 +162,7 @@ export class LootablesApp extends FormApplication {
         this.usecr = $('#assign-gold-by-cr').is(':checked');
         for (let token of this.entries) {
             let hasGold = false;
-            for (const [k, v] in Object.entries(token.actor.data.data.currency)) {
+            for (const [k, v] in Object.entries(token.actor.system.currency)) {
                 hasGold = (hasGold && parseInt(v.value || v) > 0);
             }
             // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
@@ -174,8 +174,8 @@ export class LootablesApp extends FormApplication {
                         const compiled = Handlebars.compile(goldformula);
                         let content = compiled({ actor: token.actor }, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
 
-                        //const exponent = 0.15 * (getProperty(token.actor, "data.data.details.cr") ?? 0);
-                        //let gold = Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.data.data.details.cr}} ?? 0))));
+                        //const exponent = 0.15 * (getProperty(token.actor, "system.details.cr") ?? 0);
+                        //let gold = Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.system.details.cr}} ?? 0))));
 
                         gold = eval(content);
                     } catch {}
@@ -221,7 +221,7 @@ export class LootablesApp extends FormApplication {
 
         //find the folder and find the next available 'Loot Entry (x)'
         let previous = collection.filter(e => {
-            return e.data.folder == folder && e.name.startsWith("Loot Entry");
+            return e.folder.id == folder && e.name.startsWith("Loot Entry");
         }).map((e, i) =>
             parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
         ).sort((a, b) => { return b - a; });
@@ -265,7 +265,7 @@ export class LootablesApp extends FormApplication {
                         continue;
 
                     // Don't run this on PC tokens by mistake
-                    if (entry.actor.data.type === 'character')
+                    if (entry.actor.type === 'character')
                         continue;
 
                     // Change sheet to lootable, and give players permissions.
@@ -302,7 +302,7 @@ export class LootablesApp extends FormApplication {
 
                     // Remove items that shouldn't be lootable
                     let oldItems = [];
-                    let newItems = entry.actor.data.items
+                    let newItems = entry.actor.items
                         .filter(item => {
                             let itemData = entry.items.find(i => i._id == item.id);
                             if (!itemData?.included)
@@ -327,15 +327,15 @@ export class LootablesApp extends FormApplication {
 
                     /*
                     for (let curr of ['cp', 'sp', 'ep', 'gp', 'pp']) {
-                        if (typeof (entry.actor.data.data.currency[curr]) === "number" || entry.actor.data.data.currency[curr] == undefined) {
-                            let oldCurrencyData = entry.actor.data.data.currency[curr];
-                            newActorData[`data.currency.${curr}`] = { 'value': oldCurrencyData || 0 };
+                        if (typeof (entry.actor.system.currency[curr]) === "number" || entry.actor.system.currency[curr] == undefined) {
+                            let oldCurrencyData = entry.actor.system.currency[curr];
+                            newActorData[`system.currency.${curr}`] = { 'value': oldCurrencyData || 0 };
                         }
                     }*/
 
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                         if (entry.currency[curr] != undefined)
-                            newActorData[`data.currency.${curr}`] = (entry.actor.data.data.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
+                            newActorData[`system.currency.${curr}`] = (entry.actor.system.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
                     }
 
                     newActorData = expandObject(newActorData);
@@ -357,9 +357,9 @@ export class LootablesApp extends FormApplication {
 
                     // Update permissions to level 2, so players can loot
                     let permissions = {};
-                    Object.assign(permissions, entry.actor.data.permission);
+                    Object.assign(permissions, entry.actor.ownership);
                     lootingUsers.forEach(user => {
-                        permissions[user.id] = CONST.ENTITY_PERMISSIONS.OBSERVER;
+                        permissions[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
                     });
 
                     // If using Combat Utility Belt, need to remove any of its condition overlays
@@ -368,7 +368,7 @@ export class LootablesApp extends FormApplication {
                         await game.cub.removeAllConditions(entry.actor);
                     }
 
-                    let oldAlpha = entry.token.data.alpha;
+                    let oldAlpha = entry.token.alpha;
                     await entry.token.update({
                         "overlayEffect": 'icons/svg/chest.svg',
                         "alpha": 0.6,
@@ -411,10 +411,10 @@ export class LootablesApp extends FormApplication {
 
                 const cls = collection.documentClass;
                 if (this.isLootActor(lootSheet)) {
-                    entity = await cls.create({ folder: folder, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, permission: { 'default': CONST.ENTITY_PERMISSIONS.OBSERVER } });
+                    entity = await cls.create({ folder: folder, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
                     ui.actors.render();
                 } else {
-                    entity = await cls.create({ folder: folder, name: name, permission: { 'default': CONST.ENTITY_PERMISSIONS.OBSERVER } }, { render: false });
+                    entity = await cls.create({ folder: folder, name: name, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { render: false });
                     await entity.setFlag('monks-enhanced-journal', 'type', 'loot');
                     await entity.setFlag('monks-enhanced-journal', 'purchasing', 'confirm');
                     ui.journal.render();
@@ -442,8 +442,8 @@ export class LootablesApp extends FormApplication {
                 if (entry.disabled === true)
                     continue;
 
-                ptAvg.x += entry.token.data.x;
-                ptAvg.y += entry.token.data.y;
+                ptAvg.x += entry.token.x;
+                ptAvg.y += entry.token.y;
                 ptAvg.count++;
 
                 let loot = entry.items.filter(i => i.included);
@@ -462,7 +462,7 @@ export class LootablesApp extends FormApplication {
                 } else {
                     entity.createEmbeddedDocuments("Item", items);
 
-                    let entityCurr = entity.data.data.currency || {};
+                    let entityCurr = entity.system.currency || {};
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                         if (currency[curr] != undefined) {
                             let value = entityCurr[curr].value ?? entityCurr[curr];
@@ -505,8 +505,8 @@ export class LootablesApp extends FormApplication {
                         await cls.create(td, { parent: canvas.scene });
                     } else if (lootSheet == 'monks-enhanced-journal') {
                         let data = {
-                            x: pt.x + (canvas.scene.data.size / 2),
-                            y: pt.y + (canvas.scene.data.size / 2),
+                            x: pt.x + (canvas.scene.size / 2),
+                            y: pt.y + (canvas.scene.size / 2),
                             entryId: entity.id,
                             icon: "icons/svg/chest.svg"
                         };
@@ -553,7 +553,7 @@ export class LootablesApp extends FormApplication {
         let actorData = {
             'flags': {
                 'core': {
-                    'sheetClass': (actor.data.flags['monks-tokenbar'].oldsheetClass || null)
+                    'sheetClass': (actor.flags['monks-tokenbar'].oldsheetClass || null)
                 },
                 'monks-tokenbar': {
                     'converted': false
@@ -563,7 +563,7 @@ export class LootablesApp extends FormApplication {
 
         let newItems = [];
         if (actor.getFlag('monks-tokenbar', 'olditems')?.length) {
-            actorData.items = duplicate(actor.data.items);
+            actorData.items = duplicate(actor.items);
             for (let olditem of actor.getFlag('monks-tokenbar', 'olditems')) {
                 if (actorData.items.findIndex(i => { return i._id == olditem._id; }) < 0)
                     actorData.items.push(olditem);
@@ -583,7 +583,7 @@ export class LootablesApp extends FormApplication {
 
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
         let permissions = {};
-        Object.assign(permissions, actor.data.permission);
+        Object.assign(permissions, actor.ownership);
         lootingUsers.forEach(user => {
             permissions[user.id] = 0;
         });

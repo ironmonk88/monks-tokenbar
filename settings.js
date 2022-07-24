@@ -268,19 +268,10 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.gold-formula.hint"),
 		scope: "world",
 		config: true,
-		default: "Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.data.data.details.cr}} ?? 0))))",
+		default: "Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.system.details.cr}} ?? 0))))",
 		type: String,
 	});
 
-	game.settings.register(modulename, "loot-type", {
-		name: game.i18n.localize("MonksTokenBar.loot-type.name"),
-		hint: game.i18n.localize("MonksTokenBar.loot-type.hint"),
-		scope: "world",
-		config: true,
-		default: "transferplus",
-		choices: lootoptions,
-		type: String,
-	});
 	game.settings.register(modulename, "loot-sheet", {
 		name: game.i18n.localize("MonksTokenBar.assign-loot.name"),
 		hint: game.i18n.localize("MonksTokenBar.assign-loot.hint"),
@@ -288,6 +279,15 @@ export const registerSettings = function () {
 		config: true,
 		default: "monks-enhanced-journal",
 		choices: lootsheetoptions,
+		type: String,
+	});
+	game.settings.register(modulename, "loot-type", {
+		name: game.i18n.localize("MonksTokenBar.loot-type.name"),
+		hint: game.i18n.localize("MonksTokenBar.loot-type.hint"),
+		scope: "world",
+		config: true,
+		default: "transferplus",
+		choices: lootoptions,
 		type: String,
 	});
 	game.settings.register(modulename, "loot-entity", {
@@ -392,6 +392,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "stats", {
 		scope: "world",
 		config: false,
+		default: { default: true },
 		type: Object,
 	});
 

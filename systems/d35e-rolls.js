@@ -27,7 +27,7 @@ export class D35eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.data.data.details.xp;
+        return actor.system.details.xp;
     }
 
     get defaultStats() {
@@ -78,14 +78,14 @@ export class D35eRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.xp.value": parseInt(actor.data.data.details.xp.value) + parseInt(msgactor.xp)
+            "system.details.xp.value": parseInt(actor.system.details.xp.value) + parseInt(msgactor.xp)
         });
 
-        if (setting("send-levelup-whisper") && actor.data.data.details.xp.value >= actor.data.data.details.xp.max) {
+        if (setting("send-levelup-whisper") && actor.system.details.xp.value >= actor.system.details.xp.max) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
-                whisper: ChatMessage.getWhisperRecipients(actor.data.name)
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
             }).then(() => { });
         }
     }

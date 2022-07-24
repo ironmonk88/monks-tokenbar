@@ -43,7 +43,7 @@ export class DnD4eRolls extends BaseRolls {
     }*/
 
     getXP(actor) {
-        return actor.data.data.details.exp;
+        return actor.system.details.exp;
     }
 
     get defaultStats() {
@@ -86,7 +86,7 @@ export class DnD4eRolls extends BaseRolls {
     async assignXP(msgactor) {
         let actor = game.actors.get(msgactor.id);
         await actor.update({
-            "data.details.exp": parseInt(actor.data.data.details.exp) + parseInt(msgactor.xp)
+            "system.details.exp": parseInt(actor.system.details.exp) + parseInt(msgactor.xp)
         });
     }
 }

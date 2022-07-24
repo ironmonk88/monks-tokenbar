@@ -45,7 +45,7 @@ export class CoC7Rolls extends BaseRolls {
     defaultRequest(app) {
         let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "data.data.attributes.hp.value") == 0).length;
+        let allZeroHP = app.tokens.filter(t => getProperty(t.actor, "system.attributes.hp.value") == 0).length;
         return (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) || (allPlayers ? 'skill:prc' : null);
     }*/
 
@@ -59,7 +59,7 @@ export class CoC7Rolls extends BaseRolls {
         for (let item of entries[0].token.actor.items) {
             if (item.type == 'skill') {
                 let sourceID = item.getFlag("core", "sourceId") || item.id;
-                skills[sourceID] = item.data.name;
+                skills[sourceID] = item.name;
             }
         }
         //see if the other tokens have these skills

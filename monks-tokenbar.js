@@ -93,6 +93,7 @@ export class MonksTokenBar {
 
         registerSettings();
 
+        /*
         if (setting('stats') == undefined) {
             //check and see if the user has selected something other than the default
             if (setting('stat1-icon') != undefined || setting('stat1-resource') != undefined || setting('stat2-icon') != undefined || setting('stat2-resource') != undefined) {
@@ -103,7 +104,7 @@ export class MonksTokenBar {
                     oldstats[setting('stat2-resource')] = setting('stat2-icon');
                 game.settings.set('monks-tokenbar', 'stats', oldstats);
             }
-        }
+        }*/
 
         let canDrag = function (wrapped, ...args) {
             let result = wrapped(...args);
@@ -231,7 +232,7 @@ export class MonksTokenBar {
             const targets = _getChatCardTargets(card);
             const entries = MonksTokenBar.getTokenEntries(targets);
             if (entries.length) {
-                let savingthrow = new SavingThrowApp(entries, { request: 'save:' + button.dataset.ability, dc: item.data.data.save.dc });
+                let savingthrow = new SavingThrowApp(entries, { request: 'save:' + button.dataset.ability, dc: item.system.save.dc });
                 savingthrow.requestRoll();
 
                 event.preventDefault();
@@ -242,7 +243,8 @@ export class MonksTokenBar {
     }
 
     static get stats() {
-        return setting('stats') || MonksTokenBar.system.defaultStats;
+        let stats = setting('stats');
+        return stats.default ? MonksTokenBar.system.defaultStats : stats;
     }
 
     static ready() {
@@ -479,15 +481,15 @@ export class MonksTokenBar {
                 let entry = curCombat.combatant;
                 let allowNpc = false;
                 if (game.settings.get("monks-tokenbar", "free-npc-combat")) {
-                    let curPermission = entry.actor?.data.permission ?? {};
-                    let tokPermission = token.actor?.data.permission ?? {};
+                    let curPermission = entry.actor?.ownership ?? {};
+                    let tokPermission = token.actor?.ownership ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
-                        && curCombat.turns.every(t => { return t.data.tokenId !== token.id; });
+                        && curCombat.turns.every(t => { return t.tokenId !== token.id; });
                 }
 
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
-                return !(entry.data.tokenId == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
+                return !(entry.tokenId == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
             }
 
             return true;
@@ -607,7 +609,7 @@ export class MonksTokenBar {
     }
 
     static selectActors(message, filter, event) {
-        let tokens = Object.entries(message.data.flags['monks-tokenbar'])
+        let tokens = Object.entries(message.flags['monks-tokenbar'])
             .map(([k, v]) => { return (k.startsWith('token') ? v : null) })
             .filter(filter)
             .map(t => { return canvas.tokens.get(t?.id); })
@@ -626,15 +628,15 @@ export class MonksTokenBar {
     static onClickMessage(message, html) {
         if (MonksTokenBar.grabmessage != undefined) {
             //make sure this message matches the grab message
-            if (message._roll) {
-                let tokenId = message.data.speaker.token;
+            if (message.rolls.length) {
+                let tokenId = message.speaker.token;
                 let msgtoken = MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'token' + tokenId);
 
                 if (msgtoken != undefined) {
                     if (MonksTokenBar.grabmessage.getFlag('monks-tokenbar', 'what') == 'contestedroll')
-                        ContestedRoll.updateMessage([{ id: tokenId, roll: message.roll }], MonksTokenBar.grabmessage);
+                        ContestedRoll.updateMessage([{ id: tokenId, roll: message.rolls[0] }], MonksTokenBar.grabmessage);
                     else
-                        SavingThrow.updateMessage([{ id: tokenId, roll: message.roll }], MonksTokenBar.grabmessage);
+                        SavingThrow.updateMessage([{ id: tokenId, roll: message.rolls[0] }], MonksTokenBar.grabmessage);
                     if (setting('delete-after-grab'))
                         message.delete();
                     MonksTokenBar.grabmessage = null;
@@ -660,7 +662,7 @@ export class MonksTokenBar {
             lootsheetoptions['merchantsheetnpc'] = "Merchant Sheet NPC";
         if (game.modules.get("item-piles")?.active)
             lootsheetoptions['item-piles'] = "Item Piles";
-        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").data.version > "1.0.39" && lootType !='convert')
+        if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").version > "1.0.39" && lootType !='convert')
             lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
 
         return lootsheetoptions;
@@ -743,7 +745,7 @@ Hooks.on('preUpdateToken', (document, update, options, userId) => {
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
-    if (game.user.isGM && setting('show-lootable-menu') && setting('loot-sheet') != 'none') {
+    if (game.user.isGM && setting('show-lootable-menu') && setting('loot-sheet') != 'none' && MonksTokenBar.getLootSheetOptions()[setting('loot-sheet')] != undefined) {
         let tokenControls = controls.find(control => control.name === "token")
         tokenControls.tools.push({
             name: "togglelootable",
@@ -795,13 +797,13 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
                 if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
                     //find Actors Folders
                     for (let entry of game.folders) {
-                        if (entry.data.type == 'Actor')
+                        if (entry.type == 'Actor')
                             list.push({ id: entry.id, name: entry.name });
                     }
                 } else if (sheet == 'monks-enhanced-journal') {
                     //find Journal Entry Folders
                     for (let entry of game.folders) {
-                        if (entry.data.type == 'JournalEntry')
+                        if (entry.type == 'JournalEntry')
                             list.push({ id: entry.id, name: entry.name });
                     }
                 }
@@ -816,7 +818,15 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
         let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
         let list = [];
-        if (type != 'convert') {
+
+        let hasLootable = sheet != 'none' && MonksTokenBar.getLootSheetOptions()[sheet] != undefined;
+        $('[name="monks-tokenbar.loot-type"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="monks-tokenbar.loot-entity"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="monks-tokenbar.loot-folder"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="monks-tokenbar.open-loot"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="monks-tokenbar.show-lootable-menu"]', html).closest('.form-group').toggle(hasLootable);
+
+        if (type != 'convert' && sheet != 'none') {
             list.push({ id: 'create', name: '-- Create new --' });
             if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
                 //find Actors
@@ -848,7 +858,7 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.request-roll-sound-file"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.allow-roll"]').parents('div.form-group:first'));
 });
 
 Hooks.on("renderCombatTracker", (app, html, data) => {
@@ -856,7 +866,7 @@ Hooks.on("renderCombatTracker", (app, html, data) => {
         $('.combatant', html).each(function () {
             let id = this.dataset.combatantId;
             let combatant = app.viewed.combatants.find(c => c.id == id);
-            if (combatant && combatant.hasPlayerOwner) {
+            if (combatant && combatant.hasPlayerOwner && combatant.token) {
                 $($('<a>')
                     .addClass('combatant-control')
                     .toggleClass('active', combatant.token.getFlag('monks-tokenbar', 'movement') == MTB_MOVEMENT_TYPE.FREE)
@@ -875,7 +885,7 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
     if (game.user.isGM) {
         let include = app.token.getFlag('monks-tokenbar', 'include') || 'default';
         include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-        //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.data.type != 'npc' || app.object.data.disposition == 1));
+        //(app.object.actor != undefined && app.object.actor?.hasPlayerOwner && (game.user.isGM || app.object.actor?.isOwner) && (app.object.actor?.type != 'npc' || app.object.document.disposition == 1));
         let group = $('<div>')
             .addClass('form-group')
             .append($('<label>').html('Show on Tokenbar'))
@@ -892,6 +902,12 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
 
 Hooks.on("renderChatMessage", (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
+
+    if (message.rolls.length != undefined && message.isRoll) {
+        //check grab this roll
+        if (MonksTokenBar.system.canGrab)
+            $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
+    }
 });
 
 Hooks.on("setupTileActions", (app) => {
@@ -1263,6 +1279,7 @@ Hooks.on("setupTileActions", (app) => {
             {
                 id: "xp",
                 name: "XP",
+                required: true,
                 type: "number"
             },
             {
@@ -1286,6 +1303,15 @@ Hooks.on("setupTileActions", (app) => {
 
             if (entities.length == 0)
                 return;
+
+            entities = entities.map(e => e.object);
+
+            let assignxp = new AssignXPApp(entities, { xp: action.data.xp, reason: action.data.reason, dividexp: action.data.dividexp});
+            if (action.data.silent === true)
+                assignxp.assign();
+            else
+                assignxp.render(true);
+
         },
         content: async (trigger, action) => {
             let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);

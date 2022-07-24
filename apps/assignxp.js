@@ -20,7 +20,7 @@ export class AssignXPApp extends Application {
             //get the actors
             let monsters = [];
             for (let combatant of entity.combatants) {
-                if (combatant.token?.data.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.document.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
                     let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
                     this.actors.push({
                         actor: actor,
@@ -29,7 +29,7 @@ export class AssignXPApp extends Application {
                     });
 
                     apl.count = apl.count + 1;
-                    apl.levels = apl.levels + (actor.data.data.details.level?.value || actor.data.data.details.level);
+                    apl.levels = apl.levels + (actor.system.details.level?.value || actor.system.details.level);
                 } else
                     monsters.push(combatant);
             };
@@ -40,16 +40,16 @@ export class AssignXPApp extends Application {
             //get the monster xp
             let combatxp = 0;
             for (let combatant of monsters) {
-                if (combatant.token?.data.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.document.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
                     if (game.system.id == 'pf2e') {
-                        let monstLevel = parseInt(combatant?.actor.data.data.details?.level?.value);
+                        let monstLevel = parseInt(combatant?.actor.system.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;
                     }else
-                        combatxp += (combatant.actor?.data.data.details?.xp?.value || 0);
+                        combatxp += (combatant.actor?.system.details?.xp?.value || 0);
                 }
             };
-            //xp += (combatant?.actor.data.data.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.data.data.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
+            //xp += (combatant?.actor.system.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.system.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
             this.xp = this.xp || combatxp;
             this.reason = this.reason || i18n("MonksTokenBar.CombatExperience");
         } else {
@@ -59,7 +59,7 @@ export class AssignXPApp extends Application {
                 .map(t => {
                     if (!t.actor)
                         return null;
-                    return (t.actor.hasPlayerOwner && (t.actor.data.type == 'character' || t.actor?.data.type == 'Player Character') ? t.actor : null)
+                    return (t.actor.hasPlayerOwner && (t.actor.type == 'character' || t.actor?.type == 'Player Character') ? t.actor : null)
                 })
                 .filter((a, index, self) => {
                     if (!a)
@@ -179,8 +179,8 @@ export class AssignXPApp extends Application {
               return {
                   id: a.actor.id,
                   //actor: a.actor,
-                  icon: a.actor.data.img,
-                  name: a.actor.data.name,
+                  icon: a.actor.img,
+                  name: a.actor.name,
                   xp: a.xp,
                   assigned: false
               }
