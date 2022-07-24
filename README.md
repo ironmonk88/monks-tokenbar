@@ -11,7 +11,7 @@ Simply use the install module screen within the FoundryVTT setup
 
 ![monks-tokenbar](screenshots/TokenBar.webp)
 
-The player tokens currently in the scene are automatically added.  This is an easy way to make sure all players are represented.  Clicking on the token iteself will center the screen on that token.  Occasionaly I find that I lose track of where the players token is and this is an easy way to get to it quickly.
+The player tokens currently in the scene are automatically added.  Tokens need to be owned by a player and of friendly disposition to be automatically included in this list.  If you'd like a token to be included or excluded, there is a dropdown menu added to the Token configuration screen that will allow you to manually change this.  Clicking on the token iteself will center the screen on that token.  Occasionaly I find that I lose track of where the players token is and this is an easy way to get to it quickly.
 
 Right click on the token in the TokenBar to open a context menu with options to edit both the character and token, aswell as targeting that token.  You can also set individual movement restrictions for that specific token.
 
