@@ -71,6 +71,8 @@
 	"MonksTokenBar.divide-xp-robin-hood-split.hint" : "Dans la boîte de dialogue d'attribution d'XP, donner automatiquement plus d'xp aux joueurs de niveau inférieur et moins aux joueurs de niveau supérieur (voler les riches pour donner aux pauvres...)",
 	"MonksTokenBar.divide-xp-nottingham-split.name" : "Une part plus importante pour le niveau supérieur",
 	"MonksTokenBar.divide-xp-nottingham-split.hint" : "Dans la boîte de dialogue d'attribution d'XP, donnez automatiquement plus d'xp aux joueurs de niveau supérieur et moins aux joueurs de niveau inférieur (voler les pauvres pour donner aux riches...)",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
 	"MonksTokenBar.show-resource-bars.name" : "Afficher les barres de ressources",
 	"MonksTokenBar.show-resource-bars.hint" : "Afficher les barres de ressources du token",
 	"MonksTokenBar.token-pictures.name" : "Images du token",

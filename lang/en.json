@@ -82,6 +82,8 @@
 	"MonksTokenBar.divide-xp-robin-hood-split.hint": "In the assign XP dialog, automatically give more xp to lower level players and less to higher level players (robbing the rich to give to the poor...)",
 	"MonksTokenBar.divide-xp-nottingham-split.name": "Larger share to higher level",
 	"MonksTokenBar.divide-xp-nottingham-split.hint": "In the assign XP dialog, automatically give more xp to higher level players and less to lower level players (robbing the poor to give to the rich...)",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
 	"MonksTokenBar.show-resource-bars.name": "Show Resource Bars",
 	"MonksTokenBar.show-resource-bars.hint": "Show the Token resource bars",
 	"MonksTokenBar.token-pictures.name": "Token Pictures",

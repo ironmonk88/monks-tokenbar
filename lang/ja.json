@@ -83,6 +83,8 @@
 	"MonksTokenBar.divide-xp-robin-hood-split.hint": "高レベルキャラクターのXPを減らし、低レベルキャラクターのXPを増やします。",
 	"MonksTokenBar.divide-xp-nottingham-split.name": "高レベルの取り分を増やす",
 	"MonksTokenBar.divide-xp-nottingham-split.hint": "低レベルキャラクターのXPを減らし、高レベルキャラクターのXPを増やします。",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
 	"MonksTokenBar.show-resource-bars.name": "リソースバーを表示する",
 	"MonksTokenBar.show-resource-bars.hint": "トークンバーの画像の上にリソースバーを表示します。",
 	"MonksTokenBar.token-pictures.name": "トークンバーに表示する画像",

@@ -60,6 +60,8 @@
 	"MonksTokenBar.divide-xp-robin-hood-split.hint": "在分配 XP 对话框中，自动地给予低等级角色更多 XP，给高等级角色分配更少 XP（劫富济贫...）",
 	"MonksTokenBar.divide-xp-nottingham-split.name": "自动给予高等级角色更高比例 XP",
 	"MonksTokenBar.divide-xp-nottingham-split.hint": "在分配 XP 对话框中，自动地给予高等级角色更多 XP，给低等级角色分配更少 XP（劫贫济富...）",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
 	"MonksTokenBar.show-resource-bars.name": "显示资源条",
 	"MonksTokenBar.show-resource-bars.hint": "显示指示物资源条",
 	"MonksTokenBar.token-pictures.name": "指示物图片",

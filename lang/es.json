@@ -129,6 +129,8 @@
     "MonksTokenBar.divide-xp-equal-split.hint": "En la asignación de PX, dividir automáticamente la PX entre los jugadores",
     "MonksTokenBar.divide-xp-robin-hood-split.hint": "En la asignación de PX, dar automáticamente más PX a los jugadores de nivel inferior y menos a los de nivel superior (robar a los ricos para dar a los pobres...)",
     "MonksTokenBar.divide-xp-nottingham-split.hint": "En la asignación de PX, dar automáticamente más PX a los jugadores de mayor nivel y menos a los de menor nivel (robar a los pobres para dar a los ricos...)",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
     "MonksTokenBar.token-pictures.name": "Foto del icono",
     "MonksTokenBar.token-pictures.hint": "Elegir si quieres utilizar la imagen del icono o la imagen del retrato de los personajes en la barra de tokenbar",
     "MonksTokenBar.allow-player.hint": "Permitir al jugador utilizar la barra tokenbar, restringida a los personajes que posee.",

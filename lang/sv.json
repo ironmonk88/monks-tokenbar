@@ -53,6 +53,8 @@
 	"MonksTokenBar.divide-xp-robin-hood-split.hint": "I tilldela XP-dialogrutan, ge automatiskt mer xp till de med lägre nivå och mindre till de med högre nivå (stjäl från de rika för att ge till de fattiga...) ",
 	"MonksTokenBar.divide-xp-nottingham-split.name": "Ge automatiskt större andel av xp till de med högre nivå",
 	"MonksTokenBar.divide-xp-nottingham-split.hint": "I dialogrutan tilldela XP, ge automatiskt mer xp till de med högre nivå och mindre till de med lägre nivå (stjäl de fattiga för att ge till de rika...)",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
 	"MonksTokenBar.show-resource-bars.name": "Visa resursfält",
 	"MonksTokenBar.show-resource-bars.hint": "Visa spelfigurs resursfält",
 	"MonksTokenBar.token-pictures.name": "Spelfigursbild",

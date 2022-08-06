@@ -10,6 +10,8 @@ export class AssignXPApp extends Application {
         this.dividexp = options?.dividexp ? options?.dividexp : setting("divide-xp");
         this.divideXpOptions = divideXpOptions
 
+        let npcShareXp = setting("npc-xp-sharing");
+        
         if (game.system.id == 'pf2e')
             this.xpchart = [10, 15, 20, 30, 40, 60, 80, 120, 160];
 
@@ -20,7 +22,7 @@ export class AssignXPApp extends Application {
             //get the actors
             let monsters = [];
             for (let combatant of entity.combatants) {
-                if (combatant.token?.document.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.document.disposition == 1 && combatant.actor && (combatant.actor.hasPlayerOwner || npcShareXp)) {
                     let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
                     this.actors.push({
                         actor: actor,

@@ -262,6 +262,15 @@ export const registerSettings = function () {
 		choices: divideXpOptions,
 		localize: true
 	});
+    
+    game.settings.register(modulename, "npc-xp-sharing", {
+		name: game.i18n.localize("MonksTokenBar.npc-xp-sharing.name"),
+		hint: game.i18n.localize("MonksTokenBar.npc-xp-sharing.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 
 	game.settings.register(modulename, "gold-formula", {
 		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),

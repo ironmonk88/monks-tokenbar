@@ -57,6 +57,8 @@
     "MonksTokenBar.divide-xp-robin-hood-split.name": "Major participació a nivells baixos",
     "MonksTokenBar.divide-xp-nottingham-split.name": "Major participació a nivells alts",
     "MonksTokenBar.divide-xp-nottingham-split.hint": "En el quadre d'assignació de PX, donar automàticament més PX a jugadors de nivell superior i menys a jugadors de nivell inferior (robar als pobres per donar-ho als rics ...)",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Include NPCs in combat XP splitting",
     "MonksTokenBar.show-resource-bars.name": "Mostrar les barres de recursos",
     "MonksTokenBar.show-resource-bars.hint": "Mostrar les barres de recursos als tokens",
     "MonksTokenBar.token-pictures.name": "Imatge del token",
