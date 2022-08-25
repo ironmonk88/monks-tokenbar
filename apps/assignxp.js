@@ -20,7 +20,7 @@ export class AssignXPApp extends Application {
             //get the actors
             let monsters = [];
             for (let combatant of entity.combatants) {
-                if (combatant.token?.document.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
                     let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
                     this.actors.push({
                         actor: actor,
@@ -40,7 +40,7 @@ export class AssignXPApp extends Application {
             //get the monster xp
             let combatxp = 0;
             for (let combatant of monsters) {
-                if (combatant.token?.document.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
                     if (game.system.id == 'pf2e') {
                         let monstLevel = parseInt(combatant?.actor.system.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];

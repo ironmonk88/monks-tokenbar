@@ -1,3 +1,7 @@
+## Version 1.0.70
+
+More v10 fixes
+
 ## Version 1.0.69
 
 Added v10 support.

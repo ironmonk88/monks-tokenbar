@@ -1,9 +1,9 @@
 <div class="monks-tokenbar savingthrow chat-card">
     <header class="card-header flexrow">
-        <h3 class="item-name">{{name}}</h3>
+        <h3 class="item-name noborder">{{name}}</h3>
         {{#if dc}}
         <div class="item-controls flexrow" style="text-align: right;flex: 0 0 55px;">
-            <h3 class="{{#unless showdc}}gm-only{{/unless}}">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>
+            <h3 class="{{#unless showdc}}gm-only{{/unless}} noborder">{{localize 'MonksTokenBar.SavingDC'}}: {{dc}}</h3>
         </div>
         {{/if}}
     </header>
@@ -12,7 +12,7 @@
 	    <div class="form-group sheet actor">
             <ol class="items-list inventory-list">
                 <li class="items-header flexrow">
-                    <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
+                    <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
                     <div class="item-controls flexrow">
                         <a class="item-control roll-all gm-only" title="{{localize 'MonksTokenBar.RollAll'}}" data-control="all">

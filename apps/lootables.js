@@ -8,7 +8,7 @@ export class LootablesApp extends FormApplication {
         let tokens = [];
         if (entity != undefined && entity instanceof Combat) {
             tokens = entity.combatants.filter(c => {
-                return c.actor?.token && c.token?.document.disposition != 1
+                return c.actor?.token && c.token?.disposition != 1
             }).map(c => {
                 return c.token;
             });
@@ -221,7 +221,7 @@ export class LootablesApp extends FormApplication {
 
         //find the folder and find the next available 'Loot Entry (x)'
         let previous = collection.filter(e => {
-            return e.folder.id == folder && e.name.startsWith("Loot Entry");
+            return e.folder?.id == folder && e.name.startsWith("Loot Entry");
         }).map((e, i) =>
             parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
         ).sort((a, b) => { return b - a; });
