@@ -24,6 +24,15 @@ export class SavingThrowApp extends Application {
         if (!["roll", "gmroll", "blindroll", "selfroll"].includes(this.rollmode))
             this.rollmode = "roll";
         this.baseoptions = this.requestoptions = (options.requestoptions || MonksTokenBar.system.requestoptions);
+
+        this.baseoptions = this.baseoptions.filter(g => g.groups);
+        for (let attr of this.baseoptions) {
+            attr.groups = duplicate(attr.groups);
+            for (let [k, v] of Object.entries(attr.groups)) {
+                attr.groups[k] = v?.label || v;
+            }
+        }
+
         this.request = options.request;
         this.flavor = options.flavor;
 

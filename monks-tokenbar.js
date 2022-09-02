@@ -560,6 +560,18 @@ export class MonksTokenBar {
         }
     }
 
+    static getNameList(list) {
+        list = list.filter(g => g.groups);
+        for (let attr of list) {
+            attr.groups = duplicate(attr.groups);
+            for (let [k, v] of Object.entries(attr.groups)) {
+                attr.groups[k] = v?.label || v;
+            }
+        }
+
+        return list;
+    }
+
     static getRequestName(requestoptions, requesttype, request) {
         let name = '';
         switch (requesttype) {
@@ -983,7 +995,7 @@ Hooks.on("setupTileActions", (app) => {
             {
                 id: "request",
                 name: "Request",
-                list: () => { return MonksTokenBar.system._requestoptions; },
+                list: () => { return MonksTokenBar.getNameList(MonksTokenBar.system._requestoptions); },
                 type: "list",
                 required: true
             },
@@ -1100,7 +1112,7 @@ Hooks.on("setupTileActions", (app) => {
             {
                 id: "request1",
                 name: "Request",
-                list: () => { return MonksTokenBar.system.contestedoptions; },
+                list: () => { return MonksTokenBar.getNameList(MonksTokenBar.system.contestedoptions); },
                 type: "list",
                 required: true
             },
@@ -1118,7 +1130,7 @@ Hooks.on("setupTileActions", (app) => {
             {
                 id: "request2",
                 name: "Request",
-                list: () => { return MonksTokenBar.system.contestedoptions; },
+                list: () => { return MonksTokenBar.getNameList(MonksTokenBar.system.contestedoptions); },
                 type: "list",
                 required: true
             },

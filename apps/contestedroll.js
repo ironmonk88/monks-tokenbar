@@ -9,6 +9,15 @@ export class ContestedRollApp extends Application {
         if (!["roll", "gmroll", "blindroll", "selfroll"].includes(this.rollmode))
             this.rollmode = "roll";
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
+
+        this.requestoptions = this.requestoptions.filter(g => g.groups);
+        for (let attr of this.requestoptions) {
+            attr.groups = duplicate(attr.groups);
+            for (let [k, v] of Object.entries(attr.groups)) {
+                attr.groups[k] = v?.label || v;
+            }
+        }
+
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
 

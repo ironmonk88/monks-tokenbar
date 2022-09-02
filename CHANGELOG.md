@@ -1,3 +1,7 @@
+## Version 1.0.71
+
+Fixed an issue that the latest v10 update broke.
+
 ## Version 1.0.70
 
 More v10 fixes
