@@ -150,6 +150,8 @@
 	"MonksTokenBar.resolution-size.hint": "Set the resolution of the tokens, the larger the number the clearer the image, but the longer it will take to load.",
 	"MonksTokenBar.allow-roll.name": "Allow Players Roll",
 	"MonksTokenBar.allow-roll.hint": "Allow players to request rolls",
+	"MonksTokenBar.create-canvas-object.name": "Create Canvas Object",
+	"MonksTokenBar.create-canvas-object.hint": "When creating a lootable, also create a related canvas object",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -189,6 +191,7 @@
 	"MonksTokenBar.AssignByCR": "Assign gold by CR",
 	"MonksTokenBar.ConvertToLootable": "Convert to Lootable",
 	"MonksTokenBar.TransferToLootable": "Transfer to Lootable",
+	"MonksTokenBar.TransferToNewLootable": "Create New Lootable",
 	"MonksTokenBar.Gold": "Gold",
 	"MonksTokenBar.Levelup": "You have enough xp to level up!",
 	"MonksTokenBar.EditStats": "Edit Stats",
@@ -199,6 +202,7 @@
 	"MonksTokenBar.CreateEntityName": "New Entity Name",
 	"MonksTokenBar.ClearCurrentItems": "Clear Current Items",
 	"MonksTokenBar.SaveToMacro": "Save to Macro",
+	"MonksTokenBar.LootEntry": "Loot Entry",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

@@ -120,12 +120,12 @@ export class MonksTokenBar {
             }
         }
 
-        let sceneView = function (wrapped, ...args) {
+        let sceneView = async function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
                 MonksTokenBar.tokenbar.tokens = [];
                 MonksTokenBar.tokenbar.refresh();
             }
-            return wrapped(...args);
+            return await wrapped(...args);
         }
 
         if (game.modules.get("lib-wrapper")?.active) {
@@ -680,8 +680,83 @@ export class MonksTokenBar {
         return lootsheetoptions;
     }
 
-    static getLootFolder() {
+    static refreshDirectory(data) {
+        ui[data.name]?.render();
+    }
 
+    static async lootEntryListing(ctrl, html, collection = game.journal, uuid) {
+        async function selectItem(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            let id = event.currentTarget.dataset.uuid;
+            $(`[name="monks-enhanced-journal.loot-entity"]`, html).val(id);
+
+            let name = await getEntityName(id);
+
+            $('.journal-select-text', ctrl.next()).html(name);
+            $('.journal-list.open').removeClass('open');
+            $(event.currentTarget).addClass('selected').siblings('.selected').removeClass('selected');
+        }
+
+        async function getEntityName(id) {
+            let entity = null;
+            try {
+                entity = (id ? await fromUuid(id) : null);
+            } catch { }
+
+            if (entity instanceof JournalEntryPage || entity instanceof Actor)
+                return "Adding to " + entity.name;
+            else if (entity instanceof JournalEntry)
+                return "Adding new loot page to " + entity.name;
+            else if (entity instanceof Folder)
+                return (game.journal.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating within " + entity.name + " folder");
+            else
+                return "Creating in the root folder";
+        }
+
+        function getEntries(folderID, contents) {
+            let result = [$('<li>').addClass('journal-item create-item').attr('data-uuid', folderID).html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())];
+            return result.concat((contents || [])
+                .filter(c => {
+                    return c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot"
+                })
+                .sort((a, b) => { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; })
+                .map(e => {
+                    return $('<li>').addClass('journal-item flexrow').toggleClass('selected', uuid == e.uuid).attr('data-uuid', e.uuid).html($('<div>').addClass('journal-title').html(e.name)).click(selectItem.bind())
+                }));
+        }
+
+        function createFolder(folder, icon = "fa-folder-open") {
+            return $('<li>').addClass('journal-item folder flexcol collapse').append($('<div>').addClass('journal-title').append($("<i>").addClass(`fas ${icon}`)).append(folder.name)).append(
+                $('<ul>')
+                    .addClass('subfolder')
+                    .append(getFolders(folder?.children?.map(c => c.folder)))
+                    .append(getEntries(folder.uuid, folder.documents || folder.contents)))
+                .click(function (event) { event.preventDefault(); event.stopPropagation(); $(this).toggleClass('collapse'); });
+        }
+
+        function getFolders(folders) {
+            return (folders || []).sort((a, b) => { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; }).map(f => {
+                return createFolder(f);
+            });
+        }
+
+        let list = $('<ul>')
+            .addClass('journal-list')
+            .append($('<li>').addClass('journal-item convert-item').attr('data-uuid', 'convert').toggle(collection.name == "Actors").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == 'convert').html("-- convert tokens --")).click(selectItem.bind()))
+            .append(getFolders(collection.directory.folders.filter(f => f.folder == null)))
+            .append(getEntries(null, collection.contents.filter(j => j.folder == null)));
+
+        $(html).click(function () { list.removeClass('open') });
+
+        let name = await getEntityName(uuid);
+
+        return $('<div>')
+            .addClass('journal-select')
+            .attr('tabindex', '0')
+            .append($('<div>').addClass('flexrow').css({ font: ctrl.css('font') }).append($('<span>').addClass("journal-select-text").html(name)).append($('<i>').addClass('fas fa-chevron-down')))
+            .append(list)
+            .click(function (evt) { $('.journal-list', html).removeClass('open'); list.toggleClass('open'); evt.preventDefault(); evt.stopPropagation(); });
     }
 }
 
@@ -798,72 +873,21 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
 
-    $('[name="monks-tokenbar.loot-entity"]', html).on('change', () => {
-        //folder is only needed if entity is create
-        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
-        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
-        let list = [];
-        if (type != 'convert') {
-            if (($('[name="monks-tokenbar.loot-entity"]', html).val() || setting('loot-entity')) == 'create') {
-                list.push({ id: '', name: '' });
-                if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
-                    //find Actors Folders
-                    for (let entry of game.folders) {
-                        if (entry.type == 'Actor')
-                            list.push({ id: entry.id, name: entry.name });
-                    }
-                } else if (sheet == 'monks-enhanced-journal') {
-                    //find Journal Entry Folders
-                    for (let entry of game.folders) {
-                        if (entry.type == 'JournalEntry')
-                            list.push({ id: entry.id, name: entry.name });
-                    }
-                }
-            }
-        }
-
-        let folderid = setting('loot-folder');
-        $('[name="monks-tokenbar.loot-folder"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == folderid).html(e.name) }));
-    });
-
-    $('[name="monks-tokenbar.loot-sheet"]', html).on('change', () => {
-        let type = $('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type');
-        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val() || setting('loot-sheet');
-        let list = [];
+    $('[name="monks-tokenbar.loot-sheet"]', html).on('change', async () => {
+        let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val();
 
         let hasLootable = sheet != 'none' && MonksTokenBar.getLootSheetOptions()[sheet] != undefined;
-        $('[name="monks-tokenbar.loot-type"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="monks-tokenbar.loot-entity"]', html).closest('.form-group').toggle(hasLootable);
-        $('[name="monks-tokenbar.loot-folder"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="monks-tokenbar.open-loot"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="monks-tokenbar.show-lootable-menu"]', html).closest('.form-group').toggle(hasLootable);
 
-        if (type != 'convert' && sheet != 'none') {
-            list.push({ id: 'create', name: '-- Create new --' });
-            if (['lootsheetnpc5e', 'merchantsheetnpc'].includes(sheet)) {
-                //find Actors
-                for (let entry of game.actors) {
-                    if (entry.getFlag('core', 'sheetClass') == (sheet == 'lootsheetnpc5e' ? 'dnd5e.LootSheetNPC5e' : (sheet == 'merchantsheetnpc' ? 'core.a' : '')))
-                        list.push({ id: entry.id, name: entry.name });
-                }
-            } else if (sheet == 'monks-enhanced-journal') {
-                //find Journal Entries
-                for (let entry of game.journal) {
-                    if (entry.getFlag('monks-enhanced-journal', 'type') == 'loot')
-                        list.push({ id: entry.id, name: entry.name });
-                }
-            }
-        }
-
         let entityid = setting('loot-entity');
-        $('[name="monks-tokenbar.loot-entity"]', html).empty().append(list.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }).map((e) => { return $('<option>').attr('value', e.id).prop('selected', e.id == entityid).html(e.name) })).change();
-    });
-
-    $('[name="monks-tokenbar.loot-type"]', html).on('change', () => {
-        let sheetid = $('[name="monks-tokenbar.loot-sheet"] ', html).val() || setting('loot-sheet');
-        let list = MonksTokenBar.getLootSheetOptions($('[name="monks-tokenbar.loot-type"]', html).val() || setting('loot-type'));
-
-        $('[name="monks-tokenbar.loot-sheet"] ', html).empty().append(Object.entries(list).map(([k, v]) => { return $('<option>').attr('value', k).prop('selected', k == sheetid).html(i18n(v)) })).change();
+        let ctrl = $('[name="monks-tokenbar.loot-entity"]', html);
+        if (ctrl.next().hasClass("journal-select"))
+            ctrl.next().remove();
+        let list = await MonksTokenBar.lootEntryListing(ctrl, html, (sheet == "monks-enhanced-journal" ? game.journal : game.actors), entityid);
+        list.insertAfter(ctrl);
+        ctrl.hide();
     }).change();
 
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));

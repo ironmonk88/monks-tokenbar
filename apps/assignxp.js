@@ -104,6 +104,8 @@ export class AssignXPApp extends Application {
         if(xp !== undefined)
             this.xp = xp;
 
+        this.actors.filter(a => a.disabled).forEach(a => { a.xp = 0 });
+
         let sortedByLevel = this.actors.filter(a => !a.disabled).sort(function (a, b) {
             const aXP = MonksTokenBar.system.getXP(a.actor);
             const bXP = MonksTokenBar.system.getXP(b.actor);
@@ -201,7 +203,7 @@ export class AssignXPApp extends Application {
             };
 
             setProperty(chatData, "flags.monks-tokenbar", requestdata);
-            msg = ChatMessage.create(chatData, {});
+            msg = await ChatMessage.create(chatData, {});
             this.close();
         } else
             ui.notifications.warn(i18n("MonksTokenBar.RequestNoneActorSelected"));

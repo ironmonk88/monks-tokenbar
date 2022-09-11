@@ -46,7 +46,6 @@ export const registerSettings = function () {
     }
 
 	let lootsheetoptions = MonksTokenBar.getLootSheetOptions();
-	let lootentity = {};
 	let lootfolder = {};
 	
 	const dividexp = (game.system.id === "pf2e" ? "no-split" : "equal-split");
@@ -281,32 +280,30 @@ export const registerSettings = function () {
 		choices: lootsheetoptions,
 		type: String,
 	});
-	game.settings.register(modulename, "loot-type", {
-		name: game.i18n.localize("MonksTokenBar.loot-type.name"),
-		hint: game.i18n.localize("MonksTokenBar.loot-type.hint"),
-		scope: "world",
-		config: true,
-		default: "transferplus",
-		choices: lootoptions,
-		type: String,
-	});
 	game.settings.register(modulename, "loot-entity", {
 		name: game.i18n.localize("MonksTokenBar.loot-entity.name"),
 		hint: game.i18n.localize("MonksTokenBar.loot-entity.hint"),
 		scope: "world",
 		config: true,
 		default: "",
-		choices: lootentity,
 		type: String,
 	});
 	game.settings.register(modulename, "loot-folder", {
 		name: game.i18n.localize("MonksTokenBar.loot-folder.name"),
 		hint: game.i18n.localize("MonksTokenBar.loot-folder.hint"),
 		scope: "world",
-		config: true,
+		config: false,
 		default: "",
 		choices: lootfolder,
 		type: String,
+	});
+	game.settings.register(modulename, "create-canvas-object", {
+		name: game.i18n.localize("MonksTokenBar.create-canvas-object.name"),
+		hint: game.i18n.localize("MonksTokenBar.create-canvas-object.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
 	});
 	game.settings.register(modulename, "open-loot", {
 		name: game.i18n.localize("MonksTokenBar.open-loot.name"),

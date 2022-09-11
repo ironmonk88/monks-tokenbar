@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, i18n, warn, setting } from "../monks-tokenbar.js";
 
 export class LootablesApp extends FormApplication {
     constructor(entity, options) {
@@ -71,10 +71,11 @@ export class LootablesApp extends FormApplication {
         });
     }
 
-    getData(options) {
+    async getData(options) {
         let notes = "";
         let hasItems = false;
         let lootsheet = setting('loot-sheet');
+        let lootentity = setting('loot-entity');
         let sheetName = "";
         switch (lootsheet) {
             case 'lootsheetnpc5e': sheetName = "Loot Sheet NPC 5e"; break;
@@ -82,32 +83,38 @@ export class LootablesApp extends FormApplication {
             case 'monks-enhanced-journal': sheetName = "Monk's Enhanced Journal"; break;
             case 'item-piles': sheetName = "Item Piles"; break;
         }
-        if (setting('loot-type') == 'convert')
+
+        let entity;
+        try {
+            entity = await fromUuid(lootentity);
+        } catch { }
+
+        let convertEntity = lootentity == "convert";
+        let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+
+        if (convertEntity)
             notes = `Convert tokens to lootable using ${sheetName}`;
         else {
             let entityName = "New " + (this.isLootActor(lootsheet) ? "Actor" : "Loot Journal Entry");
-            if (setting('loot-entity') != 'create') {
-                if (this.isLootActor(lootsheet)){
-                    let entity = game.actors.get(setting('loot-entity'));
-                    entityName = entity?.name || "Unknown";
-                    hasItems = (entity?.items.size || 0) > 0;
-                } else {
-                    let entity = game.journal.get(setting('loot-entity'));
-                    entityName = entity?.name || "Unknown";
-                    hasItems = (entity?.getFlag('monks-enhanced-journal', 'items') || []).length > 0;
-                }
+            if (this.isLootActor(lootsheet)) {
+                entityName = this.getEntityName(entity);
+                hasItems = (entity?.items.size || 0) > 0;
+            } else {
+                entityName = this.getEntityName(entity);
+                hasItems = (entity?.getFlag('monks-enhanced-journal', 'items') || []).length > 0;
             }
-            notes = `Transfer items to <${entityName}> using ${sheetName}${setting('loot-type') == 'transferplus' ? `, and create a ${(this.isLootActor(lootsheet) ? "Token" : "Note")} on the Canvas` : ''}`;
-        }
+            notes = `${entityName}, using ${sheetName}${setting("create-canvas-object") ? `, and create a ${(this.isLootActor(lootsheet) ? "Token" : "Note")} on the Canvas` : ''}`;
+        }           
+
         return {
             usecr: this.usecr,
-            loottype: setting('loot-type'),
-            createEntity: setting('loot-entity') == 'create',
-            clearEntity: setting('loot-type') != 'convert' && setting('loot-entity') != 'create' && hasItems,
+            convertEntity: convertEntity,
+            createEntity: createEntity,
+            clearEntity: !convertEntity && !createEntity && hasItems,
             notes: notes,
             placeholder: this.getLootableName(),
             entries: this.entries,
-            actionText: (setting('loot-type') == 'convert' ? i18n('MonksTokenBar.ConvertToLootable') : i18n('MonksTokenBar.TransferToLootable'))
+            actionText: (convertEntity ? i18n('MonksTokenBar.ConvertToLootable') : (createEntity ? i18n('MonksTokenBar.TransferToNewLootable') : i18n('MonksTokenBar.TransferToLootable')))
         };
     }
 
@@ -122,6 +129,9 @@ export class LootablesApp extends FormApplication {
     }
 
     disableToken(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
         let id = $(ev.currentTarget).closest('.item').attr('data-item-id');
         //let token = this.entries.find(t => { return t.token.id === id; });
         //if (token != undefined)
@@ -213,36 +223,42 @@ export class LootablesApp extends FormApplication {
         return data;
     }
 
-    getLootableName() {
-        let lootSheet = setting('loot-sheet');
-        let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal)
+    getEntityName(entity) {
+        if (entity instanceof JournalEntryPage || entity instanceof Actor)
+            return "Transferring to " + entity.name;
+        else if (entity instanceof JournalEntry)
+            return "Adding new loot page to " + entity.name;
+        else if (entity instanceof Folder)
+            return (entity.documentClass.documentName == "JournalEntry" ? "Create new Journal Entry within " + entity.name + " folder" : "Create within " + entity.name + " folder");
+        else
+            return "Create in the root folder";
+    }
 
-        let folder = setting('loot-folder');
-
+    getLootableName(entity) {
         //find the folder and find the next available 'Loot Entry (x)'
-        let previous = collection.filter(e => {
-            return e.folder?.id == folder && e.name.startsWith("Loot Entry");
-        }).map((e, i) =>
+        let lootSheet = setting('loot-sheet');
+        let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
+
+        let documents = (entity == undefined ? collection.filter(e => e.folder == undefined) : entity.contents || entity.pages);
+        let previous = documents.map((e, i) =>
             parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
         ).sort((a, b) => { return b - a; });
         let num = (previous.length ? previous[0] + 1 : 1);
 
-        name = (num == 1 ? 'Loot Entry' : `Loot Entry (${num})`);
+        name = `${i18n("MonksTokenBar.LootEntry")}${(num > 1 ? ` (${num})` : '')}`;
         return name;
     }
 
     async convertToLootable({ clear = false, name = null }) {
         let data = expandObject(this._getSubmitData());
 
-        if (setting('loot-sheet') == 'none') {
-            return;
-        }
-
         // Limit selection to Players and Trusted Players
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
-
-        let lootType = setting('loot-type');
         let lootSheet = setting('loot-sheet');
+        let lootEntity = setting('loot-entity');
+
+        if (lootSheet == 'none')
+            return;
 
         let msg = "";
 
@@ -255,7 +271,7 @@ export class LootablesApp extends FormApplication {
             }
         }
 
-        if (lootType == 'convert') {
+        if (lootEntity == 'convert') {
             if (lootSheet == "item-piles") {
                 let tokens = this.entries.map(t => t.token);
                 ItemPiles.API.turnTokensIntoItemPiles(tokens);
@@ -389,42 +405,43 @@ export class LootablesApp extends FormApplication {
 
             msg = `Actors have been converted to lootable`;
         } else {
-            let lootentity = setting('loot-entity');
             let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
 
             let entity;
-            if (lootentity != 'create'){
-                entity = await collection.get(lootentity);//find the correct entity;
-                name = entity?.name;
+            try {
+                entity = await fromUuid(lootEntity);
+            } catch { }
+            name = entity?.name;
 
-                if (entity == undefined)
-                    warn("Could not find Loot Entity, defaulting to creating one");
-            }
+            if (entity == undefined)
+                warn("Could not find Loot Entity, defaulting to creating one");
 
-            let created = (lootentity == 'create' || entity == undefined);
+            let created = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
             if (created) {
                 //create the entity in the Correct Folder
-                let folder = setting('loot-folder');
-
                 if (name == undefined || name == '')
-                    name = this.getLootableName();
+                    name = this.getLootableName(entity);
 
-                const cls = collection.documentClass;
+                if ((entity instanceof Folder || entity == undefined) && collection.documentName == "JournalEntry") {
+                    entity = await JournalEntry.create({ folder: entity, name: name, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { render: false });
+                }
+
                 if (this.isLootActor(lootSheet)) {
-                    entity = await cls.create({ folder: folder, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
+                    const cls = collection.documentClass;
+                    entity = await cls.create({ folder: entity, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
                     ui.actors.render();
+                    MonksTokenBar.emit("refreshDirectory", { name: "actors" });
                 } else {
-                    entity = await cls.create({ folder: folder, name: name, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { render: false });
-                    await entity.setFlag('monks-enhanced-journal', 'type', 'loot');
-                    await entity.setFlag('monks-enhanced-journal', 'purchasing', 'confirm');
+                    entity = await JournalEntryPage.create({ name: name, type: "text", flags: { "monks-enhanced-journal": { type: "loot", purchasing: "confirm" } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { parent: entity, render: false });
                     ui.journal.render();
+                    MonksTokenBar.emit("refreshDirectory", { name: "journal" });
                 }
             }
 
             if (!entity)
                 return ui.notifications.warn("Could not find Loot Entity");
 
-            if (clear && lootentity != 'create') {
+            if (clear) {
                 if (this.isLootActor(lootSheet)) {
                     for (let item of entity.items) {
                         await item.delete();
@@ -489,7 +506,7 @@ export class LootablesApp extends FormApplication {
                 `${name} has been created, items have been transferred to it` :
                 `Items have been transferred to ${name}`);
 
-            if (lootType == 'transferplus' && lootSheet !== "item-piles") {
+            if (setting("create-canvas-object") && lootSheet !== "item-piles") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
                 let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
@@ -505,9 +522,10 @@ export class LootablesApp extends FormApplication {
                         await cls.create(td, { parent: canvas.scene });
                     } else if (lootSheet == 'monks-enhanced-journal') {
                         let data = {
-                            x: pt.x + (canvas.scene.size / 2),
-                            y: pt.y + (canvas.scene.size / 2),
-                            entryId: entity.id,
+                            x: parseInt(pt.x + (canvas.scene.dimensions.size / 2)),
+                            y: parseInt(pt.y + (canvas.scene.dimensions.size / 2)),
+                            entryId: entity.parent.id,
+                            pageId: entity.id,
                             icon: "icons/svg/chest.svg"
                         };
 

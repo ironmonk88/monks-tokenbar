@@ -1,3 +1,13 @@
+## Version 10.1
+
+Fixed issues with assigning xp, leaving the old xp visible on disabled actors.
+
+Switched the setting to select how to deliver lootables to be more inline with how Enhanced Journals is displaying them.
+
+Fixed lootables to work correctly in v10 and with Enhanced Journals.
+
+Fixed issues when switching scenes and refreshing tokens.
+
 ## Version 1.0.71
 
 Fixed an issue that the latest v10 update broke.
