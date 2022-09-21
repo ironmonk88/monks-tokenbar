@@ -29,7 +29,10 @@ export class AssignXPApp extends Application {
                     });
 
                     apl.count = apl.count + 1;
-                    apl.levels = apl.levels + (actor.system.details.level?.value || actor.system.details.level);
+                    if (game.system.id == 'ds4') {
+                        apl.levels = apl.levels + actor.data.data.progression.level;
+                    } else
+                        apl.levels = apl.levels + (actor.system.details.level?.value || actor.system.details.level);
                 } else
                     monsters.push(combatant);
             };
@@ -45,7 +48,9 @@ export class AssignXPApp extends Application {
                         let monstLevel = parseInt(combatant?.actor.system.details?.level?.value);
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;
-                    }else
+                    } else if (game.system.id == 'ds4') {
+                        combatxp += (combatant.actor?.data.data.baseInfo?.experiencePoints || 0);
+                    } else
                         combatxp += (combatant.actor?.system.details?.xp?.value || 0);
                 }
             };
