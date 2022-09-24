@@ -43,7 +43,7 @@ export class DnD4eRolls extends BaseRolls {
     }*/
 
     getXP(actor) {
-        return actor.system.details.exp;
+        return actor?.system.details.exp;
     }
 
     get defaultStats() {
@@ -52,30 +52,30 @@ export class DnD4eRolls extends BaseRolls {
 
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'skill:prc' : null);
+        return (allPlayers ? { type: 'skill', key: 'prc' } : null);
     }
 
     defaultContested() {
         return 'ability:str';
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
         let context = actor;
-        if (requesttype == 'ability') {
+        if (request.type == 'ability') {
             rollfn = actor.rollAbility
         }
-        else if (requesttype == 'save') {
+        else if (request.type == 'save') {
             rollfn = actor.rollDef;
         }
-        else if (requesttype == 'skill') {
+        else if (request.type == 'skill') {
             rollfn = actor.rollSkill;
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(context, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                return rollfn.call(context, request.key, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }

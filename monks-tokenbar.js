@@ -125,7 +125,7 @@ export class MonksTokenBar {
                 MonksTokenBar.tokenbar.tokens = [];
                 MonksTokenBar.tokenbar.refresh();
             }
-            return await wrapped(...args);
+            return await wrapped.call(this, ...args);
         }
 
         if (game.modules.get("lib-wrapper")?.active) {
@@ -141,7 +141,7 @@ export class MonksTokenBar {
             let innerHTML = `
 #tokenbar .token {
     flex: 0 0 ${setting('token-size')}px;
-    width: ${setting('token-size')};
+    width: ${setting('token-size')}px;
 }
 `;
             let style = document.createElement("style");
@@ -572,19 +572,19 @@ export class MonksTokenBar {
         return list;
     }
 
-    static getRequestName(requestoptions, requesttype, request) {
+    static getRequestName(requestoptions, request) {
         let name = '';
-        switch (requesttype) {
+        switch (request.type) {
             case 'ability': name = i18n("MonksTokenBar.AbilityCheck"); break;
             case 'save': name = i18n("MonksTokenBar.SavingThrow"); break;
             case 'dice': name = i18n("MonksTokenBar.Roll"); break;
             default:
-                name = (request != 'death' && request != 'init' ? i18n("MonksTokenBar.Check") : "");
+                name = (request.key != 'death' && request.key != 'init' ? i18n("MonksTokenBar.Check") : "");
         }
         let rt = requestoptions.find(o => {
-            return o.id == (requesttype || request);
+            return o.id == (request.type || request.key);
         });
-        let req = (rt?.groups && rt?.groups[request]);
+        let req = (rt?.groups && rt?.groups[request.key]);
         let flavor = i18n(req || rt?.text);
         switch (game.i18n.lang) {
             case "pt-BR":
@@ -596,6 +596,48 @@ export class MonksTokenBar {
                 name = flavor + " " + name;
         }
         return name;
+    }
+
+    static findBestRequest(requests, options) {
+        if (requests) {
+            requests = requests instanceof Array ? requests : [requests];
+            for (let i = 0; i < requests.length; i++) {
+                let request = requests[i];
+                if (!request)
+                    continue;
+
+                let type = request.type
+                let key = request.key
+                if (typeof request == "string") {
+                    if (request.indexOf(':') > -1) {
+                        let parts = request.split(':');
+                        type = parts[0];
+                        key = parts[1];
+                    } else
+                        key = request;
+                }
+
+                //correct the type if it's a string
+                if (type && type.toLowerCase() == "saving")
+                    type = "save";
+
+                let optType = (type ? options.find(o => o.id == type.toLowerCase() || i18n(o.text).toLowerCase() == type.toLowerCase()) : null);
+
+                //correct the key
+                optType = (optType ? [optType] : options).find(g => {
+                    return Object.entries(g.groups).find(([k, v]) => {
+                        let result = i18n(v).toLowerCase() == key.toLowerCase() || k == key.toLowerCase();
+                        if (result) key = k;
+                        return result;
+                    });
+                });
+
+                requests[i] = { type: optType.id, key: key };
+            }
+
+            return requests;
+        }
+        return null;
     }
 
     static setGrabMessage(message, event) {
@@ -689,7 +731,7 @@ export class MonksTokenBar {
             event.preventDefault();
             event.stopPropagation();
             let id = event.currentTarget.dataset.uuid;
-            $(`[name="monks-enhanced-journal.loot-entity"]`, html).val(id);
+            $(`[name="monks-tokenbar.loot-entity"]`, html).val(id);
 
             let name = await getEntityName(id);
 
@@ -722,7 +764,7 @@ export class MonksTokenBar {
                 })
                 .sort((a, b) => { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; })
                 .map(e => {
-                    return $('<li>').addClass('journal-item flexrow').toggleClass('selected', uuid == e.uuid).attr('data-uuid', e.uuid).html($('<div>').addClass('journal-title').html(e.name)).click(selectItem.bind())
+                    return $('<li>').addClass('journal-item flexrow').toggleClass('selected', uuid == e.pages.contents[0].uuid).attr('data-uuid', e.pages.contents[0].uuid).html($('<div>').addClass('journal-title').html(e.name)).click(selectItem.bind())
                 }));
         }
 
@@ -1092,7 +1134,11 @@ Hooks.on("setupTileActions", (app) => {
 
             entities = entities.map(e => e.object);
 
-            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: action.data.request, dc: action.data.dc, flavor: action.data.flavor });
+            let parts = action.data?.request.split(':');
+            let type = (parts.length > 1 ? parts[0] : '');
+            let key = (parts.length > 1 ? parts[1] : parts[0]);
+
+            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: [{ type, key }], dc: action.data.dc, flavor: action.data.flavor });
             savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
             if (action.data.silent === true) {
                 let msg = await savingthrow.requestRoll();
@@ -1111,9 +1157,9 @@ Hooks.on("setupTileActions", (app) => {
         },
         content: async (trigger, action) => {
             let parts = action.data?.request.split(':');
-            let requesttype = (parts.length > 1 ? parts[0] : '');
-            let request = (parts.length > 1 ? parts[1] : parts[0]);
-            let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            let type = (parts.length > 1 ? parts[0] : '');
+            let key = (parts.length > 1 ? parts[1] : parts[0]);
+            let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, { type, key });
             let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
             return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
         }
@@ -1242,11 +1288,11 @@ Hooks.on("setupTileActions", (app) => {
             let parts = action.data?.request1.split(':');
             let requesttype = (parts.length > 1 ? parts[0] : '');
             let request = (parts.length > 1 ? parts[1] : parts[0]);
-            let name1 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            let name1 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, { type: requesttype, key: request });
             parts = action.data?.request2.split(':');
             requesttype = (parts.length > 1 ? parts[0] : '');
             request = (parts.length > 1 ? parts[1] : parts[0]);
-            let name2 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, requesttype, request);
+            let name2 = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, { type: requesttype, key: request });
 
             let entityName1 = await game.MonksActiveTiles.entityName(action.data?.entity1);
             let entityName2 = await game.MonksActiveTiles.entityName(action.data?.entity2);
@@ -1330,7 +1376,17 @@ Hooks.on("setupTileActions", (app) => {
                     return divideXpOptions
                 },
                 type: "list"
-            }
+            },
+            {
+                id: "silent",
+                name: "Bypass Dialog",
+                type: "checkbox"
+            },
+            {
+                id: "fastforward",
+                name: "Auto Assign",
+                type: "checkbox"
+            },
         ],
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
@@ -1343,9 +1399,13 @@ Hooks.on("setupTileActions", (app) => {
             entities = entities.map(e => e.object);
 
             let assignxp = new AssignXPApp(entities, { xp: action.data.xp, reason: action.data.reason, dividexp: action.data.dividexp});
-            if (action.data.silent === true)
-                assignxp.assign();
-            else
+            if (action.data.silent === true) {
+                let msg = await assignxp.assign();
+                if (msg && action.data.fastforward === true)
+                    return AssignXP.onAssignAllXP(msg);
+                else
+                    return msg;
+            } else
                 assignxp.render(true);
 
         },

@@ -22,7 +22,7 @@ export class DS4Rolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.system.progression?.experiencePoints || 0;
+        return actor?.system.progression?.experiencePoints || 0;
     }
 
     get defaultStats() {
@@ -42,14 +42,14 @@ export class DS4Rolls extends BaseRolls {
             return 'skill:perception';
         }
     
-        roll({ id, actor, request, requesttype, fastForward = false }, callback, e) {
+        roll({ id, actor, request, fastForward = false }, callback, e) {
             let rollfn = null;
     
             rollfn = actor.rollCheck;
     
             if (rollfn != undefined) {
                 try {
-                    return rollfn.call(actor, request).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                    return rollfn.call(actor, request.key).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 } catch {
                     return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
                 }

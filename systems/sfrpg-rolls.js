@@ -52,30 +52,30 @@ export class SFRPGRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.system.details.xp;
+        return actor?.system.details.xp;
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         /*
         let rollfn = null;
         let opts = { event: e };
 
         rollfn = new Promise(function (resolve, reject) {
-            let _requesttype = (requesttype == 'saves' ? 'attributes' : requesttype);
-            const value = getProperty(actor.system, `${_requesttype}.${request}`);
-            const label = CONFIG.SFRPG[requesttype][request];
-            let title = (requesttype == "abilities" ? 'Ability Check' : (requesttype == "saves" ? 'Save' : 'Skill Check')) + ` - ${label}`;
+            let _requesttype = (request.type == 'saves' ? 'attributes' : request.type);
+            const value = getProperty(actor.system, `${_requesttype}.${request.key}`);
+            const label = CONFIG.SFRPG[requesttype][request.key];
+            let title = (request.type == "abilities" ? 'Ability Check' : (request.type == "saves" ? 'Save' : 'Skill Check')) + ` - ${label}`;
 
             let parts = [];
             let data = actor.getRollData();
 
             //Include ability check bonus only if it's not 0
-            if (requesttype == 'ability' && value.abilityCheckBonus) {
+            if (request.type == 'ability' && value.abilityCheckBonus) {
                 parts.push('@abilityCheckBonus');
                 data.abilityCheckBonus = value.abilityCheckBonus;
             }
-            let part = (requesttype == 'saves' ? 'bonus' : 'mod');
-            parts.push(`@${_requesttype}.${request}.${part}`);
+            let part = (request.type == 'saves' ? 'bonus' : 'mod');
+            parts.push(`@${_requesttype}.${request.key}.${part}`);
 
             const rollContext = new SFRPGRollContext(actor, data);
             actor.setupRollContexts(rollContext);
@@ -113,13 +113,13 @@ export class SFRPGRolls extends BaseRolls {
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, event: e };
         let context = actor;
-        if (requesttype == 'abilities') {
+        if (request.type == 'abilities') {
             rollfn = actor.rollAbility;
         }
-        else if (requesttype == 'saves') {
+        else if (request.type == 'saves') {
             rollfn = actor.rollSave;
         }
-        else if (requesttype == 'skills') {
+        else if (request.type == 'skills') {
             rollfn = actor.rollSkill;
         }
 
@@ -127,7 +127,7 @@ export class SFRPGRolls extends BaseRolls {
             try {
                 return new Promise(function (resolve, reject) {
                     options.onClose = function (roll) { resolve(callback(roll)); };
-                    rollfn.call(context, request, options);
+                    rollfn.call(context, request.key, options);
                 }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }

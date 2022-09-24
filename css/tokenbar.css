@@ -41,10 +41,11 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .bar-controls div#tokenbar-move-handle {
-    flex: 0 0 10px;
-    width: 10px;
+    flex: 0 0 20px;
+    width: 20px;
     height: 100%;
     background: url(../../../ui/denim075.png) repeat;
+    cursor: move;
 }
 
 #tokenbar .bar-controls > div > * {
@@ -465,12 +466,14 @@ body #tokenbar-window:first-child{
     justify-content: flex-end;
 }
 
-#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls {
+#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls,
+#assignexperience .monks-tokenbar .sheet .items-list .items-header .item-controls {
     flex: 1 1 auto;
     flex-wrap: nowrap;
 }
 
-#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls a{
+#requestsavingthrow .monks-tokenbar .sheet .items-list .items-header .item-controls a,
+#assignexperience .monks-tokenbar .sheet .items-list .items-header .item-controls a {
     flex-grow: 0;
     white-space: nowrap;
     margin: 0px 4px;
@@ -589,7 +592,7 @@ body #tokenbar-window:first-child{
     border: 1px solid red;
     border-bottom: 1px solid #ff6400;
     box-shadow: 0 0 10px #ff6400;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.3);
     color: #111;
     white-space: nowrap;
     overflow: hidden;
@@ -597,7 +600,8 @@ body #tokenbar-window:first-child{
 }
 
 #requestsavingthrow .request-grid > div.selected {
-    color:#000;
+    color: #000;
+    background: rgba(255, 255, 255, 0.6);
     /*color: #ff6400;*/
 }
 
@@ -751,7 +755,11 @@ body #tokenbar-window:first-child{
 .monks-tokenbar li.item .dice-roll a.add-xp {
     flex: 0 0 50px;
     text-align: center;
-    line-height: 30px;
+    margin: 4px 4px;
+    line-height: 22px;
+    border-radius: 4px;
+    background-color: #468847;
+    color: #fff;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.recommended {
@@ -1011,4 +1019,22 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
+}
+
+.savingthrow-picker .dialog-buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+.savingthrow-picker .dialog-buttons > .dialog-button {
+    flex: 0 0 32px;
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+#tokenbar .bar-controls > div > .toggle-collapse {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    line-height: 21px;
 }

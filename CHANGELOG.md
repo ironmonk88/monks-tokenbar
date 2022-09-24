@@ -1,3 +1,23 @@
+## Version 10.2
+
+Updated the assign XP dialog to allow you to customise the actors that are being assigned XP.  It will remember the last tokens to assigned XP to, can use the current combats tokens, or you can drag and drop and actor onto the dialog to add them to the list.
+
+Also added the option to auto assign XP instead of having to click the add button in the chat card.
+
+Updated the add xp chat card to highlight that the add button is clicakble as it gets a little hidden.
+
+Updated request roll and contested roll to be able to request multiple options.  So if you need to check for either an athletics or an acrobatics roll, you can do that.  Contested Roll does not offer that option in the interface, but can be configured in the API and run from a macro.
+
+Updated the request roll chat message to allow them to be popped out.
+
+Updated the lootable dialog to only clear if the confirm button is visible.  This shouldn't have been an issue, I just wanted to make sure it wasn't going to be one.
+
+Added the option to collapse the tokenbar icons in case ou want more screen room, or don't want to see the player icons.
+
+Fixed an issue updating the selection when changing in the settings how loot is distributed.
+
+Fixed an issue introduced by Foundry when serializing the Roll in the Chat card.
+
 ## Version 10.1
 
 Fixed issues with assigning xp, leaving the old xp visible on disabled actors.

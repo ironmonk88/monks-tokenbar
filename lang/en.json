@@ -160,6 +160,7 @@
 	"MonksTokenBar.Reason": "Reason",
 	"MonksTokenBar.RemoveActor": "Remove Actor",
 	"MonksTokenBar.Assign": "Assign",
+	"MonksTokenBar.AutoAssign": "Auto Assign",
 	"MonksTokenBar.AssignAll": "Assign All",
 	"MonksTokenBar.XPAddAll": " Add All",
 	"MonksTokenBar.AddExperience": "Add Experience",
@@ -203,6 +204,8 @@
 	"MonksTokenBar.ClearCurrentItems": "Clear Current Items",
 	"MonksTokenBar.SaveToMacro": "Save to Macro",
 	"MonksTokenBar.LootEntry": "Loot Entry",
+	"MonksTokenBar.FromCombat": "Actors from combat",
+	"MonksTokenBar.Combat": "Combat",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

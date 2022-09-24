@@ -79,21 +79,22 @@ export class SwadeRolls extends BaseRolls {
         return [{ id: 'skill', text: 'Skills', groups: skills }];
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = { rollMode: rollMode, event: e, chatMessage: false };
-        if (requesttype == 'ability') {
+        let sysRequest = request.key;
+        if (request.type == 'ability') {
             rollfn = actor.rollAttribute;
         }
-        else if (requesttype == 'skill') {
-            let item = actor.items.find(i => i.name == request && i.type == 'skill');
-            request = item.id;
+        else if (request.type == 'skill') {
+            let item = actor.items.find(i => i.name == request.key && i.type == 'skill');
+            sysRequest = item.id;
             rollfn = actor.rollSkill;
         } else {
-            if (request == 'init') {
+            if (request.key == 'init') {
                 rollfn = actor.rollInitiative;
                 options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true } } };
-                request = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
+                sysRequest = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
             }
         }
 
@@ -105,7 +106,7 @@ export class SwadeRolls extends BaseRolls {
                         resolve(rollfn.call(actor, { event: e, options: opts }));
                     }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 } else {
-                    return rollfn.call(actor, request, opts)
+                    return rollfn.call(actor, sysRequest, opts)
                         .then((roll) => { return callback(roll); })
                         .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 }

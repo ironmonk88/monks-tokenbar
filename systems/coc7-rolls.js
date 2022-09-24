@@ -81,32 +81,33 @@ export class CoC7Rolls extends BaseRolls {
         return [{ id: 'skill', text: 'Skills', groups: skills }];
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         /*
         let rollfn = null;
         let options = { fastForward: fastForward, chatMessage: false, event: e };
         let context = actor;
-        if (requesttype == 'characteristics') {
+        let sysRequest = request.key;
+        if (request.type == 'characteristics') {
             rollfn = actor.rollCharacteristicsValue;
-        } else if (requesttype == 'tool' || requesttype == 'skill') {
-            let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request || i.id == request; });
+        } else if (request.type == 'tool' || request.type == 'skill') {
+            let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request || i.id == request.key; });
             if (item != undefined) {
                 context = item;
-                request = options;
+                sysRequest = options;
                 rollfn = item.rollToolCheck;
             } else
                 return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoTool") };
         } else {
-            if (request == 'init') {
+            if (request.key == 'init') {
                 rollfn = actor.rollInitiative;
                 options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true }} };
-                request = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
+                sysRequest = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
             }
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(context, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                return rollfn.call(context, sysRequest, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }

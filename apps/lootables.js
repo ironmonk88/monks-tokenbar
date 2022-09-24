@@ -164,7 +164,7 @@ export class LootablesApp extends FormApplication {
     }
 
     convert() {
-        this.convertToLootable({ name: $('#entity-name').val(), clear: $('#clear-items').prop('checked') });
+        this.convertToLootable({ name: $('#entity-name').val(), clear: $('#clear-items').is(":visible") && $('#clear-items').prop('checked') });
     }
 
     calcGold() {

@@ -73,7 +73,7 @@
                     {{/if}}
                     <div class="request-grid {{this.cssclass}}">
                         {{#each this.groups as |name key|}}
-                        <div class="request-option" value="{{../id}}:{{key}}">{{localize name}}</div>
+                        <div class="request-option" data-type="{{../id}}" data-key="{{key}}">{{localize name}}</div>
                         {{/each}}
                     </div>
                     {{/each}}

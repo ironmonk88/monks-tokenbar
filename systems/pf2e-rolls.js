@@ -38,7 +38,7 @@ export class PF2eRolls extends BaseRolls {
 
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'attribute:perception' : null);
+        return (allPlayers ? { type: 'attribute', key: 'perception' } : null);
     }
 
     defaultContested() {
@@ -46,7 +46,7 @@ export class PF2eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.system.details.xp;
+        return actor?.system.details.xp;
     }
 
     get useDegrees() {
@@ -69,10 +69,10 @@ export class PF2eRolls extends BaseRolls {
             return (success < 0 ? "failed" : false);
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = request;
-        if (requesttype == 'attribute') {
+        let opts = request.key;
+        if (request.type == 'attribute') {
             rollfn = function (event, attributeName) {
                 const attribute = actor.system.attributes[attributeName];
                 if (!attribute)
@@ -97,7 +97,7 @@ export class PF2eRolls extends BaseRolls {
                 });
             }
         }
-        else if (requesttype == 'ability') {
+        else if (request.type == 'ability') {
             rollfn = function (event, abilityName) {
                 const bonus = actor.system.abilities[abilityName].mod,
                     title = game.i18n.localize(`PF2E.AbilityCheck.${abilityName}`),
@@ -117,7 +117,7 @@ export class PF2eRolls extends BaseRolls {
                 });
             }
         }
-        else if (requesttype == 'save') {
+        else if (request.type == 'save') {
             rollfn = function (event, saveName) {
                 const save = actor.system.saves[saveName],
                     flavor = `${game.i18n.localize(CONFIG.PF2E.saves[saveName])} Save Check`;
@@ -137,17 +137,17 @@ export class PF2eRolls extends BaseRolls {
                 })
             }
         }
-        else if (requesttype == 'skill') {
-            if (actor.system?.skills[request]?.roll) {
-                opts = actor.getRollOptions(["all", "skill-check", request]);
-                rollfn = actor.system.skills[request].roll;
+        else if (request.type == 'skill') {
+            if (actor.system?.skills[request.key]?.roll) {
+                opts = actor.getRollOptions(["all", "skill-check", request.key]);
+                rollfn = actor.system.skills[request.key].roll;
             } else
                 rollfn = actor.rollSkill;
         }
 
         if (rollfn != undefined) {
             try {
-                if (requesttype != 'skill')
+                if (request.type != 'skill')
                     return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else {
                     opts.push("ignore");

@@ -33,21 +33,8 @@ export class SavingThrowApp extends Application {
             }
         }
 
-        this.request = options.request;
+        this.request = MonksTokenBar.findBestRequest(options.request, this.baseoptions);
         this.flavor = options.flavor;
-
-        //find best match for request
-        if (options.request) {
-            for (let opt of this.baseoptions) {
-                let byname = Object.entries(opt.groups).find(([k, v]) => {
-                    return i18n(v).toLowerCase() == options.request.toLowerCase()
-                });
-                if (byname) {
-                    this.request = opt.id + ':' + byname[0];
-                    break;
-                }
-            }
-        }
 
         this.dc = options.dc;
         this.showdc = options.showdc;
@@ -75,7 +62,6 @@ export class SavingThrowApp extends Application {
 
         return {
             entries: this.entries,
-            request: this.request,
             rollmode: this.rollmode,
             flavor: this.flavor,
             dc: this.dc,
@@ -132,8 +118,8 @@ export class SavingThrowApp extends Application {
                 break;
             case 'last':
                 if (SavingThrow.lastTokens) {
-                    this.entries = SavingThrow.lastTokens;
-                    this.request = SavingThrow.lastRequest;
+                    this.entries = duplicate(SavingThrow.lastTokens);
+                    this.request = duplicate(SavingThrow.lastRequest);
                     this.render(true);
                 }
                 break;
@@ -176,28 +162,29 @@ export class SavingThrowApp extends Application {
             });
             SavingThrow.lastRequest = this.request;
 
-            if (this.request == undefined) {
+            if (this.request == undefined || !this.request.length) {
                 log('Invalid request');
                 ui.notifications.error("Invalid value sent as a request");
                 return;
             }
 
-            let parts = this.request.split(':'); //$('.request-roll', this.element).val()
-            let requesttype = (parts.length > 1 ? parts[0] : '');
-            let request = (parts.length > 1 ? parts[1] : parts[0]);
             let rollmode = this.rollmode;
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
+            this.request = this.request instanceof Array ? this.request : [this.request];
+            let requests = this.request.map(r => {
+                r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
+                return r;
+            });
             let flavor = this.flavor;
-            let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
+            let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requests[0]);
             
             let requestdata = {
-                dc: this.dc || (request == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
+                dc: this.dc || (this.request[0].key == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
                 showdc: this.showdc,
                 name: name,
-                requesttype: requesttype,
-                request: request,
+                requests: requests,
                 rollmode: rollmode,
                 modename: modename,
                 tokens: msgEntries,
@@ -230,6 +217,7 @@ export class SavingThrowApp extends Application {
                 user: game.user.id,
                 content: html,
                 flavor: flavor,
+                flags: { core: { canPopout: true } }
             };
             if (requestdata.rollmode == 'selfroll')
                 chatData.whisper = [game.user.id];
@@ -285,10 +273,29 @@ export class SavingThrowApp extends Application {
             this.flavor = $(e.currentTarget).val();
         }, this));
         $('.request-roll .request-option', html).click($.proxy(function (e) {
-            $('.request-roll .request-option.selected', html).removeClass('selected');
-            let ctrl = $(e.currentTarget);
-            this.request = ctrl.attr('value');
-            ctrl.addClass('selected');
+            let target = $(e.currentTarget);
+            let type = e.currentTarget.dataset.type;
+            let key = e.currentTarget.dataset.key;
+            if (e.ctrlKey) {
+                if (this.request instanceof Array) {
+                    if (this.request.length > 1 && this.request.some(r => r.type == type && r.key == key)) {
+                        this.request.findSplice(r => r.type == type && r.key == key);
+                        target.removeClass('selected');
+                    } else {
+                        this.request.push({ type, key });
+                        target.addClass('selected');
+                    }
+                } else {
+                    if (this.request.type != type && this.request.key != key) {
+                        this.request = [this.request, { type, key }];
+                        target.addClass('selected');
+                    }
+                }
+            } else {
+                this.request = [{ type, key }];
+                $('.request-roll .request-option.selected', html).removeClass('selected');
+                target.addClass('selected');
+            }
         }, this));
         $('#savingthrow-rollmode', html).change($.proxy(function (e) {
             this.rollmode = $(e.currentTarget).val();
@@ -298,17 +305,15 @@ export class SavingThrowApp extends Application {
     async saveToMacro() {
         let tokens = this.entries.map(t => { return { token: t.token.name } });
 
-        let parts = this.request.split(':');
-        let requesttype = (parts.length > 1 ? parts[0] : '');
-        let request = (parts.length > 1 ? parts[1] : parts[0]);
-        let name = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
+        let requests = this.request instanceof Array ? this.request : [this.request];
+        let name = MonksTokenBar.getRequestName(this.requestoptions, requests[0]);
 
         let folder = game.folders.find(f => { return f.type == "Macro" && f.name == "Monk's Tokenbar" });
         if (!folder) {
             folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
         }
 
-        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:'${this.request}'${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
     }
@@ -363,22 +368,47 @@ export class SavingThrow {
         }
     }
 
-    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e, msgId) {
+    static async _rollAbility(data, requests, rollmode, ffwd, e, message) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid);
         let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
         let fastForward = ffwd || (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey);
 
         if (actor != undefined) {
-            if (requesttype == 'dice') {
+            let request = requests instanceof Array ? (requests.length == 1 ? requests[0] : null) : requests;
+            if (!request && requests.length > 1) {
+                // Select which of the requests to use
+                if (ffwd) {
+                    request = requests[0];
+                } else {
+                    let buttons = requests.map(r => {
+                        return {
+                            label: r.name,
+                            callback: () => r
+                        }
+                    });
+                    request = await Dialog.wait({
+                        title: "Please pick a roll",
+                        content: "",
+                        focus: true,
+                        close: () => { return null; },
+                        buttons: buttons
+                    }, { classes: ["savingthrow-picker"], width: 300 });
+                }
+            }
+
+            if (!request)
+                return;
+
+            if (request.type == 'dice') {
                 //roll the dice
-                return SavingThrow.rollDice(request).then((roll) => {
-                    return SavingThrow.returnRoll(data.id, roll, actor, rollmode);
+                return SavingThrow.rollDice(request.key).then((roll) => {
+                    return SavingThrow.returnRoll(data.id, roll, actor, rollmode, message.id).then((result) => { if (result) result.request = request; return result; });
                 });
             } else {
-                if (MonksTokenBar.system._supportedSystem) {//game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
-                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, rollMode: rollmode, requesttype: requesttype, fastForward: fastForward }, function (roll) {
-                        return SavingThrow.returnRoll(data.id, roll, actor, rollmode, msgId);
+                if (MonksTokenBar.system._supportedSystem) {
+                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, rollMode: rollmode, fastForward: fastForward }, function (roll) {
+                        return SavingThrow.returnRoll(data.id, roll, actor, rollmode, message.id).then((result) => { if (result) result.request = request; return result; });
                     }, e);
                 }
                 else {
@@ -395,8 +425,7 @@ export class SavingThrow {
 
         let flags = message.flags['monks-tokenbar'];
 
-        let request = message.getFlag('monks-tokenbar', 'request');
-        let requesttype = message.getFlag('monks-tokenbar', 'requesttype');
+        let requests = message.getFlag('monks-tokenbar', 'requests');
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
 
         let promises = [];
@@ -419,7 +448,7 @@ export class SavingThrow {
                         e[k] = evt[k] || v;
                     MonksTokenBar.system.parseKeys(e, keys);
 
-                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, request, requesttype, rollmode, fastForward, e, message.id));
+                    promises.push(SavingThrow._rollAbility({ id: id, uuid: msgtoken.uuid }, requests, rollmode, fastForward, e, message));
                 }
             }
         };
@@ -475,8 +504,15 @@ export class SavingThrow {
                     let tooltip = '';
                     if (update.roll instanceof Roll) {
                         msgtoken.roll = update.roll.toJSON();
+                        if (msgtoken.roll.terms.length)
+                            msgtoken.roll.terms = duplicate(msgtoken.roll.terms);
+                        for (let i = 0; i < msgtoken.roll.terms.length; i++) {
+                            if (msgtoken.roll.terms[i] instanceof RollTerm)
+                                msgtoken.roll.terms[i] = msgtoken.roll.terms[i].toJSON();
+                        }
                         msgtoken.total = update.roll.total;
                         msgtoken.reveal = update.reveal || reveal;
+                        msgtoken.request = update.request;
                         tooltip = await update.roll.getTooltip();
 
                         Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
@@ -704,30 +740,28 @@ Hooks.on("diceSoNiceRollComplete", (messageid) => {
 
 Hooks.on("renderSavingThrowApp", (app, html) => {
     if (app.request == undefined) {
-        //if all the tokens are players, then default to perception
-        /*
-        let allPlayers = (app.tokens.filter(t => t.actor?.hasPlayerOwner).length == app.tokens.length);
-        //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = 0;
-        if (game.system.id == "dnd5e" || game.system.id == "sw5e"  )
-            allZeroHP = app.tokens.filter(t => getProperty(t.actor, "system.attributes.hp.value") == 0).length;
-        let request = (allZeroHP == app.tokens.length && allZeroHP != 0 ? 'misc:death' : null) ||
-            (allPlayers ? (game.system.id == "dnd5e" || game.system.id == "sw5e"  ? 'skill:prc' : (game.system.id == "tormenta20" ? 'skill:per' : 'attribute:perception')) : null) ||
-            SavingThrow.lastRequest ||
-            $('.request-roll .request-option:first', html).attr('value');*/
-        let request = MonksTokenBar.system.defaultRequest(app) || SavingThrow.lastRequest || $('.request-roll .request-option:first', html).attr('value');
-        if ($('.request-roll .request-option[value="' + request + '"]', html).length == 0)
-            request = $('.request-roll .request-option:first', html).attr('value');
+        let request = MonksTokenBar.system.defaultRequest(app) || SavingThrow.lastRequest;
+        if (!request) {
+            request = [];
+            $('.request-roll .request-option', html).each(function () {
+                request.push({ type: this.data.type, key: this.data.key });
+            });
+        }
+        // confirm that the requests are on the list
+        request = request instanceof Array ? request : [request];
+        request = request.filter(r => {
+            return $(`.request-roll .request-option[data-type="${r.type}"][data-key="${r.key}"]`, html).length;
+        })
 
         app.request = request;
     }
 
-    $('.request-roll .request-option[value="' + app.request + '"]', html).addClass('selected');
+    for (let r of app.request) {
+        $(`.request-roll .request-option[data-type="${r.type}"][data-key="${r.key}"]`, html).addClass('selected');
+    }
 
     $('.items-header .item-control[data-type="actor"]', html).toggleClass('selected', app.selected === true);
     $('#savingthrow-rollmode', html).val(app.rollmode);
-
-    //$('.item-control[data-type="monster"]', html).hide();
 });
 
 Hooks.on("renderChatMessage", async (message, html, data) => {
@@ -741,7 +775,8 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 
         let dc = message.getFlag('monks-tokenbar', 'dc');
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
-        let request = message.getFlag('monks-tokenbar', 'request');
+        let requests = message.getFlag('monks-tokenbar', 'requests');
+        let request = requests[0];
 
         $('.roll-all', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'all', message));
         $('.roll-npc', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'npc', message));
@@ -775,8 +810,8 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
                         $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
 
-                    let critpass = roll.dice[0].total >= roll.dice[0].options.critical;
-                    let critfail = roll.dice[0].total <= roll.dice[0].options.fumble;
+                    let critpass = (roll.dice.length ? roll.dice[0].total >= roll.dice[0].options.critical : false);
+                    let critfail = (roll.dice.length ? roll.dice[0].total <= roll.dice[0].options.fumble : false);
 
                     if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll'){
                         $('.dice-result', item)
@@ -792,13 +827,13 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     //}
                     $('.dice-tooltip', item).toggleClass('noshow', !showroll);
                     $('.result-passed', item)
-                        .toggle(request != 'init')
+                        .toggle(request.key != 'init')
                         .toggleClass('recommended', dc != '' && roll.total >= dc)
                         .toggleClass('selected', msgtoken.passed === true || msgtoken.passed === "success")
                         .click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, true));
                     $('.result-passed i', item).toggleClass("fa-check", msgtoken.passed !== "success").toggleClass("fa-check-double", msgtoken.passed === "success");
                     $('.result-failed', item)
-                        .toggle(request != 'init')
+                        .toggle(request.key != 'init')
                         .toggleClass('recommended', dc != '' && roll.total < dc)
                         .toggleClass('selected', msgtoken.passed === false || msgtoken.passed === "failed")
                         .click($.proxy(SavingThrow.setRollSuccess, this, msgtoken.id, message, false));
@@ -820,7 +855,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                         $('.dice-total', item).attr("title", dicetext);
                     $('.dice-text', item)
                         .toggle(showroll && msgtoken.passed != undefined)
-                        //.toggleClass('clickable', request == 'death' && !msgtoken.assigned)
+                        //.toggleClass('clickable', request.key == 'death' && !msgtoken.assigned)
                         .toggleClass('passed', msgtoken.passed === true || msgtoken.passed === "success")
                         .toggleClass('failed', msgtoken.passed === false || msgtoken.passed === "failed")
                         //.on('click', $.proxy(SavingThrow.onAssignDeathST, this, tokenId, message))
@@ -841,7 +876,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         };
 
         //calculate the group DC
-        if (count > 0 && request != 'init')
+        if (count > 0 && request.key != 'init')
             $('.group-dc', html).html(parseInt(groupdc / count));
 
         //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));

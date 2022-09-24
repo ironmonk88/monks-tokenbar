@@ -36,8 +36,8 @@ export class Tormenta20Rolls extends BaseRolls {
 
     getXP(actor){
         return {
-            value: actor.system.attributes?.nivel?.xp.value,
-            max: actor.system.attributes?.nivel?.xp.proximo
+            value: actor?.system.attributes?.nivel?.xp.value,
+            max: actor?.system.attributes?.nivel?.xp.proximo
         };
     }
 
@@ -51,19 +51,19 @@ export class Tormenta20Rolls extends BaseRolls {
         return 'ability:for';
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let options = { rollMode: rollMode, event: e, message:false};
 
-        if (requesttype == 'ability') {
+        if (request.type == 'ability') {
             rollfn = actor.rollAtributo;
         }
-        else if (requesttype == 'save' || requesttype == 'skill') {
+        else if (request.type == 'save' || requesttype == 'skill') {
             rollfn = actor.rollPericia;
         }
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, request, options)
+                return rollfn.call(actor, request.key, options)
                     .then(async (roll) => { return callback(roll); })
                     .catch((err) => {
                         error(err);

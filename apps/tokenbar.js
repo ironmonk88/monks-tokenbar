@@ -10,6 +10,7 @@ export class TokenBar extends Application {
         this.thumbnails = {};
 
         this._hover = null;
+        this._collapsed = false;
 
         Hooks.on('canvasReady', () => {
             this.refresh();
@@ -76,6 +77,13 @@ export class TokenBar extends Application {
             setting('show-vertical') ? "vertical" : null
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();
+
+        let collapseIcon;
+        if (setting('show-vertical'))
+            collapseIcon = this._collapsed ? "fa-caret-down": "fa-caret-up";
+        else
+            collapseIcon = this._collapsed ? "fa-caret-right" : "fa-caret-left";
+
         return {
             tokens: this.tokens,
             movement: setting("movement"),
@@ -83,7 +91,9 @@ export class TokenBar extends Application {
             stat2icon: setting("stat2-icon"),
             cssClass: css,
             pos: pos,
-            buttons: this.buttons
+            buttons: this.buttons,
+            collapsed: this._collapsed,
+            collapseIcon: collapseIcon
         };
     }
 
@@ -311,6 +321,7 @@ export class TokenBar extends Application {
             }
         }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
+        $('.toggle-collapse', html).on("click", this.toggleCollapse.bind(this));
 
         html.find('#tokenbar-move-handle').mousedown(ev => {
             ev.preventDefault();
@@ -544,6 +555,50 @@ export class TokenBar extends Application {
 
             return result;
         };
+    }
+
+    toggleCollapse(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this._collapsed) this.expand();
+        else this.collapse();
+    }
+
+    collapse() {
+        if (this._collapsed) return;
+        const toggle = this.element.find(".toggle-collapse");
+        const icon = toggle.children("i");
+        const bar = this.element.find("#token-action-bar");
+        return new Promise(resolve => {
+            bar.slideUp(200, () => {
+                bar.addClass("collapsed");
+                if (setting('show-vertical'))
+                    icon.removeClass("fa-caret-up").addClass("fa-caret-down");
+                else
+                    icon.removeClass("fa-caret-left").addClass("fa-caret-right");
+                this._collapsed = true;
+                resolve(true);
+            });
+        });
+    }
+
+    expand() {
+        if (!this._collapsed) return true;
+        const toggle = this.element.find(".toggle-collapse");
+        const icon = toggle.children("i");
+        const bar = this.element.find("#token-action-bar");
+        return new Promise(resolve => {
+            bar.slideDown(200, () => {
+                bar.css("display", "");
+                bar.removeClass("collapsed");
+                if (setting('show-vertical'))
+                    icon.removeClass("fa-caret-down").addClass("fa-caret-up");
+                else
+                    icon.removeClass("fa-caret-right").addClass("fa-caret-left");
+                this._collapsed = false;
+                resolve(true);
+            });
+        });
     }
 
     getEntry(id) {
