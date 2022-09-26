@@ -59,7 +59,7 @@ New to 1.0.15 added support for converting npc's to lootable if you have the <a 
 It's a bit of a beta feature and only availabe for DnD5e, but if the player rolls their dice outside of the request.  Like clicking on the character sheet to make the roll.  You can grab the roll and add it to the request by clicking the grab roll button in the bottomright corner, then clicking the roll that the character made.
 
 ### Roll Card Popout
-Roll request chat cards can now be right-clicked and popped out for easier tracking.
+Roll request chat cards can now be right-clicked and popped out into a seperate window for easier tracking.
 ![monks-tokenbar](screenshots/ChatCardPopout.webp)
 
 ## Bug Reporting
