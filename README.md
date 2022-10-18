@@ -35,6 +35,12 @@ Clicking on the contested roll button will open a dialog to facilitate a contest
 If a token is selected and another is set as a target it will automatically fill the two slots.  Otherwise the next token clicked will fill the next avaialble slot.  Individually select what roll each token will make.  
 Clicking request will add a chat message and prompt players to roll the contested roll requested.  After both partied have rolled it will show which one won the contested roll.
 
+#### Multiple Choice Requests
+
+![monks-tokenbar](screenshots/MultiSkillRequest.gif)
+
+You can hold the ```CTRL``` key and click multiple skills to request a choice from among them.
+
 Guide to Roll Mode:
 
 Public Roll will show everyone who's involved and their roll.  
