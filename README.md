@@ -35,6 +35,12 @@ Clicking on the contested roll button will open a dialog to facilitate a contest
 If a token is selected and another is set as a target it will automatically fill the two slots.  Otherwise the next token clicked will fill the next avaialble slot.  Individually select what roll each token will make.  
 Clicking request will add a chat message and prompt players to roll the contested roll requested.  After both partied have rolled it will show which one won the contested roll.
 
+#### Multiple Choice Requests
+
+![monks-tokenbar](screenshots/MultiSkillRequest.gif)
+
+You can hold the ```CTRL``` key and click multiple skills to request a choice from among them.
+
 Guide to Roll Mode:
 
 Public Roll will show everyone who's involved and their roll.  
@@ -57,6 +63,10 @@ New to 1.0.15 added support for converting npc's to lootable if you have the <a 
 ### Grab the dice roll
 
 It's a bit of a beta feature and only availabe for DnD5e, but if the player rolls their dice outside of the request.  Like clicking on the character sheet to make the roll.  You can grab the roll and add it to the request by clicking the grab roll button in the bottomright corner, then clicking the roll that the character made.
+
+### Roll Card Popout
+Roll request chat cards can now be right-clicked and popped out into a seperate window for easier tracking.
+![monks-tokenbar](screenshots/ChatCardPopout.webp)
 
 ## Bug Reporting
 I'm sure there are lots of issues with it.
