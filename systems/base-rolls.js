@@ -121,7 +121,7 @@ export class BaseRolls {
                     id: 'assign-xp',
                     title: 'MonksTokenBar.AssignXP',
                     icon: 'fa-book-medical',
-                    hidden: !MonksTokenBar.system.showXP,
+                    hidden: !(game.user.isGM && MonksTokenBar.system.showXP),
                     click: (event) => {
                         event.preventDefault();
                         new AssignXPApp().render(true);

@@ -54,6 +54,22 @@ export class TokenBar extends Application {
             }
         });
 
+        Hooks.on("updateActiveEffect", (effect) => {
+            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+                let actor = effect.parent;
+                if (actor instanceof Actor) {
+                    let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
+                    if (tkn != undefined) {
+                        this.updateToken(tkn)
+                    } else if (data.ownership != undefined) {
+                        this.refresh();
+                    }
+                }
+            }
+        });
+
+        //updateActiveEffect 
+
         this.buttons = MonksTokenBar.system.getButtons();
     }
 
@@ -186,9 +202,11 @@ export class TokenBar extends Application {
 
                 let hasActor = (t.actor != undefined);
                 let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER"));
-                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include')
+                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
-                let addToken = hasActor && canView && disp;
+                let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
+
+                let addToken = hasActor && canView && disp && !mlt;
                 debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include);
 
                 return addToken;

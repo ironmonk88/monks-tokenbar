@@ -1038,3 +1038,12 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     height: 20px;
     line-height: 21px;
 }
+
+a.inline-request-roll {
+    background: #DDD;
+    padding: 1px 4px;
+    border: 1px solid #4b4a44;
+    border-radius: 2px;
+    white-space: nowrap;
+    word-break: break-all;
+}

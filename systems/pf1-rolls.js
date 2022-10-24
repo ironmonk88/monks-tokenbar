@@ -52,7 +52,7 @@ export class PF1Rolls extends BaseRolls {
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = { rollMode: rollMode, event: e, skipPrompt: fastForward, chatMessage: false };
+        let opts = { rollMode: rollMode, event: e, skipDialog: fastForward, chatMessage: false };
         if (request.type == 'ability') {
             rollfn = actor.rollAbilityTest;
         }
@@ -66,7 +66,12 @@ export class PF1Rolls extends BaseRolls {
         if (rollfn != undefined) {
             try {
                 return rollfn.call(actor, request.key, opts)
-                    .then((roll) => { return callback(roll); })
+                    .then((msg) => {
+                        if (msg) {
+                            let roll = Roll.fromJSON(msg.rolls[0]);
+                            return callback(roll);
+                        }
+                    })
                     .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch(err)
             {

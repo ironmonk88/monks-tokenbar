@@ -164,7 +164,7 @@ export class SavingThrowApp extends Application {
 
             if (this.request == undefined || !this.request.length) {
                 log('Invalid request');
-                ui.notifications.error("Invalid value sent as a request");
+                ui.notifications.error("Please select a request to roll");
                 return;
             }
 
@@ -179,6 +179,30 @@ export class SavingThrowApp extends Application {
             });
             let flavor = this.flavor;
             let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requests[0]);
+
+            if (requests[0].type == 'misc' && requests[0].key == 'init') {
+                if (!game.combats.active) {
+                    await Dialog.confirm({
+                        title: "No Combat",
+                        content: "You're asking for an initiative roll but there's no combat.  <br />Would you like to start a combat with these tokens?<br />",
+                        yes: async () => {
+                            const cls = getDocumentClass("Combat")
+                            await cls.create({ scene: canvas.scene.id, active: true });
+                        }
+                    });
+                }
+
+                let combat = game.combats.active;
+                if (combat) {
+                    let combatants = []
+                    for (let token of this.entries) {
+                        if (!combat.combatants.find(c => c.token?.id == token.token.id))
+                            combatants.push({ tokenId: token.token.id, actorId: token.token.actor?.id });
+                    }
+                    if (combatants.length)
+                        await Combatant.createDocuments(combatants, { parent: combat });
+                }
+            }
             
             let requestdata = {
                 dc: this.dc || (this.request[0].key == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
@@ -203,7 +227,7 @@ export class SavingThrowApp extends Application {
             for (let i = 0; i < this.entries.length; i++) {
                 let token = this.entries[i].token;
                 if (token.actor != undefined) {
-                    for (var key in Object.keys(token.actor.ownership)) {
+                    for (let key of Object.keys(token.actor.ownership)) {
                         if (key != 'default' && token.actor.ownership[key] >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
                             if (whisper.find(t => t == key) == undefined)
                                 whisper.push(key);
@@ -281,7 +305,7 @@ export class SavingThrowApp extends Application {
                     if (this.request.length > 1 && this.request.some(r => r.type == type && r.key == key)) {
                         this.request.findSplice(r => r.type == type && r.key == key);
                         target.removeClass('selected');
-                    } else {
+                    } else if (!this.request.some(r => r.type == type && r.key == key)){
                         this.request.push({ type, key });
                         target.addClass('selected');
                     }
@@ -325,8 +349,7 @@ export class SavingThrow {
 
     static async rollDice(dice) {
         let r = new Roll(dice);
-        r.evaluate();
-        return r;
+        return r.evaluate({ async: true });
     }
 
     static async returnRoll (id, roll, actor, rollmode, msgId) {
@@ -336,8 +359,45 @@ export class SavingThrow {
                 let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
                 if (combatant != undefined) {
                     let initTotal = combatant.actor.system.attributes.init.total;
-                    let jsonRoll = '{ "class": "Roll", "dice": [], "formula": "1d20 + ' + initTotal + '", "terms": [{ "class": "Die", "number": 1, "faces": 20, "modifiers": [], "options": { "critical": 20, "fumble": 1 }, "results": [{ "result": ' + (combatant.initiative - initTotal) + ', "active": true }] }, " + ", ' + initTotal + '], "results": [' + (combatant.initiative - initTotal) + ', " + ", ' + initTotal + '], "total": ' + combatant.initiative + ' }';
-                    let fakeroll = Roll.fromJSON(jsonRoll);
+                    let jsonRoll = {
+                        "class": "Roll",
+                        "dice": [],
+                        "formula": `1d20 + ${initTotal}`,
+                        "terms": [
+                            {
+                                "class": "Die",
+                                "options": {
+                                    "critical": 20,
+                                    "fumble": 1
+                                },
+                                "evaluated": true,
+                                "number": 1,
+                                "faces": 20,
+                                "modifiers": [],
+                                "results": [
+                                    {
+                                        "result": (combatant.initiative - initTotal),
+                                        "active": true
+                                    }
+                                ]
+                            },
+                            {
+                                "class": "OperatorTerm",
+                                "options": {},
+                                "evaluated": true,
+                                "operator": "+"
+                            },
+                            {
+                                "class": "NumericTerm",
+                                "options": {},
+                                "evaluated": true,
+                                "number": initTotal
+                            }
+                        ],
+                        "total": combatant.initiative,
+                        "evaluated": true
+                    };
+                    let fakeroll = Roll.fromData(jsonRoll);
                     return { id: id, roll: fakeroll, finish: null, reveal: true };
                 } else {
                     log('Actor is not part of combat to roll initiative', actor, roll);
@@ -347,8 +407,10 @@ export class SavingThrow {
                 let finishroll;
                 if (roll instanceof ChatMessage) {
                     let msg = roll;
-                    roll = msg.roll;
+                    roll = msg.roll || msg.rolls[0];
                     msg.delete();
+                    if (!(roll instanceof Roll))
+                        roll = Roll.fromJSON(roll);
                 }
 
                 let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
@@ -741,22 +803,24 @@ Hooks.on("diceSoNiceRollComplete", (messageid) => {
 Hooks.on("renderSavingThrowApp", (app, html) => {
     if (app.request == undefined) {
         let request = MonksTokenBar.system.defaultRequest(app) || SavingThrow.lastRequest;
-        if (!request) {
+        /*if (!request) {
             request = [];
-            $('.request-roll .request-option', html).each(function () {
-                request.push({ type: this.data.type, key: this.data.key });
+            $('.request-roll .request-option:first', html).each(function () {
+                request.push({ type: this.dataset.type, key: this.dataset.key });
+            });
+        }*/
+        // confirm that the requests are on the list
+        if (request) {
+            request = request instanceof Array ? request : [request];
+            request = request.filter(r => {
+                return $(`.request-roll .request-option[data-type="${r.type}"][data-key="${r.key}"]`, html).length;
             });
         }
-        // confirm that the requests are on the list
-        request = request instanceof Array ? request : [request];
-        request = request.filter(r => {
-            return $(`.request-roll .request-option[data-type="${r.type}"][data-key="${r.key}"]`, html).length;
-        })
 
         app.request = request;
     }
 
-    for (let r of app.request) {
+    for (let r of app.request || []) {
         $(`.request-roll .request-option[data-type="${r.type}"][data-key="${r.key}"]`, html).addClass('selected');
     }
 

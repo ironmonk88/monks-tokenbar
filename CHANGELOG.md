@@ -1,3 +1,33 @@
+## Version 10.3
+
+Fixed issues with calculating xp in pf2e
+
+Fixed issue with assigning xp that's not a number
+
+Fixed issue with contested rolls not getting the correct request value.
+
+Fixed issue with getting currency when compiling lootables after a combat
+
+Fixed issue with lootable generated for Monk's Enhanced Journal deleting after the first item is updated.
+
+Added the option to start a combat if initiative is requested and no combat is available.
+
+Fixed issue with finding the owner of a token.
+
+Fixed issue where rolling initiative was throwing an error in pf1.
+
+Fixed issue with Saving Throw when no default request has been determined.
+
+Fixed issue where active effects aren't updating the token bar values
+
+Remove tokens added by multilevel tokens.
+
+Only notifying once on movement change if there's more than one GM logged in.
+
+Added the option to use tagger when selecting tokens for a roll request
+
+Fixed issue with pf1 when skipping the dialog is requested.
+
 ## Version 10.2
 
 Updated the assign XP dialog to allow you to customise the actors that are being assigned XP.  It will remember the last tokens to assigned XP to, can use the current combats tokens, or you can drag and drop and actor onto the dialog to add them to the list.

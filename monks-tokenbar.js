@@ -5,6 +5,7 @@ import { SavingThrow, SavingThrowApp } from "./apps/savingthrow.js";
 import { ContestedRoll, ContestedRollApp } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
 import { MonksTokenBarAPI } from "./monks-tokenbar-api.js";
+import { dcconfiginit } from "./plugins/dcconfig.plugin.js"
 
 import { BaseRolls } from "./systems/base-rolls.js";
 import { DS4Rolls } from "./systems/ds4-rolls.js";
@@ -69,9 +70,18 @@ export class MonksTokenBar {
     static init() {
         log("initializing");
         // element statics
-        //CONFIG.debug.hooks = true;
+
+        try {
+            Object.defineProperty(User.prototype, "isTheGM", {
+                get: function isTheGM() {
+                    return this == (game.users.find(u => u.hasRole("GAMEMASTER")) || game.users.find(u => u.hasRole("ASSISTANT")));
+                }
+            });
+        } catch { }
 
         MonksTokenBar.SOCKET = "module.monks-tokenbar";
+
+        CONFIG.TextEditor.enrichers.push({ id: 'MonksTokenBarRequest', pattern: /@(Request|Contested)\[([^\]]+)\](?:{([^}]+)})?/gi, enricher: MonksTokenBar._createRequestRoll });
 
         game.keybindings.register('monks-tokenbar', 'request-roll', {
             name: 'MonksTokenBar.RequestRoll',
@@ -252,6 +262,8 @@ export class MonksTokenBar {
 
         game.settings.settings.get("monks-tokenbar.stats").default = MonksTokenBar.system.defaultStats;
 
+        tinyMCE.PluginManager.add('dcconfig', dcconfiginit);
+
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();
             MonksTokenBar.tokenbar.refresh();
@@ -353,7 +365,10 @@ export class MonksTokenBar {
                     } else
                         entity.sheet.render(true);
                 })
-            }
+            } break;
+            case 'closeLootable': {
+                $(`#lootables[data-combat-id="${data.id}"] a.close`).click();
+            } break;
         }
     }
 
@@ -535,18 +550,22 @@ export class MonksTokenBar {
 
                 if (setting("loot-sheet") != 'none' && game.modules.get(setting("loot-sheet"))?.active) {
                     let lapp = new LootablesApp(combat);
-                    await lapp.render(true);
+                    if (!lapp.entries.length)
+                        lapp.close();
+                    else {
+                        await lapp.render(true);
 
-                    if (axpa != undefined) {
-                        setTimeout(function () {
-                            $(axpa.element).addClass('dual');
-                            $(lapp.element).addClass('dual');
-                            /*
-                            axpa.position.left += 204;
-                            axpa.render();
-                            lapp.position.left -= 204;
-                            lapp.render();*/
-                        }, 200);
+                        if (axpa != undefined) {
+                            setTimeout(function () {
+                                $(axpa.element).addClass('dual');
+                                $(lapp.element).addClass('dual');
+                                /*
+                                axpa.position.left += 204;
+                                axpa.render();
+                                lapp.position.left -= 204;
+                                lapp.render();*/
+                            }, 200);
+                        }
                     }
                 }
             }
@@ -600,6 +619,7 @@ export class MonksTokenBar {
 
     static findBestRequest(requests, options) {
         if (requests) {
+            let opt = options.filter(o => o);
             requests = requests instanceof Array ? requests : [requests];
             for (let i = 0; i < requests.length; i++) {
                 let request = requests[i];
@@ -621,10 +641,10 @@ export class MonksTokenBar {
                 if (type && type.toLowerCase() == "saving")
                     type = "save";
 
-                let optType = (type ? options.find(o => o.id == type.toLowerCase() || i18n(o.text).toLowerCase() == type.toLowerCase()) : null);
+                let optType = (type ? opt.find(o => o.id == type.toLowerCase() || i18n(o.text).toLowerCase() == type.toLowerCase()) : null);
 
                 //correct the key
-                optType = (optType ? [optType] : options).find(g => {
+                optType = (optType ? [optType] : opt).find(g => {
                     return Object.entries(g.groups).find(([k, v]) => {
                         let result = i18n(v).toLowerCase() == key.toLowerCase() || k == key.toLowerCase();
                         if (result) key = k;
@@ -632,7 +652,8 @@ export class MonksTokenBar {
                     });
                 });
 
-                requests[i] = { type: optType.id, key: key };
+                if (optType)
+                    requests[i] = { type: optType.id, key: key };
             }
 
             return requests;
@@ -800,6 +821,69 @@ export class MonksTokenBar {
             .append(list)
             .click(function (evt) { $('.journal-list', html).removeClass('open'); list.toggleClass('open'); evt.preventDefault(); evt.stopPropagation(); });
     }
+
+    static _createRequestRoll(match, ...args) {
+        let [command, options, name] = match.slice(1, 5);
+        // Define default inline data
+        let [request, ...props] = options.split(' ');
+
+        let dataset = {
+            requesttype: command,
+            request: request,
+        }
+
+        if (command == "Contested") {
+            dataset.request1 = props[0];
+        }
+
+        let dc = props.filter(p => $.isNumeric(p) || p.toLowerCase().startsWith('dc')).map(p => !$.isNumeric(p) ? parseInt(p.toLowerCase().replace('dc:', '')) : p);
+        if (dc.length)
+            dataset.dc = parseInt(dc[0]);
+        let rollmode = props.filter(p => { if ($.isNumeric(p)) return false; return p.toLowerCase().startsWith('rollmode') }).map(p => p.toLowerCase().replace('rollmode:', ''));
+        if (rollmode.length) {
+            if (["roll", "gmroll", "blindroll", "selfroll"].includes(rollmode[0]))
+                dataset.rollmode = rollmode;
+        }
+        if (props.find(p => p == 'silent') != undefined)
+            dataset.silent = true;
+        if (props.find(p => p == 'fastForward') != undefined)
+            dataset.fastForward = true;
+        if (name)
+            dataset.flavor = name;
+
+        const data = {
+            cls: ["inline-request-roll"],
+            title: `${i18n("MonksTokenBar.RequestRoll")}: ${request} ${dc}`,
+            label: name || i18n("MonksTokenBar.RequestRoll"),
+            dataset: dataset
+        };
+
+        // Construct and return the formed link element
+        const a = document.createElement('a');
+        a.classList.add(...data.cls);
+        a.title = data.title;
+        for (let [k, v] of Object.entries(data.dataset)) {
+            a.dataset[k] = v;
+        }
+        a.innerHTML = `<i class="fas fa-dice-d20"></i> ${data.label}`;
+        return a;
+    }
+
+    static _onClickInlineRequestRoll(event) {
+        event.preventDefault();
+        const a = event.currentTarget;
+
+        let options = duplicate(a.dataset);
+        if (options.dc) options.dc = parseInt(options.dc);
+        if (options.fastForward) options.fastForward = true;
+        if (options.silent) options.silent = true;
+
+        let requesttype = a.dataset.requesttype.toLowerCase();
+        if (requesttype == 'request')
+            MonksTokenBarAPI.requestRoll(canvas.tokens.controlled, options);
+        else if (requesttype == 'contested')
+            MonksTokenBarAPI.requestContestedRoll({ request: a.dataset.request }, { request: a.dataset.request1 }, options);
+    }
 }
 
 Hooks.once('init', async function () {
@@ -815,10 +899,10 @@ Hooks.once('init', async function () {
 Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
 
 Hooks.on("updateCombat", function (combat, delta) {
-    if (game.user.isGM) {
+    if (game.user.isTheGM) {
         if (MonksTokenBar.tokenbar) {
             $(MonksTokenBar.tokenbar.tokens).each(function () {
-                this.token.unsetFlag("monks-tokenbar", "nofified");
+                this.token.unsetFlag("monks-tokenbar", "notified");
             });
         }
 
@@ -878,7 +962,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
         let tokenControls = controls.find(control => control.name === "token")
         tokenControls.tools.push({
             name: "togglelootable",
-            title: "MonksTokenBar.Lootables",
+            title: "MonksTokenBar.TransferLoot",
             icon: "fas fa-dolly-flatbed",
             onClick: () => {
                 if (setting('loot-sheet') == 'none') {
@@ -1055,7 +1139,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true, showTagger: true },
                 restrict: (entity) => { return (entity instanceof Token); }
             },
             {
@@ -1414,4 +1498,12 @@ Hooks.on("setupTileActions", (app) => {
             return `<span class="action-style">${trigger.name}</span> <span class="details-style">"${action.data?.xp}XP"</span> to <span class="entity-style">${entityName}</span>`;
         }
     });
+});
+
+Hooks.on("renderJournalSheet", (sheet, html, data) => {
+    $("a.inline-request-roll", html).click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
+});
+
+Hooks.on("renderJournalPageSheet", (sheet, html, data) => {
+    $("a.inline-request-roll", html).click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
 });

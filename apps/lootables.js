@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, i18n, warn, setting } from "../monks-tokenbar.js";
+import { i18n, log, MonksTokenBar, setting, warn } from "../monks-tokenbar.js";
 
 export class LootablesApp extends FormApplication {
     constructor(entity, options) {
@@ -12,6 +12,7 @@ export class LootablesApp extends FormApplication {
             }).map(c => {
                 return c.token;
             });
+            this.combat = entity;
         } else {
             tokens = entity || canvas.tokens.controlled.filter(t => t.actor != undefined);
             if (tokens != undefined && !$.isArray(tokens))
@@ -155,6 +156,16 @@ export class LootablesApp extends FormApplication {
         $('.item-row', html).on('click', this.toggleTooltip.bind(this));
     };
 
+    async _render(force, options = {}) {
+        let result = await super._render(force, options);
+
+        if (this.element && this.combat) {
+            $(this.element).attr("data-combat-id", this.combat.id);
+        }
+
+        return result;
+    }
+
     toggleTooltip(ev) {
         $(ev.currentTarget).next().toggle();
     }
@@ -172,7 +183,7 @@ export class LootablesApp extends FormApplication {
         this.usecr = $('#assign-gold-by-cr').is(':checked');
         for (let token of this.entries) {
             let hasGold = false;
-            for (const [k, v] in Object.entries(token.actor.system.currency)) {
+            for (let [k, v] of Object.entries(token.actor.system.currency)) {
                 hasGold = (hasGold && parseInt(v.value || v) > 0);
             }
             // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
@@ -464,6 +475,15 @@ export class LootablesApp extends FormApplication {
                 ptAvg.count++;
 
                 let loot = entry.items.filter(i => i.included);
+                for (let item of loot) {
+                    let sysPrice = game.MonksEnhancedJournal.getSystemPrice(item);
+                    let price = game.MonksEnhancedJournal.getPrice(sysPrice);
+
+                    item._id = randomID();
+                    setProperty(item, "flags.monks-enhanced-journal.quantity", 1);
+                    setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
+                    setProperty(item, "flags.monks-enhanced-journal.from", entry.actor.name);
+                }
                 items = items.concat(loot);
 
                 let entryCurr = entry.currency;
@@ -497,9 +517,9 @@ export class LootablesApp extends FormApplication {
 
                 let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
                 for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                    entityCurr[curr] = parseInt(currency[curr] || 0) + parseInt(entityCurr[curr] || 0);
+                    entityCurr[curr] = parseInt(entityCurr[curr] || 0) + parseInt(currency[curr] || 0);
                 }
-                await entity.setFlag('monks-enhanced-journal', 'currency', currency);
+                await entity.setFlag('monks-enhanced-journal', 'currency', entityCurr);
             }
 
             msg = (created ?
@@ -534,7 +554,7 @@ export class LootablesApp extends FormApplication {
                     }
                 }
 
-                msg += `and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
+                msg += ` and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
             }
 
             if (setting('open-loot') != "none" && entity) {
@@ -553,7 +573,8 @@ export class LootablesApp extends FormApplication {
 
         if(msg != "")
             ui.notifications.info(msg);
-
+        if (this.combat)
+            MonksTokenBar.emit("closeLootable", { id: this.combat.id });
         this.close();
     }
 

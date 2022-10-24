@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, setting, error } from "../monks-tokenbar.js"
 
 export class PF2eRolls extends BaseRolls {
     constructor() {
@@ -9,7 +9,7 @@ export class PF2eRolls extends BaseRolls {
             { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: CONFIG.PF2E.attributes.perception } },
             { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
-            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
+            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skillList }
         ].concat(this._requestoptions);
 
         /*
@@ -37,7 +37,7 @@ export class PF2eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
+        let allPlayers = (app.entries.filter(t => t.token?.actor?.hasPlayerOwner).length == app.entries.length);
         return (allPlayers ? { type: 'attribute', key: 'perception' } : null);
     }
 
@@ -138,9 +138,10 @@ export class PF2eRolls extends BaseRolls {
             }
         }
         else if (request.type == 'skill') {
-            if (actor.system?.skills[request.key]?.roll) {
+            if (actor.skills[request.key]?.roll) {
                 opts = actor.getRollOptions(["all", "skill-check", request.key]);
-                rollfn = actor.system.skills[request.key].roll;
+                rollfn = actor.skills[request.key].check.roll;
+                actor = actor.skills[request.key].check;
             } else
                 rollfn = actor.rollSkill;
         }
@@ -150,10 +151,9 @@ export class PF2eRolls extends BaseRolls {
                 if (request.type != 'skill')
                     return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else {
-                    opts.push("ignore");
                     return new Promise(function (resolve, reject) {
-                        rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(callback(roll)); } });
-                    }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                        rollfn.call(actor, { event: e, options: opts, extraRollOptions: ["ignore"], callback: function (roll) { resolve(callback(roll)); } });
+                    }).catch((err) => { error(err); return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 }
             } catch(err)
             {

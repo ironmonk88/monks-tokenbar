@@ -41,7 +41,7 @@ export class AssignXPApp extends Application {
             for (let combatant of monsters) {
                 if (combatant.token?.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
                     if (game.system.id == 'pf2e') {
-                        let monstLevel = parseInt(MonksTokenBar.system.getLevel(combatant?.actor)?.value);
+                        let monstLevel = parseInt(MonksTokenBar.system.getLevel(combatant?.actor));
                         let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
                         combatxp += monstXP;
                     }else
@@ -218,7 +218,9 @@ export class AssignXPApp extends Application {
         });
 
         $('#assign-xp-value', html).blur(function () {
-            that.xp = parseInt($(this).val());
+            that.xp = parseInt($(this).val() || '0');
+            if (isNaN(that.xp))
+                that.xp = 0;
             that.changeXP.call(that, that.xp);
             that.render(true);
         });

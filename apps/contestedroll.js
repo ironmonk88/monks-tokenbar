@@ -72,7 +72,7 @@ export class ContestedRollApp extends Application {
                 if (index > 1)
                     return null;
 
-                let requests = this.request instanceof Array ? item.request : [item.request];
+                let requests = item.request instanceof Array ? item.request : [item.request];
                 requests = requests.map(r => {
                     r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
                     return r;
