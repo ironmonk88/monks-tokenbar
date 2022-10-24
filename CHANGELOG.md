@@ -28,6 +28,8 @@ Added the option to use tagger when selecting tokens for a roll request
 
 Fixed issue with pf1 when skipping the dialog is requested.
 
+Moved the inline request roll feature from Monks Enhanced Journal to this module, since it's the one doing the work.
+
 ## Version 10.2
 
 Updated the assign XP dialog to allow you to customise the actors that are being assigned XP.  It will remember the last tokens to assigned XP to, can use the current combats tokens, or you can drag and drop and actor onto the dialog to add them to the list.
