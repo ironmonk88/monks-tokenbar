@@ -58,7 +58,7 @@ export class Tormenta20Rolls extends BaseRolls {
         if (request.type == 'ability') {
             rollfn = actor.rollAtributo;
         }
-        else if (request.type == 'save' || requesttype == 'skill') {
+        else if (request.type == 'save' || request.type == 'skill') {
             rollfn = actor.rollPericia;
         }
         if (rollfn != undefined) {
