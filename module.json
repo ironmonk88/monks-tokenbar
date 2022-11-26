@@ -63,9 +63,9 @@
   "styles": [
     "css/tokenbar.css"
   ],
-  "url": "https://github.com/Lannder13/monks-tokenbar",
-  "download": "https://github.com/Lannder13/monks-tokenbar/archive/10.3.zip",
-  "manifest": "https://github.com/Lannder13/monks-tokenbar/releases/latest/download/module.json",
+  "url": "https://github.com/ironmonk88/monks-tokenbar",
+  "download": "https://github.com/ironmonk88/monks-tokenbar/archive/10.3.zip",
+  "manifest": "https://github.com/ironmonk88/monks-tokenbar/releases/latest/download/module.json",
   "bugs": "https://github.com/ironmonk88/monks-tokenbar/issues",
   "allowBugReporter": true,
   "id": "monks-tokenbar",
