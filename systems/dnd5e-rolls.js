@@ -24,9 +24,19 @@ export class DnD5eRolls extends BaseRolls {
 
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
-            if (message.getFlag('monks-tokenbar', 'ignore') === true)
+            if (message.getFlag('monks-tokenbar', 'ignore') === true) {
+                let msgid = message.getFlag('monks-tokenbar', 'msgid');
+                if (msgid) {
+                    let msg = game.messages.get(msgid);
+                    if (msg) {
+                        let rolls = duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
+                        rolls[message.getFlag('monks-tokenbar', 'tokenid')] = message.rolls[0];
+                        msg.setFlag('monks-tokenbar', "rolls", rolls);
+                        setProperty(msg, "flags.monks-tokenbar.rolls", rolls);
+                    }
+                }
                 return false;
-            else
+            } else
                 return true;
         });
     }
@@ -63,7 +73,15 @@ export class DnD5eRolls extends BaseRolls {
         let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "system.attributes.hp.value") == 0).length;
-        return (allZeroHP == app.entries.length && allZeroHP != 0 ? { type: 'misc', key: 'death' } : null) || (allPlayers ? { type: 'skill', key: 'prc' } : null);
+        if (allZeroHP == app.entries.length && allZeroHP != 0)
+            return { type: 'misc', key: 'death' };
+
+        // If there's an active combat and all the selected tokens are part of it, then off initiative
+        if (game.combats.active && !game.combats.active.started) {
+            if (!app.entries.find(t => !game.combats.active.combatants.find(c => c.token.id == t.token.id)))
+                return { type: 'misc', key: 'init' };
+        }
+        return allPlayers ? { type: 'skill', key: 'prc' } : null;
     }
 
     defaultContested() {
@@ -74,6 +92,10 @@ export class DnD5eRolls extends BaseRolls {
         if (game.modules.get("betterrolls5e")?.active)
             return false;
         return true;
+    }
+
+    get showAdvantage() {
+        return setting("add-advantage-buttons");
     }
 
     dynamicRequest(entries) {
@@ -105,7 +127,7 @@ export class DnD5eRolls extends BaseRolls {
         return [{ id: 'tool', text: 'Tools', groups: tools }];
     }
 
-    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false, message }, callback, e) {
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
         let context = actor;
@@ -133,7 +155,7 @@ export class DnD5eRolls extends BaseRolls {
             }
             else if (request.key == 'init') {
                 rollfn = actor.rollInitiative;
-                options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true }} };
+                options.messageOptions = { flags: { 'monks-tokenbar': { ignore: true, msgid: message.id, tokenid: id }} };
                 sysRequest = { createCombatants: false, rerollInitiative: true, initiativeOptions: options };
             }
         }

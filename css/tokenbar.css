@@ -708,11 +708,37 @@ body #tokenbar-window:first-child{
     background-size: 32px;
     margin: 0 0.5em;
     transform: rotate(180deg);
+    position: relative;
+}
+
+.monks-tokenbar li.item .item-roll .adv-btn {
+    position: absolute;
+    bottom: 8px;
+    opacity: 0;
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
+    text-align: center;
+    text-shadow: none;
+}
+
+.monks-tokenbar li.item .item-roll .adv-btn.advantage {
+    right: -2px;
+    color: #468847;
+}
+
+.monks-tokenbar li.item .item-roll .adv-btn.disadvantage {
+    left: -2px;
+    color: #b94a48;
 }
 
 .monks-tokenbar li.item .item-roll:hover {
     background-image: url(../../../icons/svg/d20-highlight.svg);
     transform: none;
+}
+
+.monks-tokenbar li.item .item-roll:hover .adv-btn {
+    opacity: 1;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total {
@@ -820,7 +846,9 @@ body #tokenbar-window:first-child{
 
 .grabbing .grab-message {
     border: 1px solid red;
-    border-bottom: 1px solid #ff6400;
+    background: #ff6400;
+    color: #fff;
+    border-bottom: 1px solid #ff0000;
     box-shadow: 0 0 10px #ff6400;
 }
 
@@ -997,10 +1025,101 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     flex: 0 0 32px;
 }
 
-#lootables .item-list {
-    max-height: 200px;
+#lootables .entry-list {
+    max-height: 450px;
     overflow-y: auto;
-    height: 200px;
+    /*height: 300px;*/
+    margin: 0px;
+    padding: 0px;
+}
+
+#lootables .entry-list .loot-entry-image {
+    width: 48px;
+    height: 48px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin: auto;
+}
+
+#lootables .entry-list .loot-entry-name {
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#lootables .entry-list .loot-item-image {
+    flex: 0 0 25px;
+    width: 25px;
+    height: 25px;
+    border: 0px;
+}
+
+#lootables .entry-list .item.notincluded .loot-item-image {
+    filter: grayscale(100%);
+    color: #808080;
+}
+
+#lootables .entry-list .loot-item-quantity {
+    text-align: right;
+    flex: 0 0 50px;
+}
+
+#lootables .entry-list .loot-item-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 25px;
+    margin-left: 5px;
+}
+
+#lootables .entry-list a {
+    flex: 0 0 20px;
+    text-align: center;
+    opacity: 0.5;
+}
+
+
+#lootables .entry-list a:hover {
+    opacity: 0.9;
+}
+
+#lootables .no-item-entry {
+    color: #888;
+    padding: 4px;
+}
+
+#lootables .journal-select.disabled {
+    color: #888;
+}
+
+#lootables .journal-select.disabled i.fa-chevron-down {
+    display: none;
+}
+
+#lootables .entry-list a.delete-entry {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    opacity: 0.2;
+}
+
+#lootables .entry-list a.delete-entry:hover {
+    opacity: 0.9;
+}
+
+#lootables .entry-quantity {
+    opacity: 0.8;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-weight: bold;
+    background-color: #C0C0C0;
+    border: 1px solid #808080;
+    border-radius: 2px;
+    padding: 0px 2px;
 }
 
 .editstats .stat-name > * {

@@ -213,6 +213,7 @@ export class SavingThrowApp extends Application {
                 modename: modename,
                 tokens: msgEntries,
                 canGrab: MonksTokenBar.system.canGrab,//['dnd5e', 'sw5e'].includes(game.system.id),
+                showAdvantage: MonksTokenBar.system.showAdvantage,
                 options: this.opts,
                 what: 'savingthrow',
             };
@@ -356,6 +357,18 @@ export class SavingThrow {
         log("Roll", roll, actor);
         if (roll != undefined) {
             if (roll instanceof Combat) {
+                let realroll;
+
+                // try and extract the roll from a saved value
+                let message = game.messages.get(msgId);
+                if (message) {
+                    let rolls = getProperty(message, "flags.monks-tokenbar.rolls");
+                    realroll = rolls[id];
+                    if (realroll)
+                        return { id: id, roll: realroll, finish: null, reveal: true };
+                }
+
+                // if it wasn't extracted, then just pull the value from the combat and fake the roll
                 let combatant = roll.combatants.find(c => { return c?.actor?.id == actor.id });
                 if (combatant != undefined) {
                     let initTotal = combatant.actor.system.attributes.init.total;
@@ -397,7 +410,7 @@ export class SavingThrow {
                         "total": combatant.initiative,
                         "evaluated": true
                     };
-                    let fakeroll = Roll.fromData(jsonRoll);
+                    fakeroll = Roll.fromData(jsonRoll);
                     return { id: id, roll: fakeroll, finish: null, reveal: true };
                 } else {
                     log('Actor is not part of combat to roll initiative', actor, roll);
@@ -469,7 +482,7 @@ export class SavingThrow {
                 });
             } else {
                 if (MonksTokenBar.system._supportedSystem) {
-                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, rollMode: rollmode, fastForward: fastForward }, function (roll) {
+                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, rollMode: rollmode, fastForward: fastForward, message: message }, function (roll) {
                         return SavingThrow.returnRoll(data.id, roll, actor, rollmode, message.id).then((result) => { if (result) result.request = request; return result; });
                     }, e);
                 }
@@ -501,8 +514,8 @@ export class SavingThrow {
                     //roll the dice, using standard details from actor
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
-                    e.ctrlKey = evt?.ctrlKey;
-                    e.altKey = evt?.altKey;
+                    e.ctrlKey = evt?.ctrlKey || $(evt?.originalEvent?.target).hasClass("disadvantage");
+                    e.altKey = evt?.altKey || $(evt?.originalEvent?.target).hasClass("advantage");
                     e.shiftKey = evt?.shiftKey;
                     e.metaKey = evt?.metaKey;
 

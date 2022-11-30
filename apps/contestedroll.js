@@ -597,7 +597,7 @@ Hooks.on('controlToken', (token, delta) => {
 Hooks.on("renderContestedRollApp", (app, html) => {
     for (let i = 0; i < 2; i++) {
         let request = app.entries[i].request instanceof Array ? app.entries[i].request : [app.entries[i].request];
-        $(`.request-roll[data-index="${i}"]`, html).val(request[0].type + ":" + request[0].key);
+        $(`.request-roll[data-index="${i}"]`, html).val(request.type + ":" + request.key);
     }
     $('#contestedroll-rollmode', html).val(app.rollmode);
 });

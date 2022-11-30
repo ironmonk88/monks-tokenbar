@@ -752,7 +752,7 @@ export class MonksTokenBar {
             event.preventDefault();
             event.stopPropagation();
             let id = event.currentTarget.dataset.uuid;
-            $(`[name="monks-tokenbar.loot-entity"]`, html).val(id);
+            ctrl.val(id).change();
 
             let name = await getEntityName(id);
 
@@ -772,9 +772,13 @@ export class MonksTokenBar {
             else if (entity instanceof JournalEntry)
                 return "Adding new loot page to " + entity.name;
             else if (entity instanceof Folder)
-                return (game.journal.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating within " + entity.name + " folder");
+                return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
+            else if (id == "convert")
+                return "Convert tokens";
+            else if (entity)
+                return `Creating ${entity.documentClass.documentName == "JournalEntry" ? "Journal Entry" : "Actor"} in the root folder`;
             else
-                return "Creating in the root folder";
+                return "Unknown";
         }
 
         function getEntries(folderID, contents) {
@@ -819,7 +823,14 @@ export class MonksTokenBar {
             .attr('tabindex', '0')
             .append($('<div>').addClass('flexrow').css({ font: ctrl.css('font') }).append($('<span>').addClass("journal-select-text").html(name)).append($('<i>').addClass('fas fa-chevron-down')))
             .append(list)
-            .click(function (evt) { $('.journal-list', html).removeClass('open'); list.toggleClass('open'); evt.preventDefault(); evt.stopPropagation(); });
+            .click(function (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                if ($(evt.currentTarget).hasClass("disabled"))
+                    return;
+                $('.journal-list', html).removeClass('open');
+                list.toggleClass('open');
+            });
     }
 
     static _createRequestRoll(match, ...args) {
@@ -1069,6 +1080,12 @@ Hooks.on("renderChatMessage", (message, html, data) => {
         //check grab this roll
         if (MonksTokenBar.system.canGrab)
             $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
+    }
+});
+
+Hooks.on("updateSetting", (setting, value, options) => {
+    if (setting.key == "monks-tokenbar.minimum-ownership" && MonksTokenBar.tokenbar) {
+        MonksTokenBar.tokenbar.refresh();
     }
 });
 

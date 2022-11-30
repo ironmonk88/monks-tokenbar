@@ -1,3 +1,35 @@
+## Version 10.4
+
+Fixed issue with contested roll not rendering the correct ids
+
+Added the option to show an advantage and disadvantage button in addition to the regular roll button.  For DnD5e.
+
+Fixed issue with initiative requested rolls not having the correct roll data.  This is because the data was faked, since the correct data is never passed through.
+
+Fixed issue refreshing tokenbar when the actor ownership is changed
+
+Fixed issue with updating token bar when active effects are altered.
+
+Added a setting for player permissions required to view tokens on the tokenbar.  This means you can set other players permission to observer or limited so the token will appear on all players tokenbar.
+
+Fixed issue witht he tokenbar wandering to the right anytime it was expanded and collapsed.
+
+Added the option to alt click on a token while in no movement mode to individually assign movement.  This way you can let each player move one by one.
+
+Made the grabbable status a little more noticeable when you're attempting to grab a message.
+
+Fixed issue with the name shown for the loot entity.
+
+Fixed issue with the default requested roll in dnd5e.
+
+Fixed issues with experience point in ds4.
+
+Allowed pf1 to grab requested roll messages.
+
+Fixed issue with the default loot entity name.
+
+Reworked the lootable dialog so that you have more control over what items are being added.  It will now group like items together to conserve space, so if you have multiple skeletons, instead of adding an item for each monster it will just show one set of items, with an increased quantity.  You can also in the dialog set where the loot is going, so in the settings you can set the default value, but you can change this whenever you create loot.
+
 ## Version 10.3
 
 Fixed issues with calculating xp in pf2e

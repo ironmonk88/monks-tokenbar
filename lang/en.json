@@ -152,6 +152,12 @@
 	"MonksTokenBar.allow-roll.hint": "Allow players to request rolls",
 	"MonksTokenBar.create-canvas-object.name": "Create Canvas Object",
 	"MonksTokenBar.create-canvas-object.hint": "When creating a lootable, also create a related canvas object",
+	"MonksTokenBar.auto-gold-cr.name": "Auto Gold by CR",
+	"MonksTokenBar.auto-gold-cr.hint": "Automatically calculate the gold by CR whenever the loot sheet is shown",
+	"MonksTokenBar.add-advantage-buttons.name": "Add Advantage Buttons",
+	"MonksTokenBar.add-advantage-buttons.hint": "Add advantage and disadvantage buttons to the token roll button",
+	"MonksTokenBar.minimum-ownership.name": "Minimum PLayer Permission",
+	"MonksTokenBar.minimum-ownership.hint": "The minimum permission a player needs to see a token",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

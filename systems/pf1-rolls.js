@@ -46,6 +46,12 @@ export class PF1Rolls extends BaseRolls {
         return 'ability:str';
     }
 
+    get canGrab() {
+        if (game.modules.get("betterrolls5e")?.active)
+            return false;
+        return true;
+    }
+
     getXP(actor) {
         return actor?.system.details.xp;
     }

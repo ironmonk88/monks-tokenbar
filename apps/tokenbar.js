@@ -46,10 +46,10 @@ export class TokenBar extends Application {
         Hooks.on('updateActor', (actor, data) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
-                if (tkn != undefined) {
-                    this.updateToken(tkn)
-                } else if (data.ownership != undefined) {
+                if (data.ownership != undefined) {
                     this.refresh();
+                } else if (tkn != undefined) {
+                    this.updateToken(tkn)
                 }
             }
         });
@@ -61,7 +61,7 @@ export class TokenBar extends Application {
                     let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
                     if (tkn != undefined) {
                         this.updateToken(tkn)
-                    } else if (data.ownership != undefined) {
+                    } else if (actor.ownership != undefined) {
                         this.refresh();
                     }
                 }
@@ -201,7 +201,7 @@ export class TokenBar extends Application {
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
 
                 let hasActor = (t.actor != undefined);
-                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER"));
+                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
                 let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
                 let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
@@ -408,7 +408,7 @@ export class TokenBar extends Application {
                         //if (xPos > (window.innerWidth / 2))
                         //    position.right = (window.innerWidth - xPos);
                         //else
-                        position.left = xPos + 1;
+                        position.left = xPos;// + 1;
 
                         elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
                         elmnt.style.right = (position.right ? position.right + "px" : null);
@@ -630,13 +630,41 @@ export class TokenBar extends Application {
 
         let that = this;
         if (!this.dbltimer) {
-            this.dbltimer = window.setTimeout(function () {
+            this.dbltimer = window.setTimeout(async function () {
                 if (that.doubleclick !== true) {
-                    let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
+                    if (event?.originalEvent?.ctrlKey) {
+                        let token = canvas.tokens.get(entry?.id);
+                        if (!token)
+                            return;
+                        if (game.user.targets.has(token)) {
+                            // remove from targets
+                            token.setTarget(false, { user: game.user, releaseOthers: false, groupSelection: false });
+                        } else {
+                            // add to user targets
+                            token.setTarget(true, { user: game.user, releaseOthers: false, groupSelection: false });
+                        }
+                    } else if (event?.originalEvent?.altKey && setting("movement") == "none" && game.user.isGM) {
+                        if (entry && (entry.movement == undefined || entry.movement == "")) {
+                            // Dungeon mode
+                            for (let token of that.tokens) {
+                                if (token.movement == "free") {
+                                    token.movement = null;
+                                    await token.token.unsetFlag("monks-tokenbar", "movement");
+                                }
+                            }
+                            entry.movement = "free";
+                            await entry.token.setFlag("monks-tokenbar", "movement", "free");
+                            that.render(true);
+                        }
+                    } else {
+                        if (game.user.isGM || entry.token?.actor?.testUserPermission(game.user, "OBSERVER")) {
+                            let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
 
-                    if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
-                        animate = false;
-                    (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                            if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
+                                animate = false;
+                            (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                        }
+                    }
                 }
                 that.doubleclick = false;
                 delete that.dbltimer;

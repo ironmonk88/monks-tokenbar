@@ -144,6 +144,10 @@ export class BaseRolls {
         return false;
     }
 
+    get showAdvantage() {
+        return false;
+    }
+
     dynamicRequest(tokens) {
         return [];
     }

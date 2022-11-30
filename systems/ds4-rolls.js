@@ -22,7 +22,9 @@ export class DS4Rolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor?.system.progression?.experiencePoints || 0;
+        return {
+            value: actor?.system.progression?.experiencePoints || actor?.system.baseInfo?.experiencePoints || 0
+        };
     }
 
     get defaultStats() {
