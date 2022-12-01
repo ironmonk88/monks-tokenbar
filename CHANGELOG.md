@@ -1,3 +1,17 @@
+## Version 10.5
+
+Fixed issue with Contested Rolls not responding to the ctrl or alt keys.
+
+Added the option for Contested Rolls to have the advantage and disadvantage buttons.
+
+Added the option to use the Meta key to target tokens using the tokenbar.
+
+Prevented players from double-clicking on tokens to request a roll if they aren't allowed to request rolls.
+
+Fixed incompatability with MidiQol.
+
+Fixed issue with Tormenta 20 system.  Thank you Lander13
+
 ## Version 10.4
 
 Fixed issue with contested roll not rendering the correct ids

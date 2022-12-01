@@ -632,7 +632,7 @@ export class TokenBar extends Application {
         if (!this.dbltimer) {
             this.dbltimer = window.setTimeout(async function () {
                 if (that.doubleclick !== true) {
-                    if (event?.originalEvent?.ctrlKey) {
+                    if (event?.originalEvent?.ctrlKey || event?.originalEvent?.metaKey) {
                         let token = canvas.tokens.get(entry?.id);
                         if (!token)
                             return;
@@ -677,7 +677,7 @@ export class TokenBar extends Application {
         const li = event.currentTarget;
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
-        if (setting("dblclick-action") == "request") {
+        if (setting("dblclick-action") == "request" && (game.user.isGM || setting("allow-roll"))) {
             let entries = MonksTokenBar.getTokenEntries([entry.token._object]);
             new SavingThrowApp(entries).render(true);
         } else {

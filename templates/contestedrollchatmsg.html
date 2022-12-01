@@ -25,7 +25,12 @@
                                 </div>
 
                                 <div class="roll-controls flexrow noselect">
-                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;"></a>
+                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;">
+                                        {{#if ../showAdvantage}}
+                                        <div class="adv-btn advantage" title="Advantage"><i class="fas fa-circle-plus advantage"></i></div>
+                                        <div class="adv-btn disadvantage" title="Disadvantage"><i class="fas fa-circle-minus disadvantage"></i></div>
+                                        {{/if}}
+                                    </a>
                                 </div>
                             </div>
                             <div class="dice-tooltip" style="display:none;"></div>

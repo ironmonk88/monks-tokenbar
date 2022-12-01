@@ -102,7 +102,8 @@ export class ContestedRollApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: msgEntries,
-                canGrab: MonksTokenBar.system.canGrab, //['dnd5e', 'sw5e'].includes(game.system.id),
+                canGrab: MonksTokenBar.system.canGrab,
+                showAdvantage: MonksTokenBar.system.showAdvantage,
                 options: this.opts,
                 what: 'contestedroll',
             };
@@ -318,7 +319,7 @@ export class ContestedRoll {
                         e[k] = evt[k] || v;
                     MonksTokenBar.system.parseKeys(e, keys);
 
-                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.requests, rollmode, fastForward, evt, message.id));
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.requests, rollmode, fastForward, e, message.id));
                 }
             }
         };

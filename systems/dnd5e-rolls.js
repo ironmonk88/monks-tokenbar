@@ -129,7 +129,7 @@ export class DnD5eRolls extends BaseRolls {
 
     roll({ id, actor, request, rollMode, fastForward = false, message }, callback, e) {
         let rollfn = null;
-        let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
+        let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e, advantage: e.advantage, disadvantage: e.disadvantage };
         let context = actor;
         let sysRequest = request.key;
         if (request.type == 'ability') {
@@ -186,7 +186,9 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     parseKeys(e, keys) {
-        e.ctrlKey = e.ctrlKey || keys.disadvantage;
-        e.altKey = e.altKey || keys.advantage;
+        e.advantage = $(e?.originalEvent?.target).hasClass("advantage");
+        e.disadvantage = $(e?.originalEvent?.target).hasClass("disadvantage");
+        e.ctrlKey = e.ctrlKey || keys.disadvantage || e.disadvantage;
+        e.altKey = e.altKey || keys.advantage || e.advantage;
     }
 }

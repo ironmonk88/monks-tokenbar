@@ -514,8 +514,8 @@ export class SavingThrow {
                     //roll the dice, using standard details from actor
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
-                    e.ctrlKey = evt?.ctrlKey || $(evt?.originalEvent?.target).hasClass("disadvantage");
-                    e.altKey = evt?.altKey || $(evt?.originalEvent?.target).hasClass("advantage");
+                    e.ctrlKey = evt?.ctrlKey;
+                    e.altKey = evt?.altKey;
                     e.shiftKey = evt?.shiftKey;
                     e.metaKey = evt?.metaKey;
 
