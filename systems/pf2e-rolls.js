@@ -68,8 +68,7 @@ export class PF2eRolls extends BaseRolls {
         else
             return (success < 0 ? "failed" : false);
     }
-
-    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
+    async roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let opts = request.key;
         if (request.type == 'attribute') {
@@ -142,6 +141,29 @@ export class PF2eRolls extends BaseRolls {
                 opts = actor.getRollOptions(["all", "skill-check", request.key]);
                 rollfn = actor.skills[request.key].check.roll;
                 actor = actor.skills[request.key].check;
+            } else if(request.key == 'lore') {
+                let loreSkillsSlugs = []
+                for (const skill of Object.entries(actor.system.skills)) {
+                    if (skill[1].lore) {
+                        loreSkillsSlugs.push(skill[1])
+                    }
+                };
+                let buttons = loreSkillsSlugs.map(r => {
+                    return {
+                        label: r.label,
+                        callback: () => r
+                    }
+                });
+                let selectedskill = await Dialog.wait({
+                    title: "Please pick a lore skill",
+                    content: "",
+                    focus: true,
+                    close: () => { return null; },
+                    buttons: buttons
+                }, { classes: ["savingthrow-picker"], width: 300 });
+                opts = actor.getRollOptions(["all", "skill-check", selectedskill.slug]);
+                rollfn = actor.skills[selectedskill.slug].check.roll;
+                actor = actor.skills[selectedskill.slug].check;
             } else
                 rollfn = actor.rollSkill;
         }
