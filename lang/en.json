@@ -59,6 +59,7 @@
 	"MonksTokenBar.TokenNoActorAttrs": "token has no actor to use for additional attributes",
 	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
 	"MonksTokenBar.ActorNoTool": ": Does not have that tool",
+	"MonksTokenBar.ActorNoLore": ": Does not know that Lore",
 	"MonksTokenBar.UnknownSystem": "You're not using a system that Monk's Tokenbar supports.",
 	"MonksTokenBar.ActorNotCombatant": "Actor is not part of combat to roll initiative",
 
@@ -156,7 +157,7 @@
 	"MonksTokenBar.auto-gold-cr.hint": "Automatically calculate the gold by CR whenever the loot sheet is shown",
 	"MonksTokenBar.add-advantage-buttons.name": "Add Advantage Buttons",
 	"MonksTokenBar.add-advantage-buttons.hint": "Add advantage and disadvantage buttons to the token roll button",
-	"MonksTokenBar.minimum-ownership.name": "Minimum PLayer Permission",
+	"MonksTokenBar.minimum-ownership.name": "Minimum Player Permission",
 	"MonksTokenBar.minimum-ownership.hint": "The minimum permission a player needs to see a token",
 
 	"MonksTokenBar.XP": "XP",

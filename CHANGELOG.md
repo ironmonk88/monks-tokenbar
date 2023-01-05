@@ -1,3 +1,29 @@
+## Version 10.6
+
+Added a check to make sure adding XP only adds to tokens that are linked to an Actor.
+
+Fixed issues calculating XP values from Actors that didn't have a max or value for xp.
+
+Removed 'melee', 'condition' and 'spellcastEntry' from items lootable will collect.
+
+Fixed issues collecting currency from Actors in PF2E.
+
+Fixed issue changing if you want the loot entry to be automatically opened.
+
+Fixed issue with Lootable name
+
+Fixed issue with getting the default Loot Entry name.
+
+Fixed issue with the loot being added to loot entries not correct, and not able to be assigned to players.
+
+Fixed issues with saving throws when a token with tools is addded or removed from the Dialog.
+
+Added option to use handlebars in flavor field when requesting rolls in MATT.
+
+Added the option to select lore rolls in PF2E.
+
+Fixed resizing issues with the saving throw dialog.
+
 ## Version 10.5
 
 Fixed issue with Contested Rolls not responding to the ctrl or alt keys.

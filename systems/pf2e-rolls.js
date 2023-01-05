@@ -45,6 +45,35 @@ export class PF2eRolls extends BaseRolls {
         return 'ability:str';
     }
 
+    dynamicRequest(entries) {
+        let lore = {};
+        //get the first token's tools
+        for (let item of entries[0].token.actor?.items) {
+            if (item.type == 'lore') {
+                let sourceID = item.id;
+                //let toolid = item.name.toLowerCase().replace(/[^a-z]/gi, '');
+                lore[sourceID] = item.name;
+            }
+        }
+        //see if the other tokens have these tools
+        if (Object.keys(lore).length > 0) {
+            for (let i = 1; i < entries.length; i++) {
+                for (let [k, v] of Object.entries(lore)) {
+                    let _lore = entries[i].token.actor.items.find(l => {
+                        return l.type == 'lore' && l.id == k;
+                    });
+                    if (_lore == undefined)
+                        delete lore[k];
+                }
+            }
+        }
+
+        if (Object.keys(lore).length == 0)
+            return;
+
+        return [{ id: 'lore', text: 'Lore', groups: lore }];
+    }
+
     getXP(actor) {
         return actor?.system.details.xp;
     }
@@ -145,10 +174,20 @@ export class PF2eRolls extends BaseRolls {
             } else
                 rollfn = actor.rollSkill;
         }
+        else if (request.type == 'lore') {
+            let lore = actor.items.find(i => { return i.id == request.key; });
+            if (lore != undefined) {
+                let slug = lore.name.slugify();
+                opts = actor.getRollOptions(["all", "skill-check", slug]);
+                rollfn = actor.skills[slug].check.roll;
+                actor = actor.skills[slug].check;
+            } else
+                return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoLore") };
+        }
 
         if (rollfn != undefined) {
             try {
-                if (request.type != 'skill')
+                if (request.type != 'skill' && request.type != 'lore')
                     return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else {
                     return new Promise(function (resolve, reject) {

@@ -104,6 +104,7 @@ export class SavingThrowApp extends Application {
             this.entries = this.entries.concat(MonksTokenBar.getTokenEntries(tokens));
 
         this.render(true);
+        window.setTimeout(() => { this.setPosition({ height: 'auto' }); }, 100);
     }
     changeTokens(e) {
         let type = e.target.dataset.type;
@@ -143,7 +144,8 @@ export class SavingThrowApp extends Application {
             this.entries.splice(idx, 1);
         }
         $(`li[data-item-id="${id}"]`, this.element).remove();
-        //this.render(true);
+        this.render(true); // Need this in case the token has tools
+        window.setTimeout(() => { this.setPosition({ height: 'auto' }); }, 100);
     }
 
     async requestRoll(roll) {

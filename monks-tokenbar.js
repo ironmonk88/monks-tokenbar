@@ -309,8 +309,10 @@ export class MonksTokenBar {
                     let message = game.messages.get(data.msgid);
                     const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
                     for (let response of data.response) {
-                        let r = Roll.fromData(response.roll);
-                        response.roll = r;
+                        if (response.roll) {
+                            let r = Roll.fromData(response.roll);
+                            response.roll = r;
+                        }
                     }
                     if (data.type == 'savingthrow')
                         SavingThrow.updateMessage(data.response, message, revealDice);
@@ -499,7 +501,7 @@ export class MonksTokenBar {
                     let curPermission = entry.actor?.ownership ?? {};
                     let tokPermission = token.actor?.ownership ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
-                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users.get(u).isGM)
+                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users?.get(u).isGM)
                         && curCombat.turns.every(t => { return t.tokenId !== token.id; });
                 }
 
@@ -604,7 +606,7 @@ export class MonksTokenBar {
             return o.id == (request.type || request.key);
         });
         let req = (rt?.groups && rt?.groups[request.key]);
-        let flavor = i18n(req || rt?.text);
+        let flavor = i18n(req?.label || req || rt?.text);
         switch (game.i18n.lang) {
             case "pt-BR":
             case "es":
@@ -1227,7 +1229,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile } = args;
+            const { action, tile, tokens, userid, value, method, change } = args;
             let entities = await game.MonksActiveTiles.getEntities(args);
 
             //if (entities.length == 0)
@@ -1239,7 +1241,27 @@ Hooks.on("setupTileActions", (app) => {
             let type = (parts.length > 1 ? parts[0] : '');
             let key = (parts.length > 1 ? parts[1] : parts[0]);
 
-            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: [{ type, key }], dc: action.data.dc, flavor: action.data.flavor });
+            let flavor = action.data.flavor;
+
+            if (flavor && flavor.includes("{{")) {
+                let context = {
+                    actor: tokens[0]?.actor?.toObject(false),
+                    token: tokens[0]?.toObject(false),
+                    speaker: tokens[0],
+                    tile: tile.toObject(false),
+                    entities: entities,
+                    user: game.users.get(userid),
+                    value: value,
+                    scene: canvas.scene,
+                    method: method,
+                    change: change
+                };
+
+                const compiled = Handlebars.compile(flavor);
+                flavor = compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
+            }
+
+            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: [{ type, key }], dc: action.data.dc, flavor:flavor });
             savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
             if (action.data.silent === true) {
                 let msg = await savingthrow.requestRoll();
@@ -1348,7 +1370,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile } = args;
+            const { action, tile, tokens, userid, value, method, change } = args;
             let entities1 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity1);
             let entities2 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity2);
 
@@ -1366,9 +1388,29 @@ Hooks.on("setupTileActions", (app) => {
             let request1 = mergeObject((MonksTokenBar.getTokenEntries([entity1])[0] || {}), { request: action.data.request1 });
             let request2 = mergeObject((MonksTokenBar.getTokenEntries([entity2])[0] || {}), { request: action.data.request2 });
 
+            let flavor = action.data.flavor;
+
+            if (flavor && flavor.includes("{{")) {
+                let context = {
+                    actor: tokens[0]?.actor?.toObject(false),
+                    token: tokens[0]?.toObject(false),
+                    speaker: tokens[0],
+                    tile: tile.toObject(false),
+                    entities: [entity1, entity2],
+                    user: game.users.get(userid),
+                    value: value,
+                    scene: canvas.scene,
+                    method: method,
+                    change: change
+                };
+
+                const compiled = Handlebars.compile(flavor);
+                flavor = compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
+            }
+
             let contested = new ContestedRollApp(
                 [request1, request2],
-                { rollmode: action.data.rollmode, request: action.data.request, flavor: action.data.flavor });
+                { rollmode: action.data.rollmode, request: action.data.request, flavor: flavor });
             contested['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
             if (action.data.silent === true) {
                 let msg = await contested.requestRoll();

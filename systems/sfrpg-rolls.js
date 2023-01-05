@@ -109,7 +109,6 @@ export class SFRPGRolls extends BaseRolls {
         } else
             return { id: id, error: true, msg: actor.name + i18n("MonksTokenBar.ActorNoRollFunction") };
             */
-
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, event: e };
         let context = actor;
@@ -126,7 +125,9 @@ export class SFRPGRolls extends BaseRolls {
         if (rollfn != undefined) {
             try {
                 return new Promise(function (resolve, reject) {
-                    options.onClose = function (roll) { resolve(callback(roll)); };
+                    options.onClose = function (roll) {
+                        resolve(callback(roll));
+                    };
                     rollfn.call(context, request.key, options);
                 }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{

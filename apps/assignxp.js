@@ -20,7 +20,7 @@ export class AssignXPApp extends Application {
             //get the actors
             let monsters = [];
             for (let combatant of entity.combatants) {
-                if (combatant.token?.disposition == 1 && combatant.actor && combatant.actor.hasPlayerOwner) {
+                if (combatant.token?.disposition == 1 && combatant.token?.actorLink && combatant.actor && combatant.actor.hasPlayerOwner) {
                     let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
                     this.actors.push({
                         actor: actor,
@@ -110,7 +110,7 @@ export class AssignXPApp extends Application {
             const aXP = MonksTokenBar.system.getXP(a.actor);
             const bXP = MonksTokenBar.system.getXP(b.actor);
             
-            let value = (MonksTokenBar.system.getLevel(a.actor) + (aXP.value / aXP.max)) - (MonksTokenBar.system.getLevel(b.actor) + (bXP.value / bXP.max));
+            let value = (MonksTokenBar.system.getLevel(a.actor) + ((aXP?.value ?? 0) / (aXP?.max ?? 1))) - (MonksTokenBar.system.getLevel(b.actor) + ((bXP?.value ?? 0) / (bXP?.max ?? 1)));
             log(a.actor.name, b.actor.name, value);
             return value;
         });
