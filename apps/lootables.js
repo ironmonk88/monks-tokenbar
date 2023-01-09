@@ -1,27 +1,421 @@
-import { MonksTokenBar, log, i18n, setting } from "../monks-tokenbar.js";
+import { i18n, log, MonksTokenBar, setting, warn } from "../monks-tokenbar.js";
 
-export class LootablesApp extends FormApplication {
+export class LootablesApp extends Application {
     constructor(entity, options) {
         super(options);
 
-        this.usecr = false;
+        let lootsheet = setting('loot-sheet');
+        this.lootEntity = setting("loot-entity");
+        this.openLoot = setting("open-loot");
+        this.createCanvasObject = setting("create-canvas-object");
+        this.clearItems = false;
+        this.entityName = "";
+
         let tokens = [];
         if (entity != undefined && entity instanceof Combat) {
             tokens = entity.combatants.filter(c => {
-                return c.actor?.token && c.token?.document.disposition != 1
+                return c.actor?.token && c.token?.disposition != 1
             }).map(c => {
                 return c.token;
             });
+            this.combat = entity;
         } else {
             tokens = entity || canvas.tokens.controlled.filter(t => t.actor != undefined);
             if (tokens != undefined && !$.isArray(tokens))
                 tokens = [tokens];
         }
 
-        let currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {}).reduce((a, v) => ({ ...a, [v]: 0 }), {});
+        this.currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {}).reduce((a, v) => ({ ...a, [v]: 0 }), {});
 
-        this.entries = tokens.map(t => {
-            let items = t.actor.items
+        this.entries = [];
+        this.noitems = [];
+
+        for (let t of tokens) {
+            let document = t.document || t;
+            let token = t instanceof Token ? t : canvas.tokens.get(t.id);
+            let entry = {
+                id: document.id,
+                token: token,
+                actorId: document.actor.id,
+                name: document.actor.name,
+                img: document.texture.src,
+                quantity: 1,
+                items: []
+            };
+            if (!document.actorLink && this.lootEntity != "convert") {
+                let _entry = this.entries.find(e => e.actorId == t.actor.id);
+                if (_entry) {
+                    entry = _entry;
+                    entry.quantity += 1;
+                } else
+                    this.entries.push(entry);
+            } else
+                this.entries.push(entry);
+
+            // Update the entry items
+            let actorItems = (document.actorData.items || t.actor.items);
+
+            let items = actorItems
+                .filter(item => {
+                    // Weapons are fine, unless they're natural
+                    let result = false;
+                    if (item.type == 'weapon') {
+                        result = item.system.weaponType != 'natural';
+                    }
+                    // Equipment's fine, unless it's natural armor
+                    else if (item.type == 'equipment') {
+                        if (!item.system.armor)
+                            result = true;
+                        else
+                            result = item.system.armor.type != 'natural';
+                    } else
+                        result = !(['class', 'spell', 'feat', 'action', 'lore', 'melee', 'condition', 'spellcastingEntry'].includes(item.type));
+
+                    return result;
+                }).map(i => {
+                    return {
+                        id: this.lootEntity == "convert" ? i._id : getProperty(i, "flags.core.sourceId") || i._id,
+                        name: i.name,
+                        img: i.img,
+                        from: t.name,
+                        sysQty: i.system.quantity,
+                        quantity: 1,
+                        data: (i instanceof Item ? i.toObject() : i)
+                    };
+                });
+
+            if (items.length) {
+                for (let item of items) {
+                    let _item = entry.items.find(i => i.id == item.id && i.sysQty == item.sysQty);
+                    if (_item) {
+                        _item.quantity += 1;
+                    } else
+                        entry.items.push(item);
+                }
+
+                for (let item of entry.items) {
+                    item.count = item.quantity;
+                }
+            } else if (!this.noitems.find(e => e == entry.name)) {
+                this.noitems.push(entry.name);
+            }
+
+            entry.items = entry.items.sort((a, b) => { return a.name.localeCompare(b.name); });
+
+            let actorCurrency = (document.actorData.currency || document.actor.system.currency);
+            if (actorCurrency) {
+                for (let [key, value] of Object.entries(actorCurrency)) {
+                    let val = (value.value ?? value);
+                    if (isNaN(val)) val = 0;
+                    this.currency[key] = (this.currency[key] ?? 0) + val;
+                }
+            }
+        };
+        this.entries = this.entries.sort((a, b) => { return a.name.localeCompare(b.name); });
+
+        if (setting("auto-gold-cr")) {
+            this.calcGold();
+        }
+    }
+
+    static get defaultOptions() {
+        return mergeObject(super.defaultOptions, {
+            id: "lootables",
+            title: i18n("MonksTokenBar.Lootables"),
+            template: "./modules/monks-tokenbar/templates/lootables.html",
+            width: 500,
+            popOut: true,
+            dragDrop: [{ dropSelector: ".entry-list" }],
+            scrollY: [".entry-list"]
+        });
+    }
+
+    async getData(options) {
+        let notes = "";
+        let lootsheet = setting('loot-sheet');
+        let lootentity = setting('loot-entity');
+        let sheetName = "";
+        switch (lootsheet) {
+            case 'lootsheetnpc5e': sheetName = "Loot Sheet NPC 5e"; break;
+            case 'merchantsheetnpc': sheetName = "Merchant Sheet"; break;
+            case 'monks-enhanced-journal': sheetName = "Monk's Enhanced Journal"; break;
+            case 'item-piles': sheetName = "Item Piles"; break;
+        }
+
+        let entity;
+        try {
+            entity = await fromUuid(lootentity);
+        } catch { }
+
+        let convertEntity = lootentity == "convert";
+        let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+
+        if (convertEntity)
+            notes = `Convert tokens to lootable using ${sheetName}`;
+        else {
+            let entityName = "New " + (this.isLootActor(lootsheet) ? "Actor" : "Loot Journal Entry");
+            if (this.isLootActor(lootsheet)) {
+                entityName = await this.getEntityName(entity || lootentity);
+            } else {
+                entityName = await this.getEntityName(entity || lootentity);
+            }
+            notes = `${entityName}, using ${sheetName}${setting("create-canvas-object") ? `, and create a ${(this.isLootActor(lootsheet) ? "Token" : "Note")} on the Canvas` : ''}`;
+        }
+
+        let hasLootable = lootsheet != 'none' && MonksTokenBar.getLootSheetOptions()[lootsheet] != undefined;
+
+        let openLootOptions = {
+            'none': game.i18n.localize("MonksTokenBar.None"),
+            'gm': game.i18n.localize("MonksTokenBar.GMOnly"),
+            'players': game.i18n.localize("MonksTokenBar.PlayersOnly"),
+            'everyone': game.i18n.localize("MonksTokenBar.Everyone"),
+        }
+
+        return {
+            hasLootable: hasLootable,
+            notes: notes,
+            createEntity: createEntity,
+            convertEntity: convertEntity,
+            placeholder: this.getLootableName(entity),
+            currency: this.currency,
+            entries: this.entries,
+            noitems: this.noitems.join(", "),
+            actionText: (convertEntity ? i18n('MonksTokenBar.ConvertToLootable') : (createEntity ? i18n('MonksTokenBar.TransferToNewLootable') : i18n('MonksTokenBar.TransferToLootable'))),
+            lootEntity: this.lootEntity,
+            openLoot: this.openLoot,
+            createCanvasObject: this.createCanvasObject,
+            clearItems: this.clearItems,
+            entityName: this.entityName,
+            openLootOptions: openLootOptions
+        };
+    }
+
+    isLootActor(lootsheet) {
+        return ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
+    }
+
+    getCurrency(currency) {
+        if (!currency)
+            return 0;
+        return (currency.value != undefined ? currency.value : currency) || 0;
+    }
+
+    async activateListeners(html) {
+        super.activateListeners(html);
+
+        $('.dialog-button.convert-to-lootable', html).click(this.convert.bind(this));
+        $('.reset-loot', html).click(this.resetLoot.bind(this));
+        $('.delete-loot', html).click(this.deleteLoot.bind(this));
+        $('.loot-item-quantity', html).blur(this.updateLoot.bind(this));
+
+        $('.delete-entry', html).click(this.deleteEntry.bind(this));
+
+        $('[name="create-canvas-object"]', html).click(() => { this.createCanvasObject = $('[name="create-canvas-object"]', html).prop("checked"); });
+        $('[name="open-loot"]', html).change(() => { this.openLoot = $('[name="open-loot"]', html).val(); });
+        $('[name="clear-items"]', html).click(() => { this.clearItems = $('[name="clear-items"]', html).prop("checked"); });
+        $('[name="entity-name"]', html).blur(() => { this.entityName = $('[name="entity-name"]', html).val(); });
+        $('[name="loot-entity"]', html).on("change", this.changeEntity.bind(this));
+
+        $('.add-gold', html).click(this.calcGold.bind(this));
+
+        $(".currency-value", html).blur((event) => { this.currency[event.currentTarget.name] = $(event.currentTarget).val(); });
+
+        let sheet = setting('loot-sheet');
+
+        let entity;
+        try {
+            entity = await fromUuid(this.lootEntity);
+        } catch { }
+
+        let convertEntity = this.lootEntity == "convert";
+        let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+
+        let hasLootable = sheet != 'none' && MonksTokenBar.getLootSheetOptions()[sheet] != undefined;
+        $('[name="loot-entity"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="open-loot"]', html).closest('.form-group').toggle(hasLootable && !convertEntity);
+        $('[name="clear-items"]', html).closest('.form-group').toggle(hasLootable && !createEntity && !convertEntity);
+        $('[name="entity-name"]', html).closest('.form-group').toggle(hasLootable && createEntity && !convertEntity);
+        $('[name="create-canvas-object"]', html).closest('.form-group').toggle(hasLootable && !convertEntity);
+
+        let ctrl = $('[name="loot-entity"]', html);
+        let list = await MonksTokenBar.lootEntryListing(ctrl, html, (sheet == "monks-enhanced-journal" ? game.journal : game.actors), this.lootEntity);
+        $('[data-uuid="convert"]', list).remove();
+        list.insertAfter(ctrl);
+        list.toggleClass("disabled", this.lootEntity == "convert");
+        ctrl.hide();
+
+        this.setPosition({ height: "auto" });
+    };
+
+    async changeEntity(event) {
+        this.lootEntity = $(event.currentTarget).val();
+
+        let sheet = setting('loot-sheet');
+
+        let entity;
+        try {
+            entity = await fromUuid(this.lootEntity);
+        } catch { }
+
+        let convertEntity = this.lootEntity == "convert";
+        let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+
+        $('[name="clear-items"]', this.element).closest('.form-group').toggle(!createEntity && !convertEntity);
+        $('[name="entity-name"]', this.element).closest('.form-group').toggle(createEntity && !convertEntity);
+    }
+
+    convert() {
+        this.convertToLootable({
+            name: this.entityName,
+            clear: this.clearItems,
+            lootEntity: this.lootEntity,
+            openLoot: this.openLoot,
+            createCanvasObject: this.createCanvasObject,
+            currency: this.currency
+        });
+    }
+
+    deleteEntry(event) {
+        let elem = event.currentTarget.closest(".entry");
+        let entryId = elem.dataset.entryId;
+
+        this.entries.findSplice(e => e.id == entryId);
+        $(elem).remove();
+        this.setPosition({ height: "auto" });
+    }
+
+    resetLoot(event) {
+        let itemElem = event.currentTarget.closest(".item");
+        let itemId = itemElem.dataset.itemId;
+        let entryId = event.currentTarget.closest(".entry").dataset.entryId;
+
+        let entry = this.entries.find(e => e.id == entryId);
+        let item = entry.items.find(i => i.id == itemId);
+        item.quantity = item.count;
+        $('.loot-item-quantity', itemElem).val(item.count);
+        $(itemElem).removeClass("notincluded");
+    }
+
+    deleteLoot(event) {
+        let itemElem = event.currentTarget.closest(".item");
+        let itemId = itemElem.dataset.itemId;
+        let entryId = event.currentTarget.closest(".entry").dataset.entryId;
+
+        let entry = this.entries.find(e => e.id == entryId);
+        if (entry.id == "") {
+            entry.items.findSplice(i => i.id == itemId);
+            $(itemElem).remove();
+        } else {
+            let item = entry.items.find(i => i.id == itemId);
+            item.quantity = 0;
+            $('.loot-item-quantity', itemElem).val(0);
+            $(itemElem).addClass("notincluded");
+        }
+    }
+
+    updateLoot(event) {
+        let itemElem = event.currentTarget.closest(".item");
+        let itemId = itemElem.dataset.itemId;
+        let entryId = event.currentTarget.closest(".entry").dataset.entryId;
+
+        let entry = this.entries.find(e => e.id == entryId);
+        let item = entry.items.find(i => i.id == itemId);
+        item.quantity = $(event.currentTarget).val();
+        $(itemElem).toggleClass("notincluded", item.quantity == 0);
+    }
+
+    calcGold() {
+        let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
+        for (let entry of this.entries) {
+            // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
+            let goldformula = setting('gold-formula');
+            let gold = 0;
+            try {
+                const compiled = Handlebars.compile(goldformula);
+                let content = compiled({ actor: entry.token?.actor }, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
+
+                gold = eval(content) * entry.quantity;
+            } catch {}
+
+            // Ensure it can divide evenly across all looting players
+            gold = gold + (gold % Math.max(lootingUsers.length, 1)) ?? 0;
+            this.currency.gp = (this.currency.gp ?? 0) + gold;
+        }
+        this.render(true);
+    }
+
+    async _onDrop(event) {
+        // Try to extract the data
+        let data;
+        try {
+            data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        }
+        catch (err) {
+            return false;
+        }
+
+        if (this.lootEntity == "convert")
+            return ui.notifications.warn("Cannot drop items when converting ");
+
+        // Identify the drop target
+        if (data.type == "Item") {
+            let entry = {
+                id: "",
+                name: "",
+                quantity: 1,
+                items: []
+            };
+
+            let _entry = this.entries.find(e => e.id == "");
+            if (_entry) {
+                entry = _entry;
+            } else {
+                this.entries.push(entry);
+                this.entries = this.entries.sort((a, b) => { return a.name.localeCompare(b.name); });
+            }
+
+            let i = data.data || await fromUuid(data.uuid);
+            let item = {
+                id: getProperty(i, "flags.core.sourceId") || i._id,
+                name: i.name,
+                img: i.img,
+                sysQty: i.system.quantity,
+                quantity: 1,
+                count: 1,
+                data: (i instanceof Item ? i.toObject() : i)
+            };
+
+            let _item = entry.items.find(i => i.id == item.id && i.sysQty == item.sysQty);
+            if (_item) {
+                _item.quantity += 1;
+                _item.count = _item.quantity;
+            } else {
+                entry.items.push(item);
+                entry.items = entry.items.sort((a, b) => { return a.name.localeCompare(b.name); });
+            }
+
+            this.render(true);
+        }/* else if (data.type == "Actor") {
+            let entry = {
+                id: t.id,
+                token: t,
+                actorId: t.actor.id,
+                name: t.actor.name,
+                img: t.document.texture.src,
+                quantity: 1,
+                items: []
+            };
+            if (!t.document.actorLink && this.lootEntity != "convert") {
+                let _entry = this.entries.find(e => e.actorId == t.actor.id);
+                if (_entry) {
+                    entry = _entry;
+                    entry.quantity += 1;
+                } else
+                    this.entries.push(entry);
+            } else
+                this.entries.push(entry);
+
+            let items = actorItems
                 .filter(item => {
                     // Weapons are fine, unless they're natural
                     let result = false;
@@ -39,229 +433,94 @@ export class LootablesApp extends FormApplication {
 
                     return result;
                 }).map(i => {
-                    let data = i.toObject();
-                    data.included = true;
-                    data.from = t.name;
-                    return data;
+                    return {
+                        id: this.lootEntity == "convert" ? i._id : getProperty(i, "flags.core.sourceId") || i._id,
+                        name: i.name,
+                        img: i.img,
+                        from: t.name,
+                        sysQty: i.system.quantity,
+                        quantity: 1,
+                        data: (i instanceof Item ? i.toObject() : i)
+                    };
                 });
 
-            let curr = Object.keys(t.actor.system.currency).reduce((a, v) => {
-                a[v] = this.getCurrency(t.actor.system.currency[v]);
-                return a;
-            }, {});
-
-            return {
-                id: t.id,
-                include: true,
-                actor: t.actor,
-                token: t.document || t,
-                items: items,
-                currency: Object.assign({}, currency, curr)
-            };
-        });
-    }
-
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            id: "lootables",
-            title: i18n("MonksTokenBar.Lootables"),
-            template: "./modules/monks-tokenbar/templates/lootables.html",
-            width: 400,
-            popOut: true
-        });
-    }
-
-    getData(options) {
-        let notes = "";
-        let hasItems = false;
-        let lootsheet = setting('loot-sheet');
-        let sheetName = "";
-        switch (lootsheet) {
-            case 'lootsheetnpc5e': sheetName = "Loot Sheet NPC 5e"; break;
-            case 'merchantsheetnpc': sheetName = "Merchant Sheet"; break;
-            case 'monks-enhanced-journal': sheetName = "Monk's Enhanced Journal"; break;
-            case 'item-piles': sheetName = "Item Piles"; break;
-        }
-        if (setting('loot-type') == 'convert')
-            notes = `Convert tokens to lootable using ${sheetName}`;
-        else {
-            let entityName = "New " + (this.isLootActor(lootsheet) ? "Actor" : "Loot Journal Entry");
-            if (setting('loot-entity') != 'create') {
-                if (this.isLootActor(lootsheet)){
-                    let entity = game.actors.get(setting('loot-entity'));
-                    entityName = entity?.name || "Unknown";
-                    hasItems = (entity?.items.size || 0) > 0;
-                } else {
-                    let entity = game.journal.get(setting('loot-entity'));
-                    entityName = entity?.name || "Unknown";
-                    hasItems = (entity?.getFlag('monks-enhanced-journal', 'items') || []).length > 0;
+            if (items.length) {
+                for (let item of items) {
+                    let _item = entry.items.find(i => i.id == item.id && i.sysQty == item.sysQty);
+                    if (_item) {
+                        _item.quantity += 1;
+                    } else
+                        entry.items.push(item);
                 }
-            }
-            notes = `Transfer items to <${entityName}> using ${sheetName}${setting('loot-type') == 'transferplus' ? `, and create a ${(this.isLootActor(lootsheet) ? "Token" : "Note")} on the Canvas` : ''}`;
-        }
-        return {
-            usecr: this.usecr,
-            loottype: setting('loot-type'),
-            createEntity: setting('loot-entity') == 'create',
-            clearEntity: setting('loot-type') != 'convert' && setting('loot-entity') != 'create' && hasItems,
-            notes: notes,
-            placeholder: this.getLootableName(),
-            entries: this.entries,
-            actionText: (setting('loot-type') == 'convert' ? i18n('MonksTokenBar.ConvertToLootable') : i18n('MonksTokenBar.TransferToLootable'))
-        };
-    }
 
-    isLootActor(lootsheet) {
-        return ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
-    }
-
-    getCurrency(currency) {
-        if (!currency)
-            return 0;
-        return (currency.value != undefined ? currency.value : currency) || 0;
-    }
-
-    disableToken(ev) {
-        let id = $(ev.currentTarget).closest('.item').attr('data-item-id');
-        //let token = this.entries.find(t => { return t.token.id === id; });
-        //if (token != undefined)
-        //    token.disabled = !token.disabled;
-        this.calcGold();
-    }
-
-    activateListeners(html) {
-        super.activateListeners(html);
-        var that = this;
-
-        //$('.item-create', html).click($.proxy(this.addToken, this));
-
-        $('[name="include"]', html).click(this.disableToken.bind(this));
-
-        $('.dialog-button.convert-to-lootable', html).click(this.convert.bind(this));
-        $('#assign-gold-by-cr', html).change($.proxy(this.calcGold, this));
-
-        $('.included-items > div', html).on('click', this.includeItem.bind(this));
-
-        $('.item-row', html).on('click', this.toggleTooltip.bind(this));
-    };
-
-    toggleTooltip(ev) {
-        $(ev.currentTarget).next().toggle();
-    }
-
-    includeItem(ev) {
-        $(ev.currentTarget).prev().prop('checked', !$(ev.currentTarget).prev().prop('checked'));
-    }
-
-    convert() {
-        this.convertToLootable({ name: $('#entity-name').val(), clear: $('#clear-items').prop('checked') });
-    }
-
-    calcGold() {
-        let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
-        this.usecr = $('#assign-gold-by-cr').is(':checked');
-        for (let token of this.entries) {
-            let hasGold = false;
-            for (const [k, v] in Object.entries(token.actor.system.currency)) {
-                hasGold = (hasGold && parseInt(v.value || v) > 0);
-            }
-            // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
-            if (!hasGold) {
-                let goldformula = setting('gold-formula');
-                if (this.usecr && !this.disabled) {
-                    let gold = 0;
-                    try {
-                        const compiled = Handlebars.compile(goldformula);
-                        let content = compiled({ actor: token.actor }, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
-
-                        //const exponent = 0.15 * (getProperty(token.actor, "system.details.cr") ?? 0);
-                        //let gold = Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.system.details.cr}} ?? 0))));
-
-                        gold = eval(content);
-                    } catch {}
-
-                    // Ensure it can divide evenly across all looting players
-                    gold = gold + (gold % Math.max(lootingUsers.length, 1)) ?? 0;
-                    token.currency.gp = gold;
-                } else {
-                    token.gold = null;
+                for (let item of entry.items) {
+                    item.count = item.quantity;
                 }
+            } else if (!this.noitems.find(e => e == entry.name)) {
+                this.noitems.push(entry.name);
             }
-        }
-        this.render(true);
+
+            entry.items = entry.items.sort((a, b) => { return a.name.localeCompare(b.name); });
+
+            let actorCurrency = (t.document.actorData.currency || t.actor.system.currency);
+            for (let [key, value] of Object.entries(actorCurrency)) {
+                this.currency[key] = (this.currency[key] ?? 0) + value;
+            }
+        }*/
     }
 
-    _getSubmitData(updateData = {}) {
-        const data = super._getSubmitData(updateData);
-        //Fix an issue with Foundry core not retrieving all the form inputs
-        for (let el of this.form.elements) {
-            if (!el.name || el.disabled || (el.tagName === "BUTTON")) continue;
-            const field = this.form.elements[el.name];
-
-            // Duplicate Fields
-            if (field instanceof RadioNodeList) {
-                const values = [];
-                for (let f of field) {
-                    if (f.type === "checkbox")
-                        values.push(f.checked);
-                }
-                if (values.length)
-                    data[el.name] = values;
-            }
-        }
-
-        return data;
+    async getEntityName(entity) {
+        if (entity instanceof JournalEntryPage || entity instanceof Actor)
+            return "Adding to " + entity.name;
+        else if (entity instanceof JournalEntry)
+            return "Adding new loot page to " + entity.name;
+        else if (entity instanceof Folder)
+            return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
+        else if (entity == "convert")
+            return "Convert tokens";
+        else if (entity)
+            return `Creating ${(entity?.documentClass?.documentName || entity?.parent?.documentClass?.documentName) == "JournalEntry" ? "Journal Entry" : "Actor"} in the root folder`;
+        else
+            return "Unknown";
     }
 
-    getLootableName() {
-        let lootSheet = setting('loot-sheet');
-        let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal)
-
-        let folder = setting('loot-folder');
-
+    getLootableName(entity) {
         //find the folder and find the next available 'Loot Entry (x)'
-        let previous = collection.filter(e => {
-            return e.folder.id == folder && e.name.startsWith("Loot Entry");
-        }).map((e, i) =>
-            parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
-        ).sort((a, b) => { return b - a; });
-        let num = (previous.length ? previous[0] + 1 : 1);
+        let lootSheet = setting('loot-sheet');
+        let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
 
-        name = (num == 1 ? 'Loot Entry' : `Loot Entry (${num})`);
+        let num = 0;
+
+        let documents = (entity == undefined ? collection.filter(e => e.folder == undefined) : entity.contents || entity.pages || entity.parent.contents || entity.parent.pages);
+        if (documents && documents.length) {
+            let previous = documents.map((e, i) =>
+                parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
+            ).sort((a, b) => { return b - a; });
+            num = (previous.length ? previous[0] + 1 : 1);
+        }
+
+        name = `${i18n("MonksTokenBar.LootEntry")}${(num > 1 ? ` (${num})` : '')}`;
         return name;
     }
 
-    async convertToLootable({ clear = false, name = null }) {
-        let data = expandObject(this._getSubmitData());
-
-        if (setting('loot-sheet') == 'none') {
-            return;
-        }
-
+    async convertToLootable({ clear = false, name = null, lootEntity = null, openLoot = null, createCanvasObject = null, currency = {} }) {
         // Limit selection to Players and Trusted Players
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
-
-        let lootType = setting('loot-type');
         let lootSheet = setting('loot-sheet');
+        lootEntity = lootEntity || setting('loot-entity');
+
+        if (lootSheet == 'none')
+            return;
 
         let msg = "";
 
-        for (let entry of this.entries) {
-            let ed = data.tokens[entry.id];
-            entry.currency = mergeObject(entry.currency, ed?.currency || {});
-            entry.include = ed.include;
-            for (let item of entry.items) {
-                item.included = ed.items[item._id].included;
-            }
-        }
-
-        if (lootType == 'convert') {
+        if (lootEntity == 'convert') {
             if (lootSheet == "item-piles") {
-                let tokens = this.entries.map(t => t.token);
+                let tokens = this.entries.map(t => t.token).filter(t => !!t);
                 ItemPiles.API.turnTokensIntoItemPiles(tokens);
             } else {
                 for (let entry of this.entries) {
-                    if (entry.include === false)
+                    if (!entry.items.length)
                         continue;
 
                     // Don't run this on PC tokens by mistake
@@ -305,10 +564,10 @@ export class LootablesApp extends FormApplication {
                     let newItems = entry.actor.items
                         .filter(item => {
                             let itemData = entry.items.find(i => i._id == item.id);
-                            if (!itemData?.included)
+                            if (itemData.quantity == 0)
                                 oldItems.push(item);
 
-                            return itemData?.included;
+                            return itemData.quantity > 0;
                         });
 
                     newActorData.items = newItems;
@@ -333,10 +592,12 @@ export class LootablesApp extends FormApplication {
                         }
                     }*/
 
+                    /*
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                         if (entry.currency[curr] != undefined)
                             newActorData[`system.currency.${curr}`] = (entry.actor.system.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
                     }
+                    */
 
                     newActorData = expandObject(newActorData);
 
@@ -368,63 +629,65 @@ export class LootablesApp extends FormApplication {
                         await game.cub.removeAllConditions(entry.actor);
                     }
 
-                    let oldAlpha = entry.token.alpha;
-                    await entry.token.update({
-                        "overlayEffect": 'icons/svg/chest.svg',
-                        "alpha": 0.6,
-                        "actorData": {
-                            "actor": {
-                                "flags": {
-                                    "loot": {
-                                        "playersPermission": 2
+                    if (entry.token) {
+                        let oldAlpha = entry.token.alpha;
+                        await entry.token.update({
+                            "overlayEffect": 'icons/svg/chest.svg',
+                            "alpha": 0.6,
+                            "actorData": {
+                                "actor": {
+                                    "flags": {
+                                        "loot": {
+                                            "playersPermission": 2
+                                        }
                                     }
-                                }
+                                },
+                                "permission": permissions
                             },
-                            "permission": permissions
-                        },
-                        "flags.monks-tokenbar.alpha": oldAlpha
-                    });
+                            "flags.monks-tokenbar.alpha": oldAlpha
+                        });
+                    }
                 }
             }
 
             msg = `Actors have been converted to lootable`;
         } else {
-            let lootentity = setting('loot-entity');
             let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
 
             let entity;
-            if (lootentity != 'create'){
-                entity = await collection.get(lootentity);//find the correct entity;
-                name = entity?.name;
+            try {
+                entity = await fromUuid(lootEntity);
+            } catch { }
 
-                if (entity == undefined)
-                    warn("Could not find Loot Entity, defaulting to creating one");
-            }
+            if (entity == undefined)
+                warn("Could not find Loot Entity, defaulting to creating one");
 
-            let created = (lootentity == 'create' || entity == undefined);
+            let created = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
             if (created) {
                 //create the entity in the Correct Folder
-                let folder = setting('loot-folder');
-
                 if (name == undefined || name == '')
-                    name = this.getLootableName();
+                    name = this.getLootableName(entity);
 
-                const cls = collection.documentClass;
+                if ((entity instanceof Folder || entity == undefined) && collection.documentName == "JournalEntry") {
+                    entity = await JournalEntry.create({ folder: entity, name: name, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { render: false });
+                }
+
                 if (this.isLootActor(lootSheet)) {
-                    entity = await cls.create({ folder: folder, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
+                    const cls = collection.documentClass;
+                    entity = await cls.create({ folder: entity, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
                     ui.actors.render();
+                    MonksTokenBar.emit("refreshDirectory", { name: "actors" });
                 } else {
-                    entity = await cls.create({ folder: folder, name: name, permission: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { render: false });
-                    await entity.setFlag('monks-enhanced-journal', 'type', 'loot');
-                    await entity.setFlag('monks-enhanced-journal', 'purchasing', 'confirm');
+                    entity = await JournalEntryPage.create({ name: name, type: "text", flags: { "monks-enhanced-journal": { type: "loot", purchasing: "confirm" } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { parent: entity, render: false });
                     ui.journal.render();
+                    MonksTokenBar.emit("refreshDirectory", { name: "journal" });
                 }
             }
 
             if (!entity)
                 return ui.notifications.warn("Could not find Loot Entity");
 
-            if (clear && lootentity != 'create') {
+            if (clear) {
                 if (this.isLootActor(lootSheet)) {
                     for (let item of entity.items) {
                         await item.delete();
@@ -436,22 +699,38 @@ export class LootablesApp extends FormApplication {
 
             let ptAvg = { x: 0, y: 0, count: 0 };
             let items = [];
-            let currency = {};
 
             for (let entry of this.entries) {
-                if (entry.disabled === true)
-                    continue;
-
                 ptAvg.x += entry.token.x;
                 ptAvg.y += entry.token.y;
                 ptAvg.count++;
 
-                let loot = entry.items.filter(i => i.included);
-                items = items.concat(loot);
+                let loots = entry.items.filter(i => i.quantity != "0");
+                for (let loot of loots) {
+                    let item = loot.data;
+                    let sysPrice = game.MonksEnhancedJournal.getSystemPrice(item);
+                    let price = game.MonksEnhancedJournal.getPrice(sysPrice);
 
-                let entryCurr = entry.currency;
-                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                    currency[curr] = (currency[curr] || 0) + parseInt(this.getCurrency(entryCurr[curr]) || 0);
+                    if (typeof loot.quantity == "string" && loot.quantity.indexOf("d") != -1) {
+                        let r = new Roll(loot.quantity);
+                        await r.evaluate({ async: true });
+                        loot.quantity = r.total;
+                    } else
+                        loot.quantity = parseInt(loot.quantity);
+
+                    if (isNaN(loot.quantity))
+                        loot.quantity = 1;
+
+                    item._id = randomID();
+                    setProperty(item, "flags.monks-enhanced-journal.quantity", loot.quantity);
+                    setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
+                    setProperty(item, "flags.monks-enhanced-journal.from", loot.from);
+                    if (lootSheet !== 'monks-enhanced-journal') {
+                        //+++ Need to set to correct system quantity
+                        setProperty(item, "system.quantity", loot.quantity);
+                    }
+
+                    items.push(item);
                 }
             }
 
@@ -460,13 +739,31 @@ export class LootablesApp extends FormApplication {
                     let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                     ItemPiles.API.createItemPile(pt, { items });
                 } else {
-                    entity.createEmbeddedDocuments("Item", items);
+                    let itemData = items.map(i => {
+                        let data = i.data;
+                        data.system.quantity = i.quantity * i.sysQty;
+                        if (data.system.equipped != undefined)
+                            data.system.equipped = false;
+                        return data;
+                    });
+                    entity.createEmbeddedDocuments("Item", itemData);
 
                     let entityCurr = entity.system.currency || {};
                     for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
                         if (currency[curr] != undefined) {
+                            if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
+                                let r = new Roll(currency[curr]);
+                                await r.evaluate({ async: true });
+                                currency[curr] = r.total;
+                            } else {
+                                currency[curr] = parseInt(currency[curr]);
+                            }
+
+                            if (isNaN(currency[curr]))
+                                currency[curr] = 0;
+
                             let value = entityCurr[curr].value ?? entityCurr[curr];
-                            value = parseInt(currency[curr] || 0) + parseInt(value || 0);
+                            value = currency[curr] + parseInt(value || 0);
                             entityCurr[curr] = (entityCurr[curr].hasOwnProperty("value") ? { value: value } : value);
                         }
                     }
@@ -480,16 +777,32 @@ export class LootablesApp extends FormApplication {
 
                 let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
                 for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                    entityCurr[curr] = parseInt(currency[curr] || 0) + parseInt(entityCurr[curr] || 0);
+                    if (currency[curr] != undefined) {
+                        if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
+                            let r = new Roll(currency[curr]);
+                            await r.evaluate({ async: true });
+                            currency[curr] = r.total;
+                        } else {
+                            currency[curr] = parseInt(currency[curr]);
+                        }
+
+                        if (isNaN(currency[curr]))
+                            currency[curr] = 0;
+
+                        let value = entityCurr[curr]?.value ?? entityCurr[curr];
+                        value = currency[curr] + parseInt(value || 0);
+                        entityCurr[curr] = value;
+                    }
                 }
-                await entity.setFlag('monks-enhanced-journal', 'currency', currency);
+                await entity.setFlag('monks-enhanced-journal', 'currency', entityCurr);
             }
 
             msg = (created ?
                 `${name} has been created, items have been transferred to it` :
                 `Items have been transferred to ${name}`);
 
-            if (lootType == 'transferplus' && lootSheet !== "item-piles") {
+            let createObject = setting("create-canvas-object") || createCanvasObject;
+            if (createObject && lootSheet !== "item-piles") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
                 let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
@@ -505,9 +818,10 @@ export class LootablesApp extends FormApplication {
                         await cls.create(td, { parent: canvas.scene });
                     } else if (lootSheet == 'monks-enhanced-journal') {
                         let data = {
-                            x: pt.x + (canvas.scene.size / 2),
-                            y: pt.y + (canvas.scene.size / 2),
-                            entryId: entity.id,
+                            x: parseInt(pt.x + (canvas.scene.dimensions.size / 2)),
+                            y: parseInt(pt.y + (canvas.scene.dimensions.size / 2)),
+                            entryId: entity.parent.id,
+                            pageId: entity.id,
                             icon: "icons/svg/chest.svg"
                         };
 
@@ -516,18 +830,19 @@ export class LootablesApp extends FormApplication {
                     }
                 }
 
-                msg += `and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
+                msg += ` and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
             }
 
-            if (setting('open-loot') != "none" && entity) {
-                if (setting('open-loot') != 'players') {
+            let open = openLoot || setting('open-loot');
+            if (open != "none" && entity) {
+                if (open != 'players') {
                     if (game.modules.get('monks-enhanced-journal')?.active && lootSheet == 'monks-enhanced-journal') {
                         if (!game.MonksEnhancedJournal.openJournalEntry(entity))
                             entity.sheet.render(true);
                     } else
                         entity.sheet.render(true);
                 }
-                if (setting('open-loot') != 'gm') {
+                if (open != 'gm') {
                     MonksTokenBar.emit("renderLootable", { entityid: entity.uuid });
                 }
             }
@@ -535,7 +850,8 @@ export class LootablesApp extends FormApplication {
 
         if(msg != "")
             ui.notifications.info(msg);
-
+        if (this.combat)
+            MonksTokenBar.emit("closeLootable", { id: this.combat.id });
         this.close();
     }
 

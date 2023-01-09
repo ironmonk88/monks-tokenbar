@@ -9,6 +9,15 @@ export class ContestedRollApp extends Application {
         if (!["roll", "gmroll", "blindroll", "selfroll"].includes(this.rollmode))
             this.rollmode = "roll";
         this.requestoptions = (options.requestoptions || MonksTokenBar.system.contestedoptions);
+
+        this.requestoptions = this.requestoptions.filter(g => g.groups);
+        for (let attr of this.requestoptions) {
+            attr.groups = duplicate(attr.groups);
+            for (let [k, v] of Object.entries(attr.groups)) {
+                attr.groups[k] = v?.label || v;
+            }
+        }
+
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
 
@@ -21,30 +30,11 @@ export class ContestedRollApp extends Application {
         this.entries = this.entries.map(e => {
             if (e.token == undefined)
                 e.token = available.shift();
-            if (e.request) {
-                for (let opt of this.requestoptions) {
-                    let byname = Object.entries(opt.groups).find(([k, v]) => {
-                        return i18n(v).toLowerCase() == e.request.toLowerCase()
-                    });
-                    if (byname) {
-                        e.request = opt.id + ':' + byname[0];
-                        break;
-                    }
-                }
-            }
+            e.request = MonksTokenBar.findBestRequest(e.request, this.requestoptions);
             return e;
         });
 
         this.callback = options.callback;
-
-        /*
-        this.item0 = item0 || {token: null, request: null};
-        this.item0.token = (this.item0.token || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled[0] : null));
-        this.item0.request = (this.item0.request || MonksTokenBar.system.defaultContested());
-        this.item1 = item1 || { token: null, request: null };
-        this.item1.token = (this.item1.token || (game.user.targets.values()?.next()?.value || (canvas.tokens.controlled.length > 1 ? canvas.tokens.controlled[1] : null)));
-        this.item1.request = (this.item1.request || MonksTokenBar.system.defaultContested());
-        */
     }
 
     static get defaultOptions() {
@@ -82,18 +72,17 @@ export class ContestedRollApp extends Application {
                 if (index > 1)
                     return null;
 
-                let parts = item.request.split(':'); //$('.request-roll[data-type="item' + index + '"]', this.element).val().split(':');
-                let requesttype = (parts.length > 1 ? parts[0] : '');
-                let request = (parts.length > 1 ? parts[1] : parts[0]);
-                let requestname = MonksTokenBar.getRequestName(this.requestoptions, requesttype, request);
-                //let requestname = $('.request-roll[data-type="item' + index + '"] option:selected', this.element).html() + " " + (requesttype == 'ability' ? i18n("MonksTokenBar.AbilityCheck") : (requesttype == 'save' ? i18n("MonksTokenBar.SavingThrow") : i18n("MonksTokenBar.Check")));
+                let requests = item.request instanceof Array ? item.request : [item.request];
+                requests = requests.map(r => {
+                    r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
+                    return r;
+                });
+                
                 return {
                     id: item.token.id,
                     uuid: item.token.document.uuid,
                     actorid: item.token.actor.id,
-                    requesttype: requesttype,
-                    request: request,
-                    requestname: requestname,
+                    requests: requests,
                     icon: (VideoHelper.hasVideoExtension(item.token.document.texture.src) ? item.token.actor.img : item.token.document.texture.src),
                     name: item.token.name,
                     showname: item.token.actor.hasPlayerOwner || this.hidenpcname !== true,
@@ -113,7 +102,8 @@ export class ContestedRollApp extends Application {
                 rollmode: rollmode,
                 modename: modename,
                 tokens: msgEntries,
-                canGrab: MonksTokenBar.system.canGrab, //['dnd5e', 'sw5e'].includes(game.system.id),
+                canGrab: MonksTokenBar.system.canGrab,
+                showAdvantage: MonksTokenBar.system.showAdvantage,
                 options: this.opts,
                 what: 'contestedroll',
             };
@@ -142,6 +132,7 @@ export class ContestedRollApp extends Application {
                 user: game.user.id,
                 content: html,
                 flavor: flavor,
+                flags: { core: { canPopout: true } }
             };
             if (rollmode == 'selfroll')
                 chatData.whisper = [game.user.id];
@@ -191,7 +182,9 @@ export class ContestedRollApp extends Application {
         }, this));
 
         $('.request-roll', html).change($.proxy(function (e) {
-            this.entries[e.target.dataset.index].request = $(e.currentTarget).val();
+            let value = $(e.currentTarget).val();
+            let parts = value.split(":");
+            this.entries[e.target.dataset.index].request = { type: parts[0], key: parts[1] };
         }, this));
         $('#contestedroll-rollmode', html).change($.proxy(function (e) {
             this.rollmode = $(e.currentTarget).val();
@@ -206,7 +199,7 @@ export class ContestedRollApp extends Application {
             folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
         }
 
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:'${this.entries[0].request}'},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:'${this.entries[1].request}'},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
 
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
@@ -250,22 +243,47 @@ export class ContestedRoll {
         }
     }
 
-    static async _rollAbility(data, request, requesttype, rollmode, ffwd, e, msgId) {
+    static async _rollAbility(data, requests, rollmode, ffwd, e, msgId) {
         //let actor = game.actors.get(data.actorid);
         let tokenOrActor = await fromUuid(data.uuid)
         let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
         let fastForward = ffwd || (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey);
 
         if (actor != undefined) {
-            if (requesttype == 'dice') {
+            let request = requests instanceof Array ? (requests.length == 1 ? requests[0] : null) : requests;
+            if (!request && requests.length > 1) {
+                // Select which of the requests to use
+                if (ffwd) {
+                    request = requests[0];
+                } else {
+                    let buttons = requests.map(r => {
+                        return {
+                            label: r.name,
+                            callback: () => r
+                        }
+                    });
+                    request = await Dialog.wait({
+                        title: "Please pick a roll",
+                        content: "",
+                        focus: true,
+                        close: () => { return null; },
+                        buttons: buttons
+                    }, { classes: ["savingthrow-picker"], width: 300 });
+                }
+            }
+
+            if (!request)
+                return;
+
+            if (request.type == 'dice') {
                 //roll the dice
-                return ContestedRoll.rollDice(request).then((roll) => {
-                    return ContestedRoll.returnRoll(data.id, roll, actor, rollmode);
+                return ContestedRoll.rollDice(request.key).then((roll) => {
+                    return ContestedRoll.returnRoll(data.id, roll, actor, rollmode).then((result) => { if (result) result.request = request; return result; });
                 });
             } else {
                 if (MonksTokenBar.system._supportedSystem) { //game.system.id == 'dnd5e' || game.system.id == 'sw5e' || game.system.id == 'pf1' || game.system.id == 'pf2e' || game.system.id == 'tormenta20' || game.system.id == 'ose' || game.system.id == 'sfrpg') {
-                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, requesttype: requesttype, fastForward: fastForward }, function (roll) {
-                        return ContestedRoll.returnRoll(data.id, roll, actor, rollmode, msgId);
+                    return MonksTokenBar.system.roll({ id: data.id, actor: actor, request: request, fastForward: fastForward }, function (roll) {
+                        return ContestedRoll.returnRoll(data.id, roll, actor, rollmode, msgId).then((result) => { if (result) result.request = request; return result; });
                     }, e);
                 } else
                     ui.notifications.warn(i18n("MonksTokenBar.UnknownSystem"));
@@ -301,7 +319,7 @@ export class ContestedRoll {
                         e[k] = evt[k] || v;
                     MonksTokenBar.system.parseKeys(e, keys);
 
-                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.request, msgtoken.requesttype, rollmode, fastForward, evt, message.id));
+                    promises.push(ContestedRoll._rollAbility({ id: id, uuid: msgtoken.uuid }, msgtoken.requests, rollmode, fastForward, e, message.id));
                 }
             }
         };
@@ -349,8 +367,15 @@ export class ContestedRoll {
                     let tooltip = '';
                     if (update.roll instanceof Roll) {
                         msgtoken.roll = update.roll.toJSON();
+                        if (msgtoken.roll.terms.length)
+                            msgtoken.roll.terms = duplicate(msgtoken.roll.terms);
+                        for (let i = 0; i < msgtoken.roll.terms.length; i++) {
+                            if (msgtoken.roll.terms[i] instanceof RollTerm)
+                                msgtoken.roll.terms[i] = msgtoken.roll.terms[i].toJSON();
+                        }
                         msgtoken.total = update.roll.total;
                         msgtoken.reveal = update.reveal || reveal;
+                        msgtoken.request = update.request;
                         tooltip = await update.roll.getTooltip();
 
                         Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
@@ -572,7 +597,8 @@ Hooks.on('controlToken', (token, delta) => {
 
 Hooks.on("renderContestedRollApp", (app, html) => {
     for (let i = 0; i < 2; i++) {
-        $(`.request-roll[data-index="${i}"]`, html).val(app.entries[i].request);
+        let request = app.entries[i].request instanceof Array ? app.entries[i].request : [app.entries[i].request];
+        $(`.request-roll[data-index="${i}"]`, html).val(request.type + ":" + request.key);
     }
     $('#contestedroll-rollmode', html).val(app.rollmode);
 });

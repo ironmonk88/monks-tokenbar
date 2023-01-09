@@ -1,7 +1,7 @@
-<div class="monks-tokenbar flexcol">
-    <div class="dialog-content">
-        <form>
-            <div class="flexrow">
+<div class="monks-tokenbar flexcol" style="height: 100%;">
+    <div class="dialog-content" style="height: calc(100% - 30px);">
+        <form style="height: 100%;">
+            <div class="flexrow" style="height: 100%;">
                 <div style="padding-right:10px;">
                     <div class="form-group">
                         <label>{{localize dclabel}}</label>
@@ -27,7 +27,7 @@
                     <div class="form-group sheet">
                         <ol class="items-list inventory-list">
                             <li class="items-header flexrow">
-                                <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
+                                <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
                                 <div class="item-controls flexrow">
                                     <a class="item-control" title="{{localize 'MonksTokenBar.AddPlayers'}}" data-type="player">
@@ -73,7 +73,7 @@
                     {{/if}}
                     <div class="request-grid {{this.cssclass}}">
                         {{#each this.groups as |name key|}}
-                        <div class="request-option" value="{{../id}}:{{key}}">{{localize name}}</div>
+                        <div class="request-option" data-type="{{../id}}" data-key="{{key}}">{{localize name}}</div>
                         {{/each}}
                     </div>
                     {{/each}}

@@ -1,14 +1,14 @@
 <div class="monks-tokenbar contested-roll chat-card item-card">
     <header class="card-header flexcol">
-        <h3 class="item-name">{{localize 'MonksTokenBar.ContestedRoll'}}</h3>
-        <div class="flexrow">{{#each tokens}}<div class="request-name">{{this.requestname}}</div>{{/each}}</div>
+        <h3 class="item-name noborder">{{localize 'MonksTokenBar.ContestedRoll'}}</h3>
+        <div class="flexrow">{{#each tokens}}<div class="request-name">{{this.requests.0.name}}</div>{{/each}}</div>
     </header>
     <div class="message-content" style="margin:5px 0px;">
         <div class="card-content"></div>
 	    <div class="form-group sheet actor">
             <ol class="items-list inventory-list">
                 <li class="items-header flexrow">
-                    <h3 class="item-name flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
+                    <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
                 </li>
 
                 <ol class="item-list">
@@ -25,7 +25,12 @@
                                 </div>
 
                                 <div class="roll-controls flexrow noselect">
-                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;"></a>
+                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;">
+                                        {{#if ../showAdvantage}}
+                                        <div class="adv-btn advantage" title="Advantage"><i class="fas fa-circle-plus advantage"></i></div>
+                                        <div class="adv-btn disadvantage" title="Disadvantage"><i class="fas fa-circle-minus disadvantage"></i></div>
+                                        {{/if}}
+                                    </a>
                                 </div>
                             </div>
                             <div class="dice-tooltip" style="display:none;"></div>

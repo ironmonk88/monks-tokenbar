@@ -39,34 +39,45 @@ export class PF1Rolls extends BaseRolls {
 
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'skill:per' : null);
+        return (allPlayers ? { type: 'skill', key: 'per' } : null);
     }
 
     defaultContested() {
         return 'ability:str';
     }
 
-    getXP(actor) {
-        return actor.system.details.xp;
+    get canGrab() {
+        if (game.modules.get("betterrolls5e")?.active)
+            return false;
+        return true;
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    getXP(actor) {
+        return actor?.system.details.xp;
+    }
+
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = { rollMode: rollMode, event: e, skipPrompt: fastForward, chatMessage: false };
-        if (requesttype == 'ability') {
+        let opts = { rollMode: rollMode, event: e, skipDialog: fastForward, chatMessage: false };
+        if (request.type == 'ability') {
             rollfn = actor.rollAbilityTest;
         }
-        else if (requesttype == 'save') {
+        else if (request.type == 'save') {
             rollfn = actor.rollSavingThrow;
         }
-        else if (requesttype == 'skill') {
+        else if (request.type == 'skill') {
             rollfn = actor.rollSkill;
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, request, opts)
-                    .then((roll) => { return callback(roll); })
+                return rollfn.call(actor, request.key, opts)
+                    .then((msg) => {
+                        if (msg) {
+                            let roll = Roll.fromJSON(msg.rolls[0]);
+                            return callback(roll);
+                        }
+                    })
                     .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch(err)
             {

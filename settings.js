@@ -43,10 +43,15 @@ export const registerSettings = function () {
 		'gm': game.i18n.localize("MonksTokenBar.GMOnly"),
 		'players': game.i18n.localize("MonksTokenBar.PlayersOnly"),
 		'everyone': game.i18n.localize("MonksTokenBar.Everyone"),
+	}
+
+	let permissions = {
+		"LIMITED": "Limited",
+		"OBSERVER": "Observer",
+		"OWNER": "Owner"
     }
 
 	let lootsheetoptions = MonksTokenBar.getLootSheetOptions();
-	let lootentity = {};
 	let lootfolder = {};
 	
 	const dividexp = (game.system.id === "pf2e" ? "no-split" : "equal-split");
@@ -80,6 +85,15 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
+	});
+	game.settings.register(modulename, "minimum-ownership", {
+		name: game.i18n.localize("MonksTokenBar.minimum-ownership.name"),
+		hint: game.i18n.localize("MonksTokenBar.minimum-ownership.hint"),
+		scope: "world",
+		config: true,
+		default: "OWNER",
+		type: String,
+		choices: permissions,
 	});
 	game.settings.register(modulename, "disable-tokenbar", {
 		name: game.i18n.localize("MonksTokenBar.disable-tokenbar.name"),
@@ -272,6 +286,15 @@ export const registerSettings = function () {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "show-lootable-menu", {
+		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-lootable-menu.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "gold-formula", {
 		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),
 		hint: game.i18n.localize("MonksTokenBar.gold-formula.hint"),
@@ -279,6 +302,14 @@ export const registerSettings = function () {
 		config: true,
 		default: "Math.round(0.6 * 10 * (10 ** (0.15 * ({{ actor.system.details.cr}} ?? 0))))",
 		type: String,
+	});
+	game.settings.register(modulename, "auto-gold-cr", {
+		name: game.i18n.localize("MonksTokenBar.auto-gold-cr.name"),
+		hint: game.i18n.localize("MonksTokenBar.auto-gold-cr.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
 	});
 
 	game.settings.register(modulename, "loot-sheet", {
@@ -290,32 +321,21 @@ export const registerSettings = function () {
 		choices: lootsheetoptions,
 		type: String,
 	});
-	game.settings.register(modulename, "loot-type", {
-		name: game.i18n.localize("MonksTokenBar.loot-type.name"),
-		hint: game.i18n.localize("MonksTokenBar.loot-type.hint"),
-		scope: "world",
-		config: true,
-		default: "transferplus",
-		choices: lootoptions,
-		type: String,
-	});
 	game.settings.register(modulename, "loot-entity", {
 		name: game.i18n.localize("MonksTokenBar.loot-entity.name"),
 		hint: game.i18n.localize("MonksTokenBar.loot-entity.hint"),
 		scope: "world",
 		config: true,
 		default: "",
-		choices: lootentity,
 		type: String,
 	});
-	game.settings.register(modulename, "loot-folder", {
-		name: game.i18n.localize("MonksTokenBar.loot-folder.name"),
-		hint: game.i18n.localize("MonksTokenBar.loot-folder.hint"),
+	game.settings.register(modulename, "create-canvas-object", {
+		name: game.i18n.localize("MonksTokenBar.create-canvas-object.name"),
+		hint: game.i18n.localize("MonksTokenBar.create-canvas-object.hint"),
 		scope: "world",
 		config: true,
-		default: "",
-		choices: lootfolder,
-		type: String,
+		default: true,
+		type: Boolean,
 	});
 	game.settings.register(modulename, "open-loot", {
 		name: game.i18n.localize("MonksTokenBar.open-loot.name"),
@@ -325,14 +345,6 @@ export const registerSettings = function () {
 		default: "none",
 		choices: openLootOptions,
 		type: String,
-	});
-	game.settings.register(modulename, "show-lootable-menu", {
-		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-lootable-menu.hint"),
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean,
 	});
 
 	//------------------------------------Request Roll settings--------------------------------------------
@@ -365,6 +377,14 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.gm-sound.hint"),
 		scope: "world",
 		config: !game.modules.get("dice-so-nice")?.active,
+		default: true,
+		type: Boolean,
+	});
+	game.settings.register(modulename, "add-advantage-buttons", {
+		name: game.i18n.localize("MonksTokenBar.add-advantage-buttons.name"),
+		hint: game.i18n.localize("MonksTokenBar.add-advantage-buttons.hint"),
+		scope: "world",
+		config: true,
 		default: true,
 		type: Boolean,
 	});

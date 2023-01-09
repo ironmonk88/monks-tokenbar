@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, setting, error } from "../monks-tokenbar.js"
 
 export class PF2eRolls extends BaseRolls {
     constructor() {
@@ -9,7 +9,7 @@ export class PF2eRolls extends BaseRolls {
             { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: CONFIG.PF2E.attributes.perception } },
             { id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
-            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
+            { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skillList }
         ].concat(this._requestoptions);
 
         /*
@@ -37,16 +37,45 @@ export class PF2eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'attribute:perception' : null);
+        let allPlayers = (app.entries.filter(t => t.token?.actor?.hasPlayerOwner).length == app.entries.length);
+        return (allPlayers ? { type: 'attribute', key: 'perception' } : null);
     }
 
     defaultContested() {
         return 'ability:str';
     }
 
+    dynamicRequest(entries) {
+        let lore = {};
+        //get the first token's tools
+        for (let item of entries[0].token.actor?.items) {
+            if (item.type == 'lore') {
+                let sourceID = item.id;
+                //let toolid = item.name.toLowerCase().replace(/[^a-z]/gi, '');
+                lore[sourceID] = item.name;
+            }
+        }
+        //see if the other tokens have these tools
+        if (Object.keys(lore).length > 0) {
+            for (let i = 1; i < entries.length; i++) {
+                for (let [k, v] of Object.entries(lore)) {
+                    let _lore = entries[i].token.actor.items.find(l => {
+                        return l.type == 'lore' && l.id == k;
+                    });
+                    if (_lore == undefined)
+                        delete lore[k];
+                }
+            }
+        }
+
+        if (Object.keys(lore).length == 0)
+            return;
+
+        return [{ id: 'lore', text: 'Lore', groups: lore }];
+    }
+
     getXP(actor) {
-        return actor.system.details.xp;
+        return actor?.system.details.xp;
     }
 
     get useDegrees() {
@@ -69,10 +98,10 @@ export class PF2eRolls extends BaseRolls {
             return (success < 0 ? "failed" : false);
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
-        let opts = request;
-        if (requesttype == 'attribute') {
+        let opts = request.key;
+        if (request.type == 'attribute') {
             rollfn = function (event, attributeName) {
                 const attribute = actor.system.attributes[attributeName];
                 if (!attribute)
@@ -97,7 +126,7 @@ export class PF2eRolls extends BaseRolls {
                 });
             }
         }
-        else if (requesttype == 'ability') {
+        else if (request.type == 'ability') {
             rollfn = function (event, abilityName) {
                 const bonus = actor.system.abilities[abilityName].mod,
                     title = game.i18n.localize(`PF2E.AbilityCheck.${abilityName}`),
@@ -117,7 +146,7 @@ export class PF2eRolls extends BaseRolls {
                 });
             }
         }
-        else if (requesttype == 'save') {
+        else if (request.type == 'save') {
             rollfn = function (event, saveName) {
                 const save = actor.system.saves[saveName],
                     flavor = `${game.i18n.localize(CONFIG.PF2E.saves[saveName])} Save Check`;
@@ -137,23 +166,33 @@ export class PF2eRolls extends BaseRolls {
                 })
             }
         }
-        else if (requesttype == 'skill') {
-            if (actor.system?.skills[request]?.roll) {
-                opts = actor.getRollOptions(["all", "skill-check", request]);
-                rollfn = actor.system.skills[request].roll;
+        else if (request.type == 'skill') {
+            if (actor.skills[request.key]?.roll) {
+                opts = actor.getRollOptions(["all", "skill-check", request.key]);
+                rollfn = actor.skills[request.key].check.roll;
+                actor = actor.skills[request.key].check;
             } else
                 rollfn = actor.rollSkill;
+        }
+        else if (request.type == 'lore') {
+            let lore = actor.items.find(i => { return i.id == request.key; });
+            if (lore != undefined) {
+                let slug = lore.name.slugify();
+                opts = actor.getRollOptions(["all", "skill-check", slug]);
+                rollfn = actor.skills[slug].check.roll;
+                actor = actor.skills[slug].check;
+            } else
+                return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoLore") };
         }
 
         if (rollfn != undefined) {
             try {
-                if (requesttype != 'skill')
+                if (request.type != 'skill' && request.type != 'lore')
                     return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else {
-                    opts.push("ignore");
                     return new Promise(function (resolve, reject) {
-                        rollfn.call(actor, { event: e, options: opts, callback: function (roll) { resolve(callback(roll)); } });
-                    }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                        rollfn.call(actor, { event: e, options: opts, extraRollOptions: ["ignore"], callback: function (roll) { resolve(callback(roll)); } });
+                    }).catch((err) => { error(err); return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 }
             } catch(err)
             {

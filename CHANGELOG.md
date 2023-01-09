@@ -1,3 +1,145 @@
+## Version 10.6
+
+Added a check to make sure adding XP only adds to tokens that are linked to an Actor.
+
+Fixed issues calculating XP values from Actors that didn't have a max or value for xp.
+
+Removed 'melee', 'condition' and 'spellcastEntry' from items lootable will collect.
+
+Fixed issues collecting currency from Actors in PF2E.
+
+Fixed issue changing if you want the loot entry to be automatically opened.
+
+Fixed issue with Lootable name
+
+Fixed issue with getting the default Loot Entry name.
+
+Fixed issue with the loot being added to loot entries not correct, and not able to be assigned to players.
+
+Fixed issues with saving throws when a token with tools is addded or removed from the Dialog.
+
+Added option to use handlebars in flavor field when requesting rolls in MATT.
+
+Added the option to select lore rolls in PF2E.
+
+Fixed resizing issues with the saving throw dialog.
+
+## Version 10.5
+
+Fixed issue with Contested Rolls not responding to the ctrl or alt keys.
+
+Added the option for Contested Rolls to have the advantage and disadvantage buttons.
+
+Added the option to use the Meta key to target tokens using the tokenbar.
+
+Prevented players from double-clicking on tokens to request a roll if they aren't allowed to request rolls.
+
+Fixed incompatability with MidiQol.
+
+Fixed issue with Tormenta 20 system.  Thank you Lander13
+
+## Version 10.4
+
+Fixed issue with contested roll not rendering the correct ids
+
+Added the option to show an advantage and disadvantage button in addition to the regular roll button.  For DnD5e.
+
+Fixed issue with initiative requested rolls not having the correct roll data.  This is because the data was faked, since the correct data is never passed through.
+
+Fixed issue refreshing tokenbar when the actor ownership is changed
+
+Fixed issue with updating token bar when active effects are altered.
+
+Added a setting for player permissions required to view tokens on the tokenbar.  This means you can set other players permission to observer or limited so the token will appear on all players tokenbar.
+
+Fixed issue witht he tokenbar wandering to the right anytime it was expanded and collapsed.
+
+Added the option to alt click on a token while in no movement mode to individually assign movement.  This way you can let each player move one by one.
+
+Made the grabbable status a little more noticeable when you're attempting to grab a message.
+
+Fixed issue with the name shown for the loot entity.
+
+Fixed issue with the default requested roll in dnd5e.
+
+Fixed issues with experience point in ds4.
+
+Allowed pf1 to grab requested roll messages.
+
+Fixed issue with the default loot entity name.
+
+Reworked the lootable dialog so that you have more control over what items are being added.  It will now group like items together to conserve space, so if you have multiple skeletons, instead of adding an item for each monster it will just show one set of items, with an increased quantity.  You can also in the dialog set where the loot is going, so in the settings you can set the default value, but you can change this whenever you create loot.
+
+## Version 10.3
+
+Fixed issues with calculating xp in pf2e
+
+Fixed issue with assigning xp that's not a number
+
+Fixed issue with contested rolls not getting the correct request value.
+
+Fixed issue with getting currency when compiling lootables after a combat
+
+Fixed issue with lootable generated for Monk's Enhanced Journal deleting after the first item is updated.
+
+Added the option to start a combat if initiative is requested and no combat is available.
+
+Fixed issue with finding the owner of a token.
+
+Fixed issue where rolling initiative was throwing an error in pf1.
+
+Fixed issue with Saving Throw when no default request has been determined.
+
+Fixed issue where active effects aren't updating the token bar values
+
+Remove tokens added by multilevel tokens.
+
+Only notifying once on movement change if there's more than one GM logged in.
+
+Added the option to use tagger when selecting tokens for a roll request
+
+Fixed issue with pf1 when skipping the dialog is requested.
+
+Moved the inline request roll feature from Monks Enhanced Journal to this module, since it's the one doing the work.
+
+## Version 10.2
+
+Updated the assign XP dialog to allow you to customise the actors that are being assigned XP.  It will remember the last tokens to assigned XP to, can use the current combats tokens, or you can drag and drop and actor onto the dialog to add them to the list.
+
+Also added the option to auto assign XP instead of having to click the add button in the chat card.
+
+Updated the add xp chat card to highlight that the add button is clicakble as it gets a little hidden.
+
+Updated request roll and contested roll to be able to request multiple options.  So if you need to check for either an athletics or an acrobatics roll, you can do that.  Contested Roll does not offer that option in the interface, but can be configured in the API and run from a macro.
+
+Updated the request roll chat message to allow them to be popped out.
+
+Updated the lootable dialog to only clear if the confirm button is visible.  This shouldn't have been an issue, I just wanted to make sure it wasn't going to be one.
+
+Added the option to collapse the tokenbar icons in case ou want more screen room, or don't want to see the player icons.
+
+Fixed an issue updating the selection when changing in the settings how loot is distributed.
+
+Fixed an issue introduced by Foundry when serializing the Roll in the Chat card.
+
+## Version 10.1
+
+Fixed issues with assigning xp, leaving the old xp visible on disabled actors.
+
+Switched the setting to select how to deliver lootables to be more inline with how Enhanced Journals is displaying them.
+
+Fixed lootables to work correctly in v10 and with Enhanced Journals.
+
+Fixed issues when switching scenes and refreshing tokens.
+
+## Version 1.0.71
+
+Fixed an issue that the latest v10 update broke.
+
+## Version 1.0.70
+
+More v10 fixes
+
 ## Version 1.0.69
 
 Added v10 support.

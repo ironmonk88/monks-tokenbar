@@ -10,6 +10,7 @@ export class TokenBar extends Application {
         this.thumbnails = {};
 
         this._hover = null;
+        this._collapsed = false;
 
         Hooks.on('canvasReady', () => {
             this.refresh();
@@ -45,13 +46,29 @@ export class TokenBar extends Application {
         Hooks.on('updateActor', (actor, data) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
-                if (tkn != undefined) {
-                    this.updateToken(tkn)
-                } else if (data.ownership != undefined) {
+                if (data.ownership != undefined) {
                     this.refresh();
+                } else if (tkn != undefined) {
+                    this.updateToken(tkn)
                 }
             }
         });
+
+        Hooks.on("updateActiveEffect", (effect) => {
+            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+                let actor = effect.parent;
+                if (actor instanceof Actor) {
+                    let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
+                    if (tkn != undefined) {
+                        this.updateToken(tkn)
+                    } else if (actor.ownership != undefined) {
+                        this.refresh();
+                    }
+                }
+            }
+        });
+
+        //updateActiveEffect 
 
         this.buttons = MonksTokenBar.system.getButtons();
     }
@@ -76,6 +93,13 @@ export class TokenBar extends Application {
             setting('show-vertical') ? "vertical" : null
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();
+
+        let collapseIcon;
+        if (setting('show-vertical'))
+            collapseIcon = this._collapsed ? "fa-caret-down": "fa-caret-up";
+        else
+            collapseIcon = this._collapsed ? "fa-caret-right" : "fa-caret-left";
+
         return {
             tokens: this.tokens,
             movement: setting("movement"),
@@ -83,7 +107,9 @@ export class TokenBar extends Application {
             stat2icon: setting("stat2-icon"),
             cssClass: css,
             pos: pos,
-            buttons: this.buttons
+            buttons: this.buttons,
+            collapsed: this._collapsed,
+            collapseIcon: collapseIcon
         };
     }
 
@@ -175,10 +201,12 @@ export class TokenBar extends Application {
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
 
                 let hasActor = (t.actor != undefined);
-                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, "OBSERVER"));
-                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include')
+                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
+                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
-                let addToken = hasActor && canView && disp;
+                let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
+
+                let addToken = hasActor && canView && disp && !mlt;
                 debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include);
 
                 return addToken;
@@ -311,6 +339,7 @@ export class TokenBar extends Application {
             }
         }
         html.find(".token").click(this._onClickToken.bind(this)).dblclick(this._onDblClickToken.bind(this)).hover(this._onHoverToken.bind(this));
+        $('.toggle-collapse', html).on("click", this.toggleCollapse.bind(this));
 
         html.find('#tokenbar-move-handle').mousedown(ev => {
             ev.preventDefault();
@@ -379,7 +408,7 @@ export class TokenBar extends Application {
                         //if (xPos > (window.innerWidth / 2))
                         //    position.right = (window.innerWidth - xPos);
                         //else
-                        position.left = xPos + 1;
+                        position.left = xPos;// + 1;
 
                         elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
                         elmnt.style.right = (position.right ? position.right + "px" : null);
@@ -546,6 +575,50 @@ export class TokenBar extends Application {
         };
     }
 
+    toggleCollapse(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this._collapsed) this.expand();
+        else this.collapse();
+    }
+
+    collapse() {
+        if (this._collapsed) return;
+        const toggle = this.element.find(".toggle-collapse");
+        const icon = toggle.children("i");
+        const bar = this.element.find("#token-action-bar");
+        return new Promise(resolve => {
+            bar.slideUp(200, () => {
+                bar.addClass("collapsed");
+                if (setting('show-vertical'))
+                    icon.removeClass("fa-caret-up").addClass("fa-caret-down");
+                else
+                    icon.removeClass("fa-caret-left").addClass("fa-caret-right");
+                this._collapsed = true;
+                resolve(true);
+            });
+        });
+    }
+
+    expand() {
+        if (!this._collapsed) return true;
+        const toggle = this.element.find(".toggle-collapse");
+        const icon = toggle.children("i");
+        const bar = this.element.find("#token-action-bar");
+        return new Promise(resolve => {
+            bar.slideDown(200, () => {
+                bar.css("display", "");
+                bar.removeClass("collapsed");
+                if (setting('show-vertical'))
+                    icon.removeClass("fa-caret-down").addClass("fa-caret-up");
+                else
+                    icon.removeClass("fa-caret-right").addClass("fa-caret-left");
+                this._collapsed = false;
+                resolve(true);
+            });
+        });
+    }
+
     getEntry(id) {
         return this.tokens.find(t => t.id === id);
     }
@@ -557,13 +630,41 @@ export class TokenBar extends Application {
 
         let that = this;
         if (!this.dbltimer) {
-            this.dbltimer = window.setTimeout(function () {
+            this.dbltimer = window.setTimeout(async function () {
                 if (that.doubleclick !== true) {
-                    let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
+                    if (event?.originalEvent?.ctrlKey || event?.originalEvent?.metaKey) {
+                        let token = canvas.tokens.get(entry?.id);
+                        if (!token)
+                            return;
+                        if (game.user.targets.has(token)) {
+                            // remove from targets
+                            token.setTarget(false, { user: game.user, releaseOthers: false, groupSelection: false });
+                        } else {
+                            // add to user targets
+                            token.setTarget(true, { user: game.user, releaseOthers: false, groupSelection: false });
+                        }
+                    } else if (event?.originalEvent?.altKey && setting("movement") == "none" && game.user.isGM) {
+                        if (entry && (entry.movement == undefined || entry.movement == "")) {
+                            // Dungeon mode
+                            for (let token of that.tokens) {
+                                if (token.movement == "free") {
+                                    token.movement = null;
+                                    await token.token.unsetFlag("monks-tokenbar", "movement");
+                                }
+                            }
+                            entry.movement = "free";
+                            await entry.token.setFlag("monks-tokenbar", "movement", "free");
+                            that.render(true);
+                        }
+                    } else {
+                        if (game.user.isGM || entry.token?.actor?.testUserPermission(game.user, "OBSERVER")) {
+                            let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
 
-                    if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
-                        animate = false;
-                    (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                            if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
+                                animate = false;
+                            (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                        }
+                    }
                 }
                 that.doubleclick = false;
                 delete that.dbltimer;
@@ -576,7 +677,7 @@ export class TokenBar extends Application {
         const li = event.currentTarget;
         const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
 
-        if (setting("dblclick-action") == "request") {
+        if (setting("dblclick-action") == "request" && (game.user.isGM || setting("allow-roll"))) {
             let entries = MonksTokenBar.getTokenEntries([entry.token._object]);
             new SavingThrowApp(entries).render(true);
         } else {

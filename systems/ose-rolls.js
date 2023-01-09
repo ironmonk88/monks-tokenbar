@@ -22,8 +22,8 @@ export class OSERolls extends BaseRolls {
 
     getXP(actor) {
         return {
-            value: actor.system.details.xp.value,
-            max: actor.system.details.xp.next
+            value: actor?.system.details.xp.value,
+            max: actor?.system.details.xp.next
         };
     }
 
@@ -33,25 +33,25 @@ export class OSERolls extends BaseRolls {
 
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'scores:str' : null);
+        return (allPlayers ? { type: 'scores', key: 'str' } : null);
     }
 
     defaultContested() {
         return 'scores:str';
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, event: e };
-        if (requesttype == 'scores') {
+        if (request.type == 'scores') {
             rollfn = actor.rollCheck;
-        } else if (requesttype == 'save') {
+        } else if (request.type == 'save') {
             rollfn = actor.rollSave;
         }
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                return rollfn.call(actor, request.key, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }

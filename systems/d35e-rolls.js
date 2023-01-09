@@ -27,7 +27,7 @@ export class D35eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor.system.details.xp;
+        return actor?.system.details.xp;
     }
 
     get defaultStats() {
@@ -36,38 +36,39 @@ export class D35eRolls extends BaseRolls {
 
     defaultRequest(app) {
         let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
-        return (allPlayers ? 'skill:spt' : null);
+        return (allPlayers ? { type: 'skill', key: 'spt' } : null);
     }
 
     defaultContested() {
         return 'ability:str';
     }
 
-    roll({ id, actor, request, rollMode, requesttype, fastForward = false }, callback, e) {
+    roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
         let rollfn = null;
         let options = { rollMode: rollMode, fastForward: fastForward, chatMessage: false, fromMars5eChatCard: true, event: e };
         let context = actor;
-        if (requesttype == 'ability') {
+        let sysRequest = request.key;
+        if (request.type == 'ability') {
             rollfn = actor.rollAbilityTest;
         }
-        else if (requesttype == 'save') {
+        else if (request.type == 'save') {
             rollfn = actor.rollSavingThrow;
         }
-        else if (requesttype == 'skill') {
+        else if (request.type == 'skill') {
             rollfn = actor.rollSkill;
         } else {
-            if (request == 'init') {
+            if (request.key == 'init') {
                 rollfn = actor.rollInitiative;
-                request = { createCombatants: false, rerollInitiative: game.user.isGM };
+                sysRequest = { createCombatants: false, rerollInitiative: game.user.isGM };
             }
         }
 
         if (rollfn != undefined) {
             try {
-                if (requesttype == 'save')
-                    return rollfn.call(context, request, null, null, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                if (request.type == 'save')
+                    return rollfn.call(context, sysRequest, null, null, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
                 else
-                    return rollfn.call(context, request, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
+                    return rollfn.call(context, sysRequest, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch{
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }

@@ -1,6 +1,10 @@
 <div id="tokenbar" class="flexrow {{cssClass}}" movement="{{movement}}" style="{{pos}}">
     <div id="tokenbar-controls" class="bar-controls flexrow">
-        <div id="tokenbar-move-handle"></div>
+        <div id="tokenbar-move-handle">
+            <div class="toggle-collapse">
+                <i class="fas {{collapseIcon}}"></i>
+            </div>
+        </div>
         {{#each buttons}}
             <div class="flexcol tokenbar-buttons">
                 {{#each this}}
@@ -11,7 +15,7 @@
             </div>
         {{/each}}
     </div>
-    <nav id="token-action-bar" class="flexrow">
+    <nav id="token-action-bar" class="flexrow{{#if collapsed}} collapsed{{/if}}">
         <ol class="flexrow token-list">{{#each tokens}}
             <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}} movement="{{this.movement}}">
                 <div class="token-stats flexcol">

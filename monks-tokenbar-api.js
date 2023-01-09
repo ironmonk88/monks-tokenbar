@@ -1,5 +1,5 @@
 import { MonksTokenBar, log, i18n, setting, MTB_MOVEMENT_TYPE } from "./monks-tokenbar.js";
-import { AssignXPApp } from "./apps/assignxp.js";
+import { AssignXPApp, AssignXP } from "./apps/assignxp.js";
 import { SavingThrowApp, SavingThrow } from "./apps/savingthrow.js";
 import { ContestedRollApp, ContestedRoll } from "./apps/contestedroll.js";
 import { LootablesApp } from "./apps/lootables.js";
@@ -80,13 +80,17 @@ export class MonksTokenBarAPI {
     * pass in a token or an array of tokens, 
     *
     * */
-    static assignXP(tokens, options = {}) {
+    static async assignXP(tokens, options = {}) {
         if (!game.user.isGM)
             return;
         let assignxp = new AssignXPApp(tokens, options);
-        if (options?.silent === true)
-            assignxp.assign();
-        else
+        if (options?.silent === true) {
+            let msg = await assignxp.assign();
+            if (msg && options.fastForward === true)
+                return AssignXP.onAssignAllXP(msg);
+            else
+                return msg;
+        } else
             assignxp.render(true);
     }
 
