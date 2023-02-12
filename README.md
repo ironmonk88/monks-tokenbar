@@ -15,7 +15,7 @@ The player tokens currently in the scene are automatically added.  Tokens need t
 
 Right click on the token in the TokenBar to open a context menu with options to edit both the character and token, aswell as targeting that token.  You can also set individual movement restrictions for that specific token.
 
-**If you are having troubles seeing a token on the token bar, please check to make sure the token is set to friendly disposition and is owned by a player**
+<ins>**If you are having troubles seeing a token on the token bar, please check to make sure the token is set to friendly disposition and is owned by a player**</ins>
 
 ### Limit Movement
 You can the limit the movement of tokens.  There are three options available, either free movement where tokens can be moved at will, no movement where tokens aren't allowed to be moved, or combat movement, where only the token whose turn is current can move.  You can set the movement individually for each token via the right-click menu.  Doing so is handy if you trust a player to clean up their movement after their turn is done while you move on to the next player.
