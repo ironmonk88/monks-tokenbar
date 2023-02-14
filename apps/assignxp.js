@@ -32,9 +32,7 @@ export class AssignXPApp extends Application {
                 } else
                     monsters.push(combatant);
             };
-            var calcAPL = 0;
-            if (apl.count > 0)
-                calcAPL = Math.round(apl.levels / apl.count) + (apl.count < 4 ? -1 : (apl.count > 5 ? 1 : 0));
+            var calcAPL = apl.count > 0 ? Math.round(apl.levels / apl.count) : 0;
 
             //get the monster xp
             let combatxp = 0;
@@ -48,6 +46,11 @@ export class AssignXPApp extends Application {
                         combatxp += (MonksTokenBar.system.getXP(combatant.actor)?.value || 0);
                 }
             };
+
+            // For Pathfinder 2e, if the party is bigger or smaller than 4, then we need to adjust the XP reward
+            if (game.system.id == 'pf2e')
+                combatxp = Math.floor(combatxp * 4 / (apl.count || 4));
+
             //xp += (combatant?.actor.system.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.system.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
             this.xp = this.xp || combatxp;
             this.reason = this.reason || i18n("MonksTokenBar.CombatExperience");
