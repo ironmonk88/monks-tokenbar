@@ -114,7 +114,7 @@ export class TokenBar extends Application {
     }
 
     getPos() {
-        this.pos = null; //game.user.getFlag("monks-tokenbar", "position");
+        this.pos = game.user.getFlag("monks-tokenbar", "position");
 
         if (this.pos == undefined) {
             let hbpos = $('#ui-bottom').offset();

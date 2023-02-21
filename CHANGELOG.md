@@ -1,3 +1,7 @@
+## Version 10.8
+
+Removing debug code so that the tokenbar can be repositioned properly.
+
 ## Version 10.7
 
 Changed the assign xp dialog to allow GMs to select which creatures get used to computer the XP.
