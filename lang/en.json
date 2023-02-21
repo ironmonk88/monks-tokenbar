@@ -3,6 +3,7 @@
 	"MonksTokenBar.EditToken": "Edit Token",
 	"MonksTokenBar.TargetToken": "Target Token",
 	"MonksTokenBar.PrivateMessage": "Private Message",
+	"MonksTokenBar.ExcludeFromTokenBar": "Exclude Token",
 	"MonksTokenBar.DisablePanning": "Disable Panning",
 
 	"MonksTokenBar.easy": "Easy",
@@ -49,6 +50,8 @@
 	"MonksTokenBar.SelectAll": "Select All Actors",
 	"MonksTokenBar.OpenCharacterSheet": "Open Character Sheet",
 	"MonksTokenBar.RequestSavingThrow": "Request Saving Throw",
+	"MonksTokenBar.Unknown": "Unknown",
+	"MonksTokenBar.Level": "Level",
 
 	"MonksTokenBar.UnknownError": "An unknown error occured",
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
@@ -67,6 +70,7 @@
 	"MonksTokenbar.IconSettings": "Icon Settings",
 	"MonksTokenbar.MovementSettings": "Movement Settings",
 	"MonksTokenbar.AfterCombatSettings": "After Combat Settings",
+	"MonksTokenbar.LootableSettings": "Lootables",
 	"MonksTokenbar.RequestRollSettings": "Request Roll Settings",
 
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
@@ -159,6 +163,10 @@
 	"MonksTokenBar.add-advantage-buttons.hint": "Add advantage and disadvantage buttons to the token roll button",
 	"MonksTokenBar.minimum-ownership.name": "Minimum Player Permission",
 	"MonksTokenBar.minimum-ownership.hint": "The minimum permission a player needs to see a token",
+	"MonksTokenBar.loot-name.name": "Loot Name",
+	"MonksTokenBar.loot-name.hint": "This name will be used when creating the new entry.",
+	"MonksTokenBar.only-use-defeated.name": "Only Use Defeated",
+	"MonksTokenBar.only-use-defeated.hint": "Only use defeated creatures when collecting loot",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -210,7 +218,7 @@
 	"MonksTokenBar.CreateEntityName": "New Entity Name",
 	"MonksTokenBar.ClearCurrentItems": "Clear Current Items",
 	"MonksTokenBar.SaveToMacro": "Save to Macro",
-	"MonksTokenBar.LootEntry": "Loot Entry",
+	"MonksTokenBar.LootEntry": "Loot {{#}}",
 	"MonksTokenBar.FromCombat": "Actors from combat",
 	"MonksTokenBar.Combat": "Combat",
 	"MonksTokenBar.TransferLoot": "Transfer loot from selected token(s)",
@@ -224,6 +232,8 @@
 	"MonksTokenBar.GMOnlyRoll": "GM Only Roll",
 	"MonksTokenBar.Close": "Close",
 	"MonksTokenBar.Save": "Save",
+	"MonksTokenBar.IncreaseLevel": "Increase Level",
+	"MonksTokenBar.Creatures": "Creatures",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

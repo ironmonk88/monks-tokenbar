@@ -249,10 +249,32 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar .resource .bar {
-    border: 1px solid solid rgba(0, 0, 0, 0.8);
-    border-radius: 2px;
-    height: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.8);
+    border-radius: 3px;
+    height: calc(100% + 2px);
     background-color: rgba(0, 0, 0, 0.4);
+    position: absolute;
+    top: -1px;
+    left: -1px;
+}
+
+#tokenbar .resource .temp-outer {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    padding: 2px;
+    width: 100%;
+    height: calc(100% + 2px);
+}
+
+#tokenbar .resource .temp {
+    background-color: #66CCFF;
+    border: 0px;
+    border-radius: 2px;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    height: 100%;
 }
 
 #tokenbar .token .tooltip {
@@ -587,6 +609,10 @@ body #tokenbar-window:first-child{
     white-space: nowrap;
 }
 
+#requestsavingthrow .request-grid > div.not-everyone {
+    color: Highlight;
+}
+
 #requestsavingthrow .request-grid > div.selected,
 #requestsavingthrow .request-grid > div:hover {
     border: 1px solid red;
@@ -650,6 +676,10 @@ body #tokenbar-window:first-child{
     overflow: hidden;
 }
 
+.monks-tokenbar.chat-card .card-header h3 .sub-request {
+    font-size: 14px;
+}
+
 .monks-tokenbar.chat-card .card-header h3:hover {
     color: #111;
     text-shadow: 0 0 10px red;
@@ -681,6 +711,36 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar.assignxp.chat-card .sheet .items-list .item-controls a {
     flex: 1;
+}
+
+.monks-tokenbar.chat-card .token-roll-container {
+    width: 100%;
+}
+
+.monks-tokenbar.chat-card .token-properties {
+    text-align: left;
+    width: 100%;
+    padding: 4px 0px;
+}
+
+.monks-tokenbar.chat-card .item-list .item:last-child .token-properties {
+    padding-bottom: 1px;
+}
+
+.monks-tokenbar.chat-card .token-properties:empty {
+    display: none;
+}
+
+.monks-tokenbar.chat-card .token-properties .property-tag {
+    border-radius: 2px;
+    border: 1px solid #808080;
+    background-color: #C0C0C0;
+    color: #7a7971;
+    padding: 0px 2px;
+}
+
+.monks-tokenbar.chat-card .token-roll-container .dice-roll .dice-tooltip {
+    flex: 0 0 calc(100% - 30px);
 }
 
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls {
@@ -786,6 +846,21 @@ body #tokenbar-window:first-child{
     border-radius: 4px;
     background-color: #468847;
     color: #fff;
+}
+
+.monks-tokenbar .dialog-content .add-level {
+    flex: 0 0 50px;
+    text-align: center;
+    margin: 4px 4px;
+    line-height: 22px;
+    border-radius: 4px;
+    background-color: #468847;
+    color: #fff;
+}
+
+.monks-tokenbar .dialog-content .add-level.disabled {
+    background-color: #C0C0C0;
+    color: #808080;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total a.recommended {
@@ -1165,4 +1240,25 @@ a.inline-request-roll {
     border-radius: 2px;
     white-space: nowrap;
     word-break: break-all;
+}
+
+#assignexperience .sheet .sheet-navigation {
+    flex: 0 0 30px !important;
+    margin-bottom: 5px;
+    font-family: "Modesto Condensed", "Palatino Linotype", serif;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+#assignexperience .sheet .sheet-navigation .item {
+    height: 30px !important;
+    line-height: 32px;
+    margin: 0 24px;
+    border-bottom: 3px solid #b5b3a4;
+    max-width: 150px;
+}
+
+#assignexperience .sheet-body .items-list .item-list {
+    height: 200px;
+    overflow-y: auto;
 }

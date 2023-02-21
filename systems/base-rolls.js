@@ -15,6 +15,10 @@ export class BaseRolls {
         return false;
     }
 
+    rollProperties(request) {
+        return [];
+    }
+
     static activateHooks() {
     }
 
@@ -43,7 +47,11 @@ export class BaseRolls {
     }
 
     get showXP() {
-        return true;
+        return false;
+    }
+
+    calcXP(actors, monsters) {
+        return 0;
     }
 
     getXP (actor) {
@@ -51,7 +59,7 @@ export class BaseRolls {
     }
 
     getLevel(actor) {
-        return actor.system.details?.level?.value || actor.system.details?.level || 0;
+        return actor.system.details?.level?.value ?? actor.system.details?.level ?? 0;
     }
 
     get dcLabel() {
@@ -157,6 +165,10 @@ export class BaseRolls {
     }
 
     async assignXP(msgactor) {
+
+    }
+
+    async checkXP(actor) {
 
     }
 

@@ -31,10 +31,16 @@
                     <img class="token-icon" src="{{this.thumb}}" />
                     {{/if}}
                     {{#if this.resource1.value}}
-                    <div class="resource" resource="1"><div class="bar" style="width:{{this.resource1.pct}}%;background-color:{{this.resource1.color}}"></div></div>
+                    <div class="resource" resource="1">
+                        <div class="bar" style="width:{{this.resource1.valuePct}}%;background-color:{{this.resource1.color}}"></div>
+                        <div class="temp-outer"><div class="temp" style="width:{{this.resource1.tempPct}}%;"></div></div>
+                    </div>
                     {{/if}}
                     {{#if this.resource2.value}}
-                    <div class="resource" resource="2"><div class="bar" style="width:{{this.resource2.pct}}%;background-color:{{this.resource2.color}}"></div></div>
+                    <div class="resource" resource="2">
+                        <div class="bar" style="width:{{this.resource2.valuePct}}%;background-color:{{this.resource2.color}}"></div>
+                        <div class="temp-outer"><div class="temp" style="width:{{this.resource2.tempPct}}%;"></div></div>
+                    </div>
                     {{/if}}
                 </div>
             </li>

@@ -184,11 +184,19 @@ export class ContestedRollApp extends Application {
         $('.request-roll', html).change($.proxy(function (e) {
             let value = $(e.currentTarget).val();
             let parts = value.split(":");
-            this.entries[e.target.dataset.index].request = { type: parts[0], key: parts[1] };
+            let type = parts.length > 1 ? parts[0] : "";
+            let key = parts.length > 1 ? parts[1] : parts[0];
+            this.entries[e.target.dataset.index].request = { type, key, slug: `${type}${type ? ':' : ''}${key}` };
         }, this));
         $('#contestedroll-rollmode', html).change($.proxy(function (e) {
             this.rollmode = $(e.currentTarget).val();
         }, this));
+
+        // Not sure why the contested roll value isn't being displayed.  The value is there, but the select isn't displaying it.
+        window.setTimeout(() => { 
+            $('.request-roll[data-index="0"]', html).val(this.entries[0].request[0].slug);
+            $('.request-roll[data-index="1"]', html).val(this.entries[1].request[0].slug);
+        }, 100);
     };
 
     async saveToMacro() {

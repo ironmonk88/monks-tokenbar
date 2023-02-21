@@ -67,6 +67,32 @@ export class MonksTokenBar {
 
     static debugEnabled = 0;
 
+    static slugify(str) {
+        if (str == undefined)
+            return "";
+
+        str = str.replace(/^\s+|\s+$/g, '');
+
+        // Make the string lowercase
+        str = str.toLowerCase();
+
+        // Remove accents, swap ñ for n, etc
+        var from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
+        var to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+        for (var i = 0, l = from.length; i < l; i++) {
+            str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+        }
+
+        // Remove invalid chars
+        str = str.replace(/[^a-z0-9 -]/g, '')
+            // Collapse whitespace and replace by -
+            .replace(/\s+/g, '-')
+            // Collapse dashes
+            .replace(/-+/g, '-');
+
+        return str;
+    }
+
     static init() {
         log("initializing");
         // element statics
@@ -74,7 +100,7 @@ export class MonksTokenBar {
         try {
             Object.defineProperty(User.prototype, "isTheGM", {
                 get: function isTheGM() {
-                    return this == (game.users.find(u => u.hasRole("GAMEMASTER")) || game.users.find(u => u.hasRole("ASSISTANT")));
+                    return this == (game.users.find(u => u.hasRole("GAMEMASTER") && u.active) || game.users.find(u => u.hasRole("ASSISTANT") && u.active));
                 }
             });
         } catch { }
@@ -102,6 +128,8 @@ export class MonksTokenBar {
         });
 
         registerSettings();
+
+        Handlebars.registerHelper({ selectGroups: MonksTokenBar.selectGroups });
 
         /*
         if (setting('stats') == undefined) {
@@ -161,6 +189,36 @@ export class MonksTokenBar {
             if (innerHTML != '')
                 document.querySelector("head").appendChild(style);
         }
+    }
+
+    static selectGroups(choices, options) {
+        const localize = options.hash['localize'] ?? false;
+        let selected = options.hash['selected'] ?? null;
+        let blank = options.hash['blank'] || null;
+        selected = selected instanceof Array ? selected.map(String) : [String(selected)];
+
+        // Create an option
+        const option = (groupid, id, label) => {
+            if (localize) label = game.i18n.has(label) ? game.i18n.localize(label) : label;
+            let key = (groupid ? groupid + ":" : "") + id;
+            let isSelected = selected.includes(key);
+            html += `<option value="${key}" ${isSelected ? "selected" : ""}>${label}</option>`
+        };
+
+        // Create the options
+        let html = "";
+        if (blank) option("", blank);
+        if (choices instanceof Array) {
+            for (let group of choices) {
+                let label = (localize ? game.i18n.localize(group.text) : group.text);
+                html += `<optgroup label="${label}">`;
+                Object.entries(group.groups).forEach(e => option(group.id, ...e));
+                html += `</optgroup>`;
+            }
+        } else {
+            Object.entries(group.groups).forEach(e => option(...e));
+        }
+        return new Handlebars.SafeString(html);
     }
 
     static getTokenEntries(tokens) {
@@ -302,7 +360,7 @@ export class MonksTokenBar {
         game.socket.emit(MonksTokenBar.SOCKET, args, (resp) => { });
     }
 
-    static onMessage(data) {
+    static async onMessage(data) {
         switch (data.action) {
             case 'rollability': {
                 if (game.user.isGM) {
@@ -371,6 +429,21 @@ export class MonksTokenBar {
             case 'closeLootable': {
                 $(`#lootables[data-combat-id="${data.id}"] a.close`).click();
             } break;
+            case 'setRolls': {
+                if (game.user.isGM) {
+                    let msg = game.messages.get(data.msgid);
+                    if (msg) {
+                        let rolls = duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
+                        rolls[data.tokenid] = data.roll;
+                        await msg.setFlag('monks-tokenbar', "rolls", rolls);
+
+                        let response = { id: data.tokenid, roll: Roll.fromData(data.roll), finish: null, reveal: true }
+
+                        const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                        await SavingThrow.updateMessage([response], msg, revealDice);
+                    }
+                }
+            }
         }
     }
 
@@ -593,7 +666,7 @@ export class MonksTokenBar {
         return list;
     }
 
-    static getRequestName(requestoptions, request) {
+    static getRequestName(requestoptions, request, actors) {
         let name = '';
         switch (request.type) {
             case 'ability': name = i18n("MonksTokenBar.AbilityCheck"); break;
@@ -605,8 +678,17 @@ export class MonksTokenBar {
         let rt = requestoptions.find(o => {
             return o.id == (request.type || request.key);
         });
+        if (!rt && actors) {
+            for (let actor of actors) {
+                let item = actor.items.find(i => i.type == request.type && (MonksTokenBar.slugify(i.name) == request.key || i.getFlag("core", "sourceId") == request.key));
+                if (item) {
+                    rt = { text: item.name };
+                    break;
+                }
+            }
+        }
         let req = (rt?.groups && rt?.groups[request.key]);
-        let flavor = i18n(req?.label || req || rt?.text);
+        let flavor = i18n(req?.label || req || rt?.text || "MonksTokenBar.Unknown");
         switch (game.i18n.lang) {
             case "pt-BR":
             case "es":
@@ -655,7 +737,7 @@ export class MonksTokenBar {
                 });
 
                 if (optType)
-                    requests[i] = { type: optType.id, key: key };
+                    requests[i] = { type: optType.id, key: key, slug: `${optType.id}${optType.id ? ':' : ''}${key}` };
             }
 
             return requests;
@@ -767,7 +849,9 @@ export class MonksTokenBar {
             let entity = null;
             try {
                 entity = (id ? await fromUuid(id) : null);
-            } catch { }
+            } catch {
+                entity = "";
+            }
 
             if (entity instanceof JournalEntryPage || entity instanceof Actor)
                 return "Adding to " + entity.name;
@@ -777,9 +861,11 @@ export class MonksTokenBar {
                 return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
             else if (id == "convert")
                 return "Convert tokens";
-            else if (entity)
-                return `Creating ${entity.documentClass.documentName == "JournalEntry" ? "Journal Entry" : "Actor"} in the root folder`;
-            else
+            else if (id == undefined) {
+                let lootsheet = setting('loot-sheet');
+                let isLootActor = ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
+                return `Creating ${isLootActor ? "Actor" : "Journal Entry"} in the root folder`;
+            } else
                 return "Unknown";
         }
 
@@ -787,11 +873,11 @@ export class MonksTokenBar {
             let result = [$('<li>').addClass('journal-item create-item').attr('data-uuid', folderID).html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())];
             return result.concat((contents || [])
                 .filter(c => {
-                    return c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot"
+                    return (c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot") || (c instanceof Actor)
                 })
                 .sort((a, b) => { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; })
                 .map(e => {
-                    return $('<li>').addClass('journal-item flexrow').toggleClass('selected', uuid == e.pages.contents[0].uuid).attr('data-uuid', e.pages.contents[0].uuid).html($('<div>').addClass('journal-title').html(e.name)).click(selectItem.bind())
+                    return $('<li>').addClass('journal-item flexrow').toggleClass('selected', uuid == (e.pages?.contents[0].uuid || e.uuid)).attr('data-uuid', e.pages?.contents[0].uuid || e.uuid).html($('<div>').addClass('journal-title').html(e.name)).click(selectItem.bind())
                 }));
         }
 
@@ -812,7 +898,7 @@ export class MonksTokenBar {
 
         let list = $('<ul>')
             .addClass('journal-list')
-            .append($('<li>').addClass('journal-item convert-item').attr('data-uuid', 'convert').toggle(collection.name == "Actors").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == 'convert').html("-- convert tokens --")).click(selectItem.bind()))
+            .append($('<li>').addClass('journal-item convert-item').attr('data-uuid', 'convert').toggle(collection.documentName == "Actor").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == 'convert').html("-- convert tokens --")).click(selectItem.bind()))
             .append(getFolders(collection.directory.folders.filter(f => f.folder == null)))
             .append(getEntries(null, collection.contents.filter(j => j.folder == null)));
 
@@ -1029,10 +1115,19 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         ctrl.hide();
     }).change();
 
+    $('[name="monks-tokenbar.loot-entity"]', html).on('change', async () => {
+        let entity = $('[name="monks-tokenbar.loot-entity"]', html).val();
+
+        $('[name="monks-tokenbar.loot-name"]', html).closest('.form-group').toggle(entity.startsWith("Folder") || !entity);
+    }).change();
+
+    $('[name="monks-tokenbar.loot-name"]', html).val(i18n($('[name="monks-tokenbar.loot-name"]', html).val()));
+
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.LootableSettings")).insertBefore($('[name="monks-tokenbar.show-lootable-menu"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.allow-roll"]').parents('div.form-group:first'));
 });
 
@@ -1075,13 +1170,29 @@ Hooks.on("renderTokenConfig", (app, html, data) => {
     }
 });
 
-Hooks.on("renderChatMessage", (message, html, data) => {
+Hooks.on("renderChatMessage", async (message, html, data) => {
     $('.item-card button[data-action="save"]', html).click(MonksTokenBar.chatCardAction.bind(message));
 
     if (message.rolls.length != undefined && message.isRoll) {
         //check grab this roll
         if (MonksTokenBar.system.canGrab)
             $(html).on('click', $.proxy(MonksTokenBar.onClickMessage, MonksTokenBar, message, html));
+    }
+
+    const levelCard = html.find(".monks-tokenbar.level-up");
+    if (levelCard.length !== 0) {
+        let actor = await fromUuid(message.getFlag("monks-tokenbar", "actor"));
+        let level = parseInt(message.getFlag("monks-tokenbar", "level"));
+        $('.add-level', html).click(() => {
+            if ($('.add-level', html).hasClass("disabled"))
+                return;
+
+            const currLevel = parseInt(getProperty(actor, "system.details.level.value"));
+            if (currLevel < level) {
+                actor.update({ "system.details.level.value": level, "system.details.xp.value": actor.system.details.xp.value - actor.system.details.xp.max });
+            }
+            $('.add-level', html).addClass("disabled");
+        }).toggleClass("disabled", !(actor && actor.system.details.xp.value >= actor.system.details.xp.max));
     }
 });
 
@@ -1565,4 +1676,23 @@ Hooks.on("renderJournalSheet", (sheet, html, data) => {
 
 Hooks.on("renderJournalPageSheet", (sheet, html, data) => {
     $("a.inline-request-roll", html).click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
+});
+
+Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
+    if (game.user.isGM && data.whisper != undefined) {
+        let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
+        if (data.whisper.length == 0 && rollmode != "roll") {
+            setProperty(data, "flags.monks-tokenbar.oldroll", rollmode);
+            setProperty(data, "flags.monks-tokenbar.rollmode", "roll");
+        } else if (data.whisper.length && rollmode == "roll") {
+            let oldroll = message.getFlag('monks-tokenbar', 'oldrollmode') || "gmroll";
+            setProperty(data, "flags.monks-tokenbar.rollmode", oldroll);
+        }
+    }
+});
+
+Hooks.on("updateActor", (actor, data, dif, userId) => {
+    if (getProperty(data, "system.details.xp") != undefined) {
+        MonksTokenBar.system.checkXP(actor);
+    }
 });

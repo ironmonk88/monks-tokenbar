@@ -52,12 +52,19 @@ export class SavingThrowApp extends Application {
     }
 
     getData(options) {
-        this.requestoptions = this.baseoptions;
+        let dispOptions = this.requestoptions = this.baseoptions;
 
         if (this.entries.length > 0) {
             let dynamic = MonksTokenBar.system.dynamicRequest(this.entries);
-            if (dynamic)
+
+            if (dynamic) {
+                let dispDyn = dynamic.map(de => {
+                    return Object.assign({}, de, { groups: Object.entries(de.groups).reduce((a, [k, v]) => ({ ...a, [k]: v.label || v }), {}) });
+                });
+
+                dispOptions = [...this.requestoptions, ...dispDyn];
                 this.requestoptions = this.requestoptions.concat(dynamic);
+            }
         }
 
         return {
@@ -67,7 +74,7 @@ export class SavingThrowApp extends Application {
             dc: this.dc,
             showdc: this.showdc,
             dclabel: MonksTokenBar.system.dcLabel,
-            options: this.requestoptions
+            options: dispOptions
         };
     }
 
@@ -164,9 +171,33 @@ export class SavingThrowApp extends Application {
             });
             SavingThrow.lastRequest = this.request;
 
+            let actors = this.entries.map(t => t?.token?.actor).filter(t => !!t);
+
             if (this.request == undefined || !this.request.length) {
                 log('Invalid request');
                 ui.notifications.error("Please select a request to roll");
+                return;
+            }
+
+            this.request = this.request instanceof Array ? this.request : [this.request];
+            let requests = this.request.map(r => {
+                r.name = MonksTokenBar.getRequestName(this.requestoptions, r, actors);
+                return r;
+            });
+
+            let hasNone = this.entries.filter(e => {
+                return requests.filter(r => {
+                    let req = this.requestoptions.find(o => o.id == r.type)?.groups[r.key];
+                    if (req && req.count) {
+                        return e.token.actor?.items.find(i => i.type == r.type && (MonksTokenBar.slugify(i.name) == r.key || i.getFlag("core", "sourceId") == r.key));
+                    }
+                    return true;
+                }).length == 0;
+            })
+
+            if (hasNone.length) {
+                log('Invalid request');
+                ui.notifications.error("This request includes tokens that cannot roll the request.  Change the request, reduce the tokens, or add an additional request that could be rolled.");
                 return;
             }
 
@@ -174,13 +205,8 @@ export class SavingThrowApp extends Application {
             game.user.setFlag("monks-tokenbar", "lastmodeST", rollmode);
             let modename = (rollmode == 'roll' ? i18n("MonksTokenBar.PublicRoll") : (rollmode == 'gmroll' ? i18n("MonksTokenBar.PrivateGMRoll") : (rollmode == 'blindroll' ? i18n("MonksTokenBar.BlindGMRoll") : i18n("MonksTokenBar.SelfRoll"))));
 
-            this.request = this.request instanceof Array ? this.request : [this.request];
-            let requests = this.request.map(r => {
-                r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
-                return r;
-            });
             let flavor = this.flavor;
-            let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requests[0]);
+            let name = this.opts?.name || MonksTokenBar.getRequestName(this.requestoptions, requests[0], actors) + requests.slice(1).map(r => { return `<span class="sub-request">, ${MonksTokenBar.getRequestName(this.requestoptions, r, actors)}</span> `; });
 
             if (requests[0].type == 'misc' && requests[0].key == 'init') {
                 if (!game.combats.active) {
@@ -299,11 +325,23 @@ export class SavingThrowApp extends Application {
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
             this.flavor = $(e.currentTarget).val();
         }, this));
+
+        $('.request-roll .request-option', html).each(function () {
+            let type = this.dataset.type;
+            let key = this.dataset.key;
+
+            let request = that.requestoptions.find(o => o.id == type)?.groups[key];
+            if (request) {
+                if (request.count && request.count < that.entries.length) {
+                    $(this).addClass('not-everyone').attr("title", "Not all tokens have this skill");
+                }
+            }
+        });
         $('.request-roll .request-option', html).click($.proxy(function (e) {
             let target = $(e.currentTarget);
             let type = e.currentTarget.dataset.type;
             let key = e.currentTarget.dataset.key;
-            if (e.ctrlKey) {
+            if (e.ctrlKey || e.metaKey) {
                 if (this.request instanceof Array) {
                     if (this.request.length > 1 && this.request.some(r => r.type == type && r.key == key)) {
                         this.request.findSplice(r => r.type == type && r.key == key);
@@ -459,8 +497,10 @@ export class SavingThrow {
                     request = requests[0];
                 } else {
                     let buttons = requests.map(r => {
+                        let disabled = !MonksTokenBar.system.requestoptions.find(o => o.id == r.type) && !actor.items.find(i => i.type == r.type && (MonksTokenBar.slugify(i.name) == r.key || i.getFlag("core", "sourceId") == r.key));
                         return {
                             label: r.name,
+                            disabled: disabled,
                             callback: () => r
                         }
                     });
@@ -855,7 +895,6 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
         let requests = message.getFlag('monks-tokenbar', 'requests');
-        let request = requests[0];
 
         $('.roll-all', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'all', message));
         $('.roll-npc', html).click($.proxy(SavingThrow.onRollAll, SavingThrow, 'npc', message));
@@ -873,6 +912,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                 //let actor = game.actors.get(msgtoken.actorid);
                 let tokenOrActor = await fromUuid(msgtoken.uuid);
                 let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
+                let request = msgtoken.request || requests[0];
 
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
@@ -940,6 +980,16 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                         //.on('click', $.proxy(SavingThrow.onAssignDeathST, this, tokenId, message))
                         .html(diceicon);
 
+                    if (requests.length > 1) {
+                        $('.token-properties', item).html(`<span class="property-tag">Rolled: ${request.name}</span>`);
+                    }
+                    if (showroll) {
+                        let props = MonksTokenBar.system.rollProperties({ request, roll }) || [];
+                        for (let prop of props) {
+                            $('.token-properties', item).append(prop);
+                        }
+                    }
+
                     count++;
                     groupdc += roll.total;
                 }
@@ -955,7 +1005,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         };
 
         //calculate the group DC
-        if (count > 0 && request.key != 'init')
+        if (count > 0 && requests[0].key != 'init')
             $('.group-dc', html).html(parseInt(groupdc / count));
 
         //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));

@@ -54,6 +54,19 @@ export class SwadeRolls extends BaseRolls {
 
     dynamicRequest(entries) {
         let skills = {};
+        for (let entry of entries) {
+            for (let item of entry.token.actor?.items) {
+                if (item.type == 'skill') {
+                    let sourceID = MonksTokenBar.slugify(item.name);
+                    if (skills[sourceID] == undefined) {
+                        skills[sourceID] = { label: item.name, count: 1 };
+                    } else {
+                        skills[sourceID].count = skills[sourceID].count + 1;
+                    }
+                }
+            }
+        }
+        /*
         //get the first token's tools
         for (let item of entries[0].token.actor.items) {
             if (item.type == 'skill') {
@@ -72,6 +85,7 @@ export class SwadeRolls extends BaseRolls {
                 }
             }
         }
+        */
 
         if (Object.keys(skills).length == 0)
             return;

@@ -46,6 +46,16 @@ export class DnD4eRolls extends BaseRolls {
         return actor?.system.details.exp;
     }
 
+    calcXP(actors, monsters) {
+        //get the monster xp
+        let combatxp = 0;
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+        };
+
+        return combatxp;
+    }
+
     get defaultStats() {
         return [{ stat: "defences.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.total", icon: "fa-eye" }];
     }

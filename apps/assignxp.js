@@ -2,79 +2,46 @@ import {i18n, log, MonksTokenBar, setting} from "../monks-tokenbar.js";
 import { divideXpOptions } from "../settings.js";
 
 export class AssignXPApp extends Application {
-    constructor(entity, options = {}) {
+    constructor(entities, options = {}) {
         super(options);
 
-        this.xp = options?.xp || 0;
-        this.reason = options?.reason;
+        this.reason = options?.reason || (entities != undefined && entities instanceof Combat ? i18n("MonksTokenBar.CombatExperience") : "");
         this.dividexp = options?.dividexp ? options?.dividexp : setting("divide-xp");
         this.divideXpOptions = divideXpOptions
 
-        if (game.system.id == 'pf2e')
-            this.xpchart = [10, 15, 20, 30, 40, 60, 80, 120, 160];
-
-        if (entity != undefined && entity instanceof Combat) {
-            this.actors = [];
-            var apl = { count: 0, levels: 0 };
-
-            //get the actors
-            let monsters = [];
-            for (let combatant of entity.combatants) {
-                if (combatant.token?.disposition == 1 && combatant.token?.actorLink && combatant.actor && combatant.actor.hasPlayerOwner) {
-                    let actor = (combatant.actor.isPolymorphed ? game.actors.find(a => a.id == combatant.actor.getFlag(game.system.id, 'originalActor')) : combatant.actor);
-                    this.actors.push({
-                        actor: actor,
-                        xp: 0
-                    });
-
-                    apl.count = apl.count + 1;
-                    apl.levels = apl.levels + MonksTokenBar.system.getLevel(actor);
-                } else
-                    monsters.push(combatant);
-            };
-            var calcAPL = 0;
-            if (apl.count > 0)
-                calcAPL = Math.round(apl.levels / apl.count) + (apl.count < 4 ? -1 : (apl.count > 5 ? 1 : 0));
-
-            //get the monster xp
-            let combatxp = 0;
-            for (let combatant of monsters) {
-                if (combatant.token?.disposition != 1 && combatant.actor && !combatant.actor.hasPlayerOwner) {
-                    if (game.system.id == 'pf2e') {
-                        let monstLevel = parseInt(MonksTokenBar.system.getLevel(combatant?.actor));
-                        let monstXP = this.xpchart[Math.clamped(4 + (monstLevel - calcAPL), 0, this.xpchart.length - 1)];
-                        combatxp += monstXP;
-                    }else
-                        combatxp += (MonksTokenBar.system.getXP(combatant.actor)?.value || 0);
-                }
-            };
-            //xp += (combatant?.actor.system.details?.xp?.value || MonksLittleDetails.xpchart[Math.clamped(parseInt(combatant?.actor.system.details?.level?.value), 0, MonksLittleDetails.xpchart.length - 1)] || 0);
-            this.xp = this.xp || combatxp;
-            this.reason = this.reason || i18n("MonksTokenBar.CombatExperience");
-
-            this.combat = duplicate(this.actors);
+        this.monsters = [];
+        if (entities != undefined) {
+            if (entities instanceof Combat) {
+                entities = entities.combatants.map(c => c.token);
+            } else if (!(entities instanceof Array)) {
+                entities = [entities];
+            }
         } else {
-            if (entity != undefined && !$.isArray(entity))
-                entity = [entity];
-            this.actors = (entity || (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables))
-                .map(t => {
-                    if (!t.actor)
-                        return null;
-                    return (t.actor.hasPlayerOwner && (t.actor.type == 'character' || t.actor?.type == 'Player Character') ? t.actor : null)
-                })
-                .filter((a, index, self) => {
-                    if (!a)
-                        return false;
-                    return self.findIndex((i) => { return i?.id == a.id }) === index;
-                })
-                .map(actor => {
-                    actor = (actor.isPolymorphed ? game.actors.find(a => a.id == actor.getFlag(game.system.id, 'originalActor')) : actor);
-                    return {
-                        actor: actor,
-                        xp: 0
-                    };
-                });
+            entities = (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables);
         }
+
+        this.actors = [];
+        this.monsters = [];
+
+        for (let entity of entities) {
+            if (entity) {
+                if (!entity.actor)
+                    return;
+                let actor = entity.actor.isPolymorphed ? game.actors.find(a => a.id == entity.actor.getFlag(game.system.id, 'originalActor')) : entity.actor;
+                let token = entity.document ? entity.document : entity;
+                if (token.disposition == 1 && token.actorLink && actor.hasPlayerOwner && (actor.type == 'character' || actor?.type == 'Player Character')) {
+                    this.actors.push({ actor: actor, xp: 0 });
+                } else if (token.disposition != 1 && !actor.hasPlayerOwner) {
+                    this.monsters.push({ actor: actor, active: true });
+                }
+            }
+        }
+        this.actors = this.actors.filter((a, index, self) => {
+            if (!a) return false;
+            return self.findIndex((i) => { return i?.actor.id == a.actor.id }) === index;
+        });
+
+        this.xp = options?.xp || MonksTokenBar.system.calcXP(this.actors, this.monsters);
 
         this.changeXP();
     }
@@ -84,17 +51,19 @@ export class AssignXPApp extends Application {
             id: "assignexperience",
             title: i18n("MonksTokenBar.AssignXP"),
             template: "./modules/monks-tokenbar/templates/assignxp.html",
+            tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "players" }],
             width: 400,
-            height: 400,
+            height: 'auto',
             popOut: true,
-            dragDrop: [{ dropSelector: ".dialog-content" }]
+            dragDrop: [{ dropSelector: ".dialog-content" }],
+            scrollY: [".tab.monsters .tab-inner", ".tab.players .tab-inner"]
         });
     }
 
     getData(options) {
         return {
             actors: this.actors,
-            hasCombat: !!this.combat,
+            monsters: this.monsters,
             xp: this.xp,
             dividexp: this.dividexp,
             reason: this.reason,
@@ -111,7 +80,6 @@ export class AssignXPApp extends Application {
             const bXP = MonksTokenBar.system.getXP(b.actor);
             
             let value = (MonksTokenBar.system.getLevel(a.actor) + ((aXP?.value ?? 0) / (aXP?.max ?? 1))) - (MonksTokenBar.system.getLevel(b.actor) + ((bXP?.value ?? 0) / (bXP?.max ?? 1)));
-            log(a.actor.name, b.actor.name, value);
             return value;
         });
 
@@ -226,6 +194,7 @@ export class AssignXPApp extends Application {
         });
 
         $('.charxp', html).blur(this.adjustCharXP.bind(this));
+        $('.item-active', html).change(this.activateMonster.bind(this));
     };
 
     adjustCharXP(event) {
@@ -233,6 +202,17 @@ export class AssignXPApp extends Application {
         let actor = this.actors.find(a => a.actor._id == id);
         if (actor)
             actor.xp = parseInt($(event.currentTarget).val())
+        this.render(true);
+    }
+
+    activateMonster(event) {
+        let id = $(event.currentTarget).closest(".item")[0].dataset["itemId"];
+        let actor = this.monsters.find(a => a.actor._id == id);
+        if (actor)
+            actor.active = $(event.currentTarget).prop("checked");
+
+        this.xp = MonksTokenBar.system.calcXP(this.actors, this.monsters);
+
         this.render(true);
     }
 
@@ -253,13 +233,6 @@ export class AssignXPApp extends Application {
                 this.changeXP();
                 this.render(true);
                 break;
-            case 'combat':
-                if (this.combat) {
-                    this.actors = duplicate(this.combat);
-                    this.changeXP();
-                    this.render(true);
-                }
-                break;
             case 'last':
                 if (AssignXP.lastTokens) {
                     this.actors = duplicate(AssignXP.lastTokens);
@@ -277,6 +250,10 @@ export class AssignXPApp extends Application {
                 break;
             case 'clear':
                 this.actors = [];
+                this.render(true);
+                break;
+            case 'disable':
+                this.monsters = this.monsters.map(m => { m.active = false; return m });
                 this.render(true);
                 break;
         }
@@ -330,7 +307,6 @@ export class AssignXPApp extends Application {
             };
             const html = await renderTemplate("./modules/monks-tokenbar/templates/assignxpchatmsg.html", requestdata);
 
-            log('create chat request');
             let chatData = {
                 user: game.user.id,
                 content: html

@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, MonksTokenBar, setting } from "../monks-tokenbar.js"
 
 export class DnD5eRolls extends BaseRolls {
     constructor() {
@@ -30,8 +30,12 @@ export class DnD5eRolls extends BaseRolls {
                     let msg = game.messages.get(msgid);
                     if (msg) {
                         let rolls = duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
-                        rolls[message.getFlag('monks-tokenbar', 'tokenid')] = message.rolls[0];
-                        msg.setFlag('monks-tokenbar', "rolls", rolls);
+                        let tokenid = message.getFlag('monks-tokenbar', 'tokenid');
+                        rolls[tokenid] = message.rolls[0];
+                        if (msg.isOwner)
+                            msg.setFlag('monks-tokenbar', "rolls", rolls);
+                        else
+                            MonksTokenBar.emit("setRolls", { msgid, tokenid, roll: rolls[tokenid] });
                         setProperty(msg, "flags.monks-tokenbar.rolls", rolls);
                     }
                 }
@@ -63,6 +67,16 @@ export class DnD5eRolls extends BaseRolls {
 
     getXP(actor) {
         return actor?.system.details.xp;
+    }
+
+    calcXP(actors, monsters) {
+        //get the monster xp
+        let combatxp = 0;
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+        };
+
+        return combatxp;
     }
 
     get useDegrees() {
@@ -100,6 +114,20 @@ export class DnD5eRolls extends BaseRolls {
 
     dynamicRequest(entries) {
         let tools = {};
+
+        for (let entry of entries) {
+            for (let item of entry.token.actor?.items) {
+                if (item.type == 'tool') {
+                    let sourceID = item.getFlag("core", "sourceId") || MonksTokenBar.slugify(item.name);
+                    if (tools[sourceID] == undefined) {
+                        tools[sourceID] = { label: item.name, count: 1 };
+                    } else {
+                        tools[sourceID].count = tools[sourceID].count + 1;
+                    }
+                }
+            }
+        }
+        /*
         //get the first token's tools
         for (let item of entries[0].token.actor?.items) {
             if (item.type == 'tool') {
@@ -120,6 +148,7 @@ export class DnD5eRolls extends BaseRolls {
                 }
             }
         }
+        */
 
         if (Object.keys(tools).length == 0)
             return;
