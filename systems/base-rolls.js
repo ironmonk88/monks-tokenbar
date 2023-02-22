@@ -15,6 +15,10 @@ export class BaseRolls {
         return false;
     }
 
+    rollProperties(request) {
+        return [];
+    }
+
     static activateHooks() {
     }
 
@@ -43,7 +47,11 @@ export class BaseRolls {
     }
 
     get showXP() {
-        return true;
+        return false;
+    }
+
+    calcXP(actors, monsters) {
+        return 0;
     }
 
     getXP (actor) {
@@ -157,6 +165,10 @@ export class BaseRolls {
     }
 
     async assignXP(msgactor) {
+
+    }
+
+    async checkXP(actor) {
 
     }
 

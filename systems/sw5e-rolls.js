@@ -39,6 +39,15 @@ export class SW5eRolls extends BaseRolls {
         return actor?.system.details.xp;
     }
 
+    calcXP(actors, monsters) {
+        //get the monster xp
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+        };
+
+        return combatxp;
+    }
+
     get defaultStats() {
         return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "skills.prc.passive", icon: "fa-eye" }];
     }

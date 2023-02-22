@@ -73,10 +73,15 @@
             {{/if}}
             {{/each}}
             {{#if noitems}}
-            <li class="no-item-entry">Creatures with no items: <i>{{noitems}}</i></li>
-            {{/if}}
-        </ul>
-    </div>
+            <li class="no-item-entry">
+                Creatures with no items: 
+                <div>
+                    <i>{{noitems}}</i>
+                </div>
+            </li>
+    {{/if}}
+    </ul>
+</div>
     <div class="dialog-buttons">
         <button type="button" class="dialog-button convert-to-lootable" data-button="assign">{{actionText}}</button>
     </div>

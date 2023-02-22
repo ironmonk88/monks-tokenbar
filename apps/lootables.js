@@ -14,7 +14,7 @@ export class LootablesApp extends Application {
         let tokens = [];
         if (entity != undefined && entity instanceof Combat) {
             tokens = entity.combatants.filter(c => {
-                return c.actor?.token && c.token?.disposition != 1
+                return c.actor?.token && c.token?.disposition != 1 && (setting("only-use-defeated") ? c.defeated : true)
             }).map(c => {
                 return c.token;
             });
@@ -59,6 +59,9 @@ export class LootablesApp extends Application {
                 .filter(item => {
                     // Weapons are fine, unless they're natural
                     let result = false;
+                    if (item.name == "-")
+                        return false;
+
                     if (item.type == 'weapon') {
                         result = item.system.weaponType != 'natural';
                     }
@@ -489,18 +492,27 @@ export class LootablesApp extends Application {
         let lootSheet = setting('loot-sheet');
         let collection = (this.isLootActor(lootSheet) ? game.actors : game.journal);
 
-        let num = 0;
+        let lootname = i18n(setting("loot-name"));
 
-        let documents = (entity == undefined ? collection.filter(e => e.folder == undefined) : entity.contents || entity.pages || entity.parent.contents || entity.parent.pages);
-        if (documents && documents.length) {
-            let previous = documents.map((e, i) =>
-                parseInt(e.name.replace('Loot Entry ', '').replace('(', '').replace(')', '')) || (i + 1)
-            ).sort((a, b) => { return b - a; });
-            num = (previous.length ? previous[0] + 1 : 1);
+        let idx = lootname.indexOf('{{#}}');
+        if (idx > -1) {
+            let start = lootname.substring(0, idx).trim();
+            let end = lootname.substring(idx + 5).trim();
+            let num = "";
+            let documents = (entity == undefined ? collection.filter(e => e.folder == undefined) : entity.contents || entity.pages || entity.parent?.contents || entity.parent?.pages);
+            if (documents && documents.length) {
+                for (let doc of documents) {
+                    if ((doc.name.startsWith(start) || start == "") && (doc.name.endsWith(end) || end == "")) {
+                        let val = Number(doc.name.substr(start.length, doc.name.length - start.length - end.length));
+                        if (!isNaN(val))
+                            num = Math.max(num || 0, val);
+                    }
+                }
+            }
+
+            lootname = lootname.replace("{{#}}", !isNaN(num) ? num + 1 : "");
         }
-
-        name = `${i18n("MonksTokenBar.LootEntry")}${(num > 1 ? ` (${num})` : '')}`;
-        return name;
+        return lootname;
     }
 
     async convertToLootable({ clear = false, name = null, lootEntity = null, openLoot = null, createCanvasObject = null, currency = {} }) {
@@ -513,6 +525,7 @@ export class LootablesApp extends Application {
             return;
 
         let msg = "";
+        let created = false;
 
         if (lootEntity == 'convert') {
             if (lootSheet == "item-piles") {
@@ -662,7 +675,7 @@ export class LootablesApp extends Application {
             if (entity == undefined)
                 warn("Could not find Loot Entity, defaulting to creating one");
 
-            let created = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+            created = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
             if (created) {
                 //create the entity in the Correct Folder
                 if (name == undefined || name == '')
@@ -673,10 +686,12 @@ export class LootablesApp extends Application {
                 }
 
                 if (this.isLootActor(lootSheet)) {
-                    const cls = collection.documentClass;
-                    entity = await cls.create({ folder: entity, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
-                    ui.actors.render();
-                    MonksTokenBar.emit("refreshDirectory", { name: "actors" });
+                    if (lootSheet !== "item-piles") {
+                        const cls = collection.documentClass;
+                        entity = await cls.create({ folder: entity, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
+                        ui.actors.render();
+                        MonksTokenBar.emit("refreshDirectory", { name: "actors" });
+                    }
                 } else {
                     entity = await JournalEntryPage.create({ name: name, type: "text", flags: { "monks-enhanced-journal": { type: "loot", purchasing: "confirm" } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } }, { parent: entity, render: false });
                     ui.journal.render();
@@ -736,8 +751,37 @@ export class LootablesApp extends Application {
 
             if (this.isLootActor(lootSheet)) {
                 if (lootSheet == "item-piles") {
-                    let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
-                    ItemPiles.API.createItemPile(pt, { items });
+                    let ipOptions = {
+                        position: { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count },
+                        items,
+                        //itemPileFlags: { enabled: true }
+                    };
+                    if (entity instanceof Folder) {
+                        let folder = entity;
+                        let foldernames = [folder.name];
+                        while (folder.folder) {
+                            folder = folder.folder;
+                            foldernames.unshift(folder.name);
+                        }
+                        if (name == undefined || name == '')
+                            name = this.getLootableName(entity);
+                        ipOptions.actor = name;
+                        ipOptions.actorOverrides = { name: name };
+                        ipOptions.tokenOverrides = { name: name };
+                        ipOptions.folders = foldernames;
+                        ipOptions.createActor = true;
+                        let uuids = await ItemPiles.API.createItemPile(ipOptions);
+                        entity = await fromUuid(uuids.actorUuid);
+                    } else if (entity instanceof Actor) {
+                        await entity.update({"flags.item-piles.data.enabled": true});
+                        await ItemPiles.API.addItems(entity, items, { removeExistingActorItems: clear });
+                    }
+
+                    /*
+                    for (let entry of this.entries) {
+                        await entry.token.document.update({ hidden: true });
+                    }
+                    */
                 } else {
                     let itemData = items.map(i => {
                         let data = i.data;
@@ -797,12 +841,13 @@ export class LootablesApp extends Application {
                 await entity.setFlag('monks-enhanced-journal', 'currency', entityCurr);
             }
 
+            name = name || entity.name;
             msg = (created ?
                 `${name} has been created, items have been transferred to it` :
                 `Items have been transferred to ${name}`);
 
-            let createObject = setting("create-canvas-object") || createCanvasObject;
-            if (createObject && lootSheet !== "item-piles") {
+            let createObject = (setting("create-canvas-object") || createCanvasObject);
+            if (createObject && !(lootSheet == "item-piles" && created) && this.lootEntity != "convert") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
                 let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
@@ -812,7 +857,7 @@ export class LootablesApp extends Application {
                 // Validate the final position
                 if (canvas.dimensions.rect.contains(pt.x, pt.y)) {
                     if (this.isLootActor(lootSheet)) {
-                        const td = await entity.getTokenData(pt);
+                        const td = await entity.getTokenData(mergeObject(pt, { texture: { src: "icons/svg/chest.svg" } }));
 
                         const cls = getDocumentClass("Token");
                         await cls.create(td, { parent: canvas.scene });
@@ -829,6 +874,11 @@ export class LootablesApp extends Application {
                         await cls.create(data, { parent: canvas.scene });
                     }
                 }
+
+                /*
+                for (let entry of this.entries) {
+                    await entry.token.document.update({hidden: true});
+                }*/
 
                 msg += ` and a ${this.isLootActor(lootSheet) ? "Token" : "Note"} has been added to the canvas`
             }

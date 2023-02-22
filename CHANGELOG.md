@@ -1,3 +1,61 @@
+## Version 10.8
+
+Removing debug code so that the tokenbar can be repositioned properly.
+
+## Version 10.7
+
+Changed the assign xp dialog to allow GMs to select which creatures get used to computer the XP.
+
+Also updated the assign xp dialog to be able to select both creatures and players to include in the dialog.
+
+Fixed issues with contested rolls to using the correct notation.
+
+Fixed issues with the contested roll not updating properly.
+
+Added the option to only use defeated tokens when calculating lootables.
+
+Fixed the way loot name is generated.
+
+Fixed issues with Item Piles support.
+
+Changed saving throws to allow for selecting skills that not all actors have.  This allows for things like thieves' tools to be included in a request with a dexterity skill check.
+
+Added the additional requested rolls to the chat card title.
+
+Added the request selected by the player to the actor list on the request roll chat card.
+
+Added the option to select multiple request using the meta key for Mac users.
+
+Fixed issues calculating the group DC.
+
+Fixed issue with the tokenbar starting too far to the left when it's first used.
+
+Added temporary hp to the tokenbar display bars.
+
+Prevented the whisper option on the tokenbar context menu from showing if you own the actor.  So you don't whisper to yourself.
+
+Switch to the chat tab when selecting whisper from the context menu.
+
+Added the option to exclude an actor from the context menu.
+
+Fixed issue where combat movement wasn't being changed is you had an assisstant GM.
+
+Fixed issues with getting roll information from an Initiative request.
+
+Fixed issues with showing lootable convert option in the settings when using Pathfinder 2e.
+
+Updated the message when an actor is available to level up, to have a button to press to handle leveling up the actor.
+
+Added check for level up when the actor is updated, not just from the assign xp dialog.
+
+Fixed issues when changing a private request roll message to public, and back.
+
+Fixed issues with getting an actors level.  Thank you JDCalvert for the heads up.
+
+Fixed issues with how PF2E handles requested rolls.
+
+Fixed issues with the edit stats dialog overflow when there are a lot of stats selected.
+
 ## Version 10.6
 
 Added a check to make sure adding XP only adds to tokens that are linked to an Actor.

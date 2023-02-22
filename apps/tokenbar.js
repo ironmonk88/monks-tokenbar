@@ -117,7 +117,7 @@ export class TokenBar extends Application {
         this.pos = game.user.getFlag("monks-tokenbar", "position");
 
         if (this.pos == undefined) {
-            let hbpos = $('#hotbar').position();
+            let hbpos = $('#ui-bottom').offset();
             let width = $('#hotbar').width();
             this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
             game.user.setFlag("monks-tokenbar", "position", this.pos);
@@ -139,7 +139,7 @@ export class TokenBar extends Application {
         this.pos = game.user.getFlag("monks-tokenbar", "position");
 
         if (this.pos == undefined) {
-            let hbpos = $('#hotbar').position();
+            let hbpos = $('#ui-bottom').offset();
             let width = $('#hotbar').width();
             this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
             game.user.setFlag("monks-tokenbar", "position", this.pos);
@@ -236,15 +236,31 @@ export class TokenBar extends Application {
     getResourceBar(token, bar) {
         let resource = {};
         if (token.displayBars > 0) {
-            const attr = token.getBarAttribute(bar);
+            let attr = token.getBarAttribute(bar);
+            if (attr.attribute == "attributes.hp")
+                attr = mergeObject(attr, (getProperty(token, "actor.system.attributes.hp") || {}));
 
             if (attr != undefined && attr.type == "bar") {
-                const val = Number(attr.value);
-                const pct = Math.clamped(val, 0, attr.max) / attr.max;
+                let { value, max, temp, tempmax } = attr;
+                temp = Number(temp || 0);
+                tempmax = Number(tempmax || 0);
+                value = Number(value);
 
-                if (val != undefined) {
-                    let color = (bar === "bar1") ? [(1 - (pct / 2)), pct, 0] : [(0.5 * pct), (0.7 * pct), 0.5 + (pct / 2)];
-                    resource = { value: val, pct: (pct * 100), color: 'rgba(' + parseInt(color[0] * 255) + ',' + parseInt(color[1] * 255) + ',' + parseInt(color[2] * 255) + ', 0.7)' };
+                const effectiveMax = Math.max(0, max + tempmax);
+                let displayMax = max + (tempmax > 0 ? tempmax : 0);
+
+                const tempPct = Math.clamped(temp, 0, displayMax) / displayMax;
+                const valuePct = Math.clamped(value, 0, effectiveMax) / displayMax;
+                const colorPct = Math.clamped(value, 0, effectiveMax) / displayMax;
+
+                if (value != undefined) {
+                    let color = (bar === "bar1") ? [(1 - (colorPct / 2)), colorPct, 0] : [(0.5 * colorPct), (0.7 * colorPct), 0.5 + (colorPct / 2)];
+                    resource = {
+                        value,
+                        valuePct: (valuePct * 100),
+                        tempPct: (tempPct * 100),
+                        color: 'rgba(' + parseInt(color[0] * 255) + ',' + parseInt(color[1] * 255) + ',' + parseInt(color[2] * 255) + ', 0.7)'
+                    };
                 }
             }
         }
@@ -436,6 +452,9 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-microphone"></i>',
                 condition: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    if (!game.user.isGM && entry.token?.actor?.isOwner)
+                        return false;
+
                     let players = game.users.contents
                         .filter(u =>
                             !u.isGM && (entry.token.actor.ownership[u.id] == 3 || entry.token.actor.ownership.default == 3)
@@ -451,8 +470,28 @@ export class TokenBar extends Application {
                     .map(u => {
                         return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);
                     });
+                    if (ui.sidebar.activeTab !== "chat")
+                        ui.sidebar.activateTab("chat");
+
                     $("#chat-message").val('/w ' + players.join(' ') + ' ');
                     $("#chat-message").focus();
+                }
+            },
+            {
+                name: "MonksTokenBar.ExcludeFromTokenBar",
+                icon: '<i class="fas fa-ban"></i>',
+                condition: li => {
+                    return game.user.isGM;
+                },
+                callback: (li) => {
+                    Dialog.confirm({
+                        title: "Exclude Token",
+                        content: "Are you sure you wish to remove this token from the Tokenbar?",
+                        yes: () => {
+                            const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                            entry.token.setFlag("monks-tokenbar", "include", "exclude");
+                        }
+                    });
                 }
             },
             {

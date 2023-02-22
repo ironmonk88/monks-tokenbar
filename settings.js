@@ -1,6 +1,6 @@
 import { ResetPosition } from "./apps/resetposition.js";
 import { EditStats } from "./apps/editstats.js";
-import { MonksTokenBar } from "./monks-tokenbar.js"
+import { MonksTokenBar, i18n } from "./monks-tokenbar.js"
 
 export const divideXpOptions = {
 	"no-split": "MonksTokenBar.divide-xp-no-split.name",
@@ -107,7 +107,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "show-vertical", {
 		name: game.i18n.localize("MonksTokenBar.show-vertical.name"),
 		hint: game.i18n.localize("MonksTokenBar.show-vertical.hint"),
-		scope: "world",
+		scope: "client",
 		config: true,
 		default: false,
 		type: Boolean,
@@ -217,7 +217,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.free-npc-combat.hint"),
 		scope: "world",
 		config: true,
-		default: false,
+		default: true,
 		type: Boolean,
 	});
 	game.settings.register(modulename, "allow-after-movement", {
@@ -277,15 +277,6 @@ export const registerSettings = function () {
 		localize: true
 	});
 
-	game.settings.register(modulename, "show-lootable-menu", {
-		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
-		hint: game.i18n.localize("MonksTokenBar.show-lootable-menu.hint"),
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean,
-	});
-
 	game.settings.register(modulename, "gold-formula", {
 		name: game.i18n.localize("MonksTokenBar.gold-formula.name"),
 		hint: game.i18n.localize("MonksTokenBar.gold-formula.hint"),
@@ -297,6 +288,26 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "auto-gold-cr", {
 		name: game.i18n.localize("MonksTokenBar.auto-gold-cr.name"),
 		hint: game.i18n.localize("MonksTokenBar.auto-gold-cr.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+
+	//------------------------------------Loot settings--------------------------------------------
+
+	game.settings.register(modulename, "show-lootable-menu", {
+		name: game.i18n.localize("MonksTokenBar.show-lootable-menu.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-lootable-menu.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
+	game.settings.register(modulename, "only-use-defeated", {
+		name: game.i18n.localize("MonksTokenBar.only-use-defeated.name"),
+		hint: game.i18n.localize("MonksTokenBar.only-use-defeated.hint"),
 		scope: "world",
 		config: true,
 		default: false,
@@ -318,6 +329,14 @@ export const registerSettings = function () {
 		scope: "world",
 		config: true,
 		default: "",
+		type: String,
+	});
+	game.settings.register(modulename, "loot-name", {
+		name: i18n("MonksTokenBar.loot-name.name"),
+		hint: i18n("MonksTokenBar.loot-name.hint"),
+		scope: "world",
+		config: true,
+		default: i18n("MonksTokenBar.LootEntry"),
 		type: String,
 	});
 	game.settings.register(modulename, "create-canvas-object", {

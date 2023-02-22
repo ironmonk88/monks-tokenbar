@@ -30,6 +30,16 @@ export class D35eRolls extends BaseRolls {
         return actor?.system.details.xp;
     }
 
+    calcXP(actors, monsters) {
+        //get the monster xp
+        let combatxp = 0;
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+        };
+
+        return combatxp;
+    }
+
     get defaultStats() {
         return [{ stat: "attributes.ac.normal.total", icon: "fa-shield-alt" }, {stat:"skills.spt.value", icon: "fa-eye"}];
     }
