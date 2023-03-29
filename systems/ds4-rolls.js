@@ -78,13 +78,12 @@ export class DS4Rolls extends BaseRolls {
             "system.progression.experiencePoints": parseInt(actor.system.progression.experiencePoints) + parseInt(msgactor.xp)
         });
 
-        // xp thresholds for each level (starting with level 1 at index 0)
         let levels = [
             0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800, 9100, 10500, 12000, 13700, 15600, 17700, 20000
         ];
 
         // level list is zero-based: subtract 1 from reported level to get correct xp threshold
-        if (setting("send-levelup-whisper") && actor.system.progression.experiencePoints >= levels[MonksTokenBar.system.getLevel(actor)-1]) {
+        if (setting("send-levelup-whisper") && actor.system.progression.experiencePoints >= levels[MonksTokenBar.system.getLevel(actor)]) {
             ChatMessage.create({
                 user: game.user.id,
                 content: i18n("MonksTokenBar.Levelup"),
