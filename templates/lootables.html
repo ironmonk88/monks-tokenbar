@@ -33,8 +33,8 @@
         <div class="flexrow" style="margin: 4px 0px;">
             {{#each currency}}
             <div class="flexrow" style="flex-direction:row-reverse;">
-                <input type="text" class="currency-value" name="{{@key}}" style="text-align: right;" value="{{this}}" />
-                <span style="text-align: center; line-height: 24px;">{{@key}}</span>
+                <input type="text" class="currency-value" name="{{@key}}" style="text-align: right; max-width: 70px;" value="{{this}}" />
+                <span style="text-align: right; line-height: 24px; margin-right: 8px;">{{@key}}</span>
             </div>
             {{/each}}
             <button type="button" class="add-gold" title="Calculate gold based on CR" style="flex: 0 0 28px; text-align: center; line-height: 24px; margin-left: 5px; padding: 0px 2px 0px 4px;">

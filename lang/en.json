@@ -234,6 +234,7 @@
 	"MonksTokenBar.Save": "Save",
 	"MonksTokenBar.IncreaseLevel": "Increase Level",
 	"MonksTokenBar.Creatures": "Creatures",
+	"MonksTokenBar.Tokenbar": "Tokenbar",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

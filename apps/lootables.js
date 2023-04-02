@@ -26,6 +26,9 @@ export class LootablesApp extends Application {
         }
 
         this.currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {}).reduce((a, v) => ({ ...a, [v]: 0 }), {});
+        if (lootsheet == "monks-enhanced-journal" && game.modules.get("monks-enhanced-journal")?.active) {
+            this.currency = game.MonksEnhancedJournal.currencies.filter(c => c.convert != null).reduce((a, v) => ({ ...a, [v.id]: 0 }), {});
+        }
 
         this.entries = [];
         this.noitems = [];
@@ -108,9 +111,11 @@ export class LootablesApp extends Application {
             let actorCurrency = (document.actorData.currency || document.actor.system.currency);
             if (actorCurrency) {
                 for (let [key, value] of Object.entries(actorCurrency)) {
-                    let val = (value.value ?? value);
-                    if (isNaN(val)) val = 0;
-                    this.currency[key] = (this.currency[key] ?? 0) + val;
+                    if (this.currency[key] != undefined) {
+                        let val = (value.value ?? value);
+                        if (isNaN(val)) val = 0;
+                        this.currency[key] = (this.currency[key] ?? 0) + val;
+                    }
                 }
             }
         };

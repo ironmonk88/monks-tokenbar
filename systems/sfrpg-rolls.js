@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, MonksTokenBar, setting } from "../monks-tokenbar.js"
 
 export class SFRPGRolls extends BaseRolls {
     constructor() {
@@ -51,8 +51,22 @@ export class SFRPGRolls extends BaseRolls {
         return 'abilities:str';
     }
 
+    get showXP() {
+        return !game.settings.get('sfrpg', 'disableExperienceTracking');
+    }
+
     getXP(actor) {
         return actor?.system.details.xp;
+    }
+
+    calcXP(actors, monsters) {
+        //get the monster xp
+        let combatxp = 0;
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+        };
+
+        return combatxp;
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {

@@ -977,11 +977,20 @@ export class MonksTokenBar {
         if (options.fastForward) options.fastForward = true;
         if (options.silent) options.silent = true;
 
+        if (options.request.indexOf(":") > -1) {
+            let [type, key] = options.request.split(":");
+            options.request = { type, key };
+        }
+        if (options.request1 && options.request1.indexOf(":") > -1) {
+            let [type, key] = options.request1.split(":");
+            options.request1 = { type, key };
+        }
+
         let requesttype = a.dataset.requesttype.toLowerCase();
         if (requesttype == 'request')
             MonksTokenBarAPI.requestRoll(canvas.tokens.controlled, options);
-        else if (requesttype == 'contested')
-            MonksTokenBarAPI.requestContestedRoll({ request: a.dataset.request }, { request: a.dataset.request1 }, options);
+        else if (requesttype == 'contested') 
+            MonksTokenBarAPI.requestContestedRoll({ request: options.request }, { request: options.request1 }, options);
     }
 }
 
@@ -1671,11 +1680,11 @@ Hooks.on("setupTileActions", (app) => {
 });
 
 Hooks.on("renderJournalSheet", (sheet, html, data) => {
-    $("a.inline-request-roll", html).click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
+    $("a.inline-request-roll", html).off("click").click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
 });
 
 Hooks.on("renderJournalPageSheet", (sheet, html, data) => {
-    $("a.inline-request-roll", html).click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
+    $("a.inline-request-roll", html).off("click").click(MonksTokenBar._onClickInlineRequestRoll.bind(sheet));
 });
 
 Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
