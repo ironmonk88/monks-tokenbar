@@ -116,11 +116,17 @@ export class SavingThrowApp extends Application {
     changeTokens(e) {
         let type = e.target.dataset.type;
         switch (type) {
-            case 'player':
+            case 'tokenbar':
                 this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
                     let include = t.document.getFlag('monks-tokenbar', 'include');
                     include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
                     return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
+                }));
+                this.render(true);
+                break;
+            case 'player':
+                this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
+                    return (t.actor != undefined && (t.actor?.hasPlayerOwner && t.document.disposition == 1));
                 }));
                 this.render(true);
                 break;

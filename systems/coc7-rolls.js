@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, MonksTokenBar, log, setting } from "../monks-tokenbar.js"
 
 export class CoC7Rolls extends BaseRolls {
     constructor() {

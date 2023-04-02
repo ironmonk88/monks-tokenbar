@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, MonksTokenBar, log, setting } from "../monks-tokenbar.js"
 
 export class SW5eRolls extends BaseRolls {
     constructor() {
@@ -41,6 +41,7 @@ export class SW5eRolls extends BaseRolls {
 
     calcXP(actors, monsters) {
         //get the monster xp
+        let combatxp = 0;
         for (let monster of monsters) {
             combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
         };

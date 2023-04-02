@@ -1,3 +1,23 @@
+## Version 10.9
+
+Added the option to set the attribute icon to blank
+
+Fixed lootables so that currencies that didn't exist aren't added to.
+
+Added the option to use the currencies specified in Monk's Enhanced Journal if using that module for your loot.
+
+Added the option to select tokens from either the players or the token on the token bar when requesting a roll.
+
+Added the option of specifying a roll code when creating an inline roll for a journal entry.  This way tokenbar can distinguish between a Strength saving throw and a regular Strength roll.
+
+Fixed issue when requesting a contested roll from an inline link in a Journal Entry.
+
+Fixed issue where inline links would open a roll request twice.
+
+Fixed issues with SFRPG, xp will show again, and calculating xp won't throw an error.
+
+Fixed issue with SW5e, calculating xp won't throw an error.
+
 ## Version 10.8
 
 Removing debug code so that the tokenbar can be repositioned properly.
