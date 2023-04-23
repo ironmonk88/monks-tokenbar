@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, MonksTokenBar, setting } from "../monks-tokenbar.js"
 
 export class DS4Rolls extends BaseRolls {
     constructor() {
@@ -17,8 +17,21 @@ export class DS4Rolls extends BaseRolls {
         return true;
     }
 
+    get showXP() {
+        return true;
+    }
+
     getLevel(actor) {
         return actor.system.progression?.level || 0;
+    }
+
+    calcXP(actors, monsters)  {
+        let combatxp = 0;
+        for (let monster of monsters) {
+            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0)
+        };
+
+        return combatxp;
     }
 
     getXP(actor) {
@@ -64,5 +77,18 @@ export class DS4Rolls extends BaseRolls {
         await actor.update({
             "system.progression.experiencePoints": parseInt(actor.system.progression.experiencePoints) + parseInt(msgactor.xp)
         });
+
+        let levels = [
+            0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800, 9100, 10500, 12000, 13700, 15600, 17700, 20000
+        ];
+
+        // level list is zero-based
+        if (setting("send-levelup-whisper") && actor.system.progression.experiencePoints >= levels[MonksTokenBar.system.getLevel(actor)]) {
+            ChatMessage.create({
+                user: game.user.id,
+                content: i18n("MonksTokenBar.Levelup"),
+                whisper: ChatMessage.getWhisperRecipients(actor.name)
+            }).then(() => { });
+        }
     }
 }
