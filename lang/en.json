@@ -167,6 +167,8 @@
 	"MonksTokenBar.loot-name.hint": "This name will be used when creating the new entry.",
 	"MonksTokenBar.only-use-defeated.name": "Only Use Defeated",
 	"MonksTokenBar.only-use-defeated.hint": "Only use defeated creatures when collecting loot",
+	"MonksTokenBar.show-undefined.name": "Show Undefined Stat",
+	"MonksTokenBar.show-undefined.hint": "Any undefined stat will be shown as zero instead of being hidden",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

@@ -579,7 +579,7 @@ export class SavingThrow {
         return Promise.all(promises).then(async (response) => {
             log('roll all finished', response);
             if (!game.user.isGM) {
-                let responses = response.map(r => { return { id: r.id, roll: r.roll }; });
+                let responses = response.map(r => { return { id: r.id, roll: r.roll, request: r.request }; });
                 MonksTokenBar.emit('rollability',
                     {
                         type: 'savingthrow',

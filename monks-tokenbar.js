@@ -574,7 +574,7 @@ export class MonksTokenBar {
                     let curPermission = entry.actor?.ownership ?? {};
                     let tokPermission = token.actor?.ownership ?? {};
                     let ownedUsers = Object.keys(curPermission).filter(k => curPermission[k] === 3);
-                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users?.get(u).isGM)
+                    allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users?.get(u)?.isGM)
                         && curCombat.turns.every(t => { return t.tokenId !== token.id; });
                 }
 
@@ -1565,7 +1565,7 @@ Hooks.on("setupTileActions", (app) => {
 
     app.registerTileAction('monks-tokenbar', 'filterrequest', {
         name: 'Redirect Request Results',
-        group: 'logic',
+        group: 'monks-tokenbar',
         ctrls: [
             {
                 id: "passed",
@@ -1583,7 +1583,6 @@ Hooks.on("setupTileActions", (app) => {
                 type: "text"
             },
         ],
-        group: 'filters',
         fn: async (args = {}) => {
             const { action, value } = args;
 

@@ -1,3 +1,19 @@
+## Version 10.10
+
+Fixed issue where an alternate requested roll wasn't being reported correctly to the chat message
+
+Fixed issue with Item Piles creation, made sure the items and currency are added properly and that the token actor and sidebar actor match up.
+
+Attached custom actor stats to the actor instead of the token.
+
+Added the option in settings to show stats that are undefined instead of hiding them.
+
+Fixed issue with checking movement when a player that's been assigned ownership to a token no longer exists in game.
+
+Moved Redirect Request Results from logic to Tokenbar group.
+
+Allowed the xp button to be shown in Pathfinder 1.
+
 ## Version 10.9
 
 Added the option to set the attribute icon to blank

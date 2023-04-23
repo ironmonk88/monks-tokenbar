@@ -756,12 +756,13 @@ export class LootablesApp extends Application {
 
             if (this.isLootActor(lootSheet)) {
                 if (lootSheet == "item-piles") {
-                    let ipOptions = {
-                        position: { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count },
-                        items,
-                        //itemPileFlags: { enabled: true }
-                    };
                     if (entity instanceof Folder) {
+                        let ipOptions = {
+                            position: { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count },
+                            //items,
+                            //itemPileFlags: { enabled: true }
+                        };
+
                         let folder = entity;
                         let foldernames = [folder.name];
                         while (folder.folder) {
@@ -772,21 +773,15 @@ export class LootablesApp extends Application {
                             name = this.getLootableName(entity);
                         ipOptions.actor = name;
                         ipOptions.actorOverrides = { name: name };
-                        ipOptions.tokenOverrides = { name: name };
+                        ipOptions.tokenOverrides = { name: name, actorLink: true };
                         ipOptions.folders = foldernames;
                         ipOptions.createActor = true;
                         let uuids = await ItemPiles.API.createItemPile(ipOptions);
                         entity = await fromUuid(uuids.actorUuid);
                     } else if (entity instanceof Actor) {
                         await entity.update({"flags.item-piles.data.enabled": true});
-                        await ItemPiles.API.addItems(entity, items, { removeExistingActorItems: clear });
                     }
-
-                    /*
-                    for (let entry of this.entries) {
-                        await entry.token.document.update({ hidden: true });
-                    }
-                    */
+                    await ItemPiles.API.addItems(entity, items, { removeExistingActorItems: clear });
                 } else {
                     let itemData = items.map(i => {
                         let data = i.data;
@@ -796,29 +791,29 @@ export class LootablesApp extends Application {
                         return data;
                     });
                     entity.createEmbeddedDocuments("Item", itemData);
-
-                    let entityCurr = entity.system.currency || {};
-                    for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
-                        if (currency[curr] != undefined) {
-                            if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
-                                let r = new Roll(currency[curr]);
-                                await r.evaluate({ async: true });
-                                currency[curr] = r.total;
-                            } else {
-                                currency[curr] = parseInt(currency[curr]);
-                            }
-
-                            if (isNaN(currency[curr]))
-                                currency[curr] = 0;
-
-                            let value = entityCurr[curr].value ?? entityCurr[curr];
-                            value = currency[curr] + parseInt(value || 0);
-                            entityCurr[curr] = (entityCurr[curr].hasOwnProperty("value") ? { value: value } : value);
-                        }
-                    }
-
-                    entity.update({ data: { currency: entityCurr } });
                 }
+
+                let entityCurr = entity.system.currency || {};
+                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                    if (currency[curr] != undefined) {
+                        if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
+                            let r = new Roll(currency[curr]);
+                            await r.evaluate({ async: true });
+                            currency[curr] = r.total;
+                        } else {
+                            currency[curr] = parseInt(currency[curr]);
+                        }
+
+                        if (isNaN(currency[curr]))
+                            currency[curr] = 0;
+
+                        let value = entityCurr[curr].value ?? entityCurr[curr];
+                        value = currency[curr] + parseInt(value || 0);
+                        entityCurr[curr] = (entityCurr[curr].hasOwnProperty("value") ? { value: value } : value);
+                    }
+                }
+
+                entity.update({ data: { currency: entityCurr } });
             } else if (lootSheet == 'monks-enhanced-journal') {
                 let entityItems = duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
                 entityItems = entityItems.concat(items);

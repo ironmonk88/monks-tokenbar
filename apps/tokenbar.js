@@ -280,20 +280,20 @@ export class TokenBar extends Application {
             }
         }
 
-        let viewstats = tkn.token.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
+        let viewstats = tkn.token?.actor?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
         for (let stat of viewstats) {
             let value = TokenBar.processStat(stat.stat, tkn.token.actor.system) || TokenBar.processStat(stat.stat, tkn.token.data);
 
             if (tkn.stats[stat.stat] == undefined) {
-                tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (value == undefined) };
+                tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (!setting("show-undefined") && value == undefined) };
                 diffstats[stat.stat] = tkn.stats[stat.stat];
             }
             else {
                 let tokenstat = duplicate(tkn.stats[stat.stat]);
                 if (tokenstat.value != value) {
                     tokenstat.value = value;
-                    tokenstat.hidden = (value == undefined);
+                    tokenstat.hidden = (!setting("show-undefined") && value == undefined);
                     diffstats[stat.stat] = tokenstat;
                 }
             }
@@ -533,7 +533,7 @@ export class TokenBar extends Application {
                 callback: li => {
                     const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
                     if (entry)
-                        new EditStats(entry.token).render(true);
+                        new EditStats(entry.token.actor).render(true);
                 }
             },
             {

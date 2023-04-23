@@ -22,6 +22,10 @@ export class PF1Rolls extends BaseRolls {
         return true;
     }
 
+    get showXP() {
+        return true;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             log(message);

@@ -86,6 +86,14 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "show-undefined", {
+		name: game.i18n.localize("MonksTokenBar.show-undefined.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-undefined.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "minimum-ownership", {
 		name: game.i18n.localize("MonksTokenBar.minimum-ownership.name"),
 		hint: game.i18n.localize("MonksTokenBar.minimum-ownership.hint"),
