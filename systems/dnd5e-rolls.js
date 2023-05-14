@@ -66,7 +66,7 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     getXP(actor) {
-        return actor?.system.details.xp;
+        return actor?.system?.details?.xp || 0;
     }
 
     calcXP(actors, monsters) {
@@ -116,7 +116,7 @@ export class DnD5eRolls extends BaseRolls {
         let tools = {};
 
         for (let entry of entries) {
-            for (let item of entry.token.actor?.items) {
+            for (let item of (entry.token.actor?.items || [])) {
                 if (item.type == 'tool') {
                     let sourceID = item.getFlag("core", "sourceId") || MonksTokenBar.slugify(item.name);
                     if (tools[sourceID] == undefined) {

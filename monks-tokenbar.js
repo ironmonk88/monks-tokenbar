@@ -114,7 +114,9 @@ export class MonksTokenBar {
             editable: [{ key: 'KeyR', modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT] }],
             restricted: true,
             onDown: (data) => {
-                new SavingThrowApp().render(true);
+                let roll = game.user.getFlag("monks-tokenbar", "lastmodeST");
+                if (roll == "selfroll") roll = "blindroll";
+                new SavingThrowApp(null, { rollmode: roll }).render(true);
             },
         });
 
@@ -1232,7 +1234,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                options: { show: ['token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); },
                 conditional: (app) => {
                     return !$('input[name="data.global"]', app.element).prop('checked');
@@ -1278,7 +1280,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true, showTagger: true },
+                options: { show: ['tile', 'token', 'within', 'players', 'previous', 'tagger'] },
                 restrict: (entity) => { return (entity instanceof Token); }
             },
             {
@@ -1417,7 +1419,7 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 required: true,
-                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                options: { show: ['tile', 'token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); },
                 defaultType: 'tokens',
                 placeholder: "Please select a token"
@@ -1435,7 +1437,7 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 required: true,
-                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true },
+                options: { show: ['tile', 'token', 'within', 'players'] },
                 restrict: (entity) => { return (entity instanceof Token); },
                 defaultType: 'tokens',
                 placeholder: "Please select a token"
@@ -1617,7 +1619,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { showTile: false, showToken: true, showWithin: true, showPlayers: true, showPrevious: true },
+                options: { show: ['tile', 'token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); }
             },
             {
@@ -1700,7 +1702,7 @@ Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
 });
 
 Hooks.on("updateActor", (actor, data, dif, userId) => {
-    if (getProperty(data, "system.details.xp") != undefined) {
+    if (getProperty(data, "system.details.xp") != undefined && game.user.isTheGM) {
         MonksTokenBar.system.checkXP(actor);
     }
 });

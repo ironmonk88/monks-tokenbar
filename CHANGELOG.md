@@ -1,3 +1,21 @@
+## Version 10.11
+
+Allow drag and drop of items to the assign loot dialog if there are no items there.
+
+Fixed issues with the configure settings when Enhanced Journal is not installed
+
+Use the last roll when using the key press to open the request roll dialog.
+
+Fixed support for changes with Active Tiles.
+
+Fixed issue with checking XP when there are two GMs in the game.
+
+Fixed issues with some systems when checking for tools, if the actor isn't allowed items.
+
+Fixed issue with default loot image.
+
+Fixed issue with group actors and assigning XP.
+
 ## Version 10.10
 
 Fixed issue where an alternate requested roll wasn't being reported correctly to the chat message

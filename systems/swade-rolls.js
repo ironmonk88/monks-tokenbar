@@ -55,7 +55,7 @@ export class SwadeRolls extends BaseRolls {
     dynamicRequest(entries) {
         let skills = {};
         for (let entry of entries) {
-            for (let item of entry.token.actor?.items) {
+            for (let item of (entry.token.actor?.items || [])) {
                 if (item.type == 'skill') {
                     let sourceID = MonksTokenBar.slugify(item.name);
                     if (skills[sourceID] == undefined) {

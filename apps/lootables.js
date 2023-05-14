@@ -133,7 +133,7 @@ export class LootablesApp extends Application {
             template: "./modules/monks-tokenbar/templates/lootables.html",
             width: 500,
             popOut: true,
-            dragDrop: [{ dropSelector: ".entry-list" }],
+            dragDrop: [{ dropSelector: ".dialog-content" }],
             scrollY: [".entry-list"]
         });
     }

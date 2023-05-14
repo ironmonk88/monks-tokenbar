@@ -1262,3 +1262,144 @@ a.inline-request-roll {
     height: 200px;
     overflow-y: auto;
 }
+
+/* Select with Folders */
+.journal-select {
+    position: relative;
+    width: 100%;
+    height: 27px;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid #7a7971;
+    border-radius: 3px;
+    padding: 0 3px;
+    text-overflow: ellipsis;
+}
+
+.journal-select:focus {
+    box-shadow: 0 0 5px #ff0000;
+    outline: none;
+}
+
+.journal-select > div > span {
+    line-height: 26px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.journal-select > div > i {
+    flex: 0 0 12px;
+    text-align: center;
+    line-height: 24px;
+    font-size: 11px;
+    color: #000;
+}
+
+.journal-list {
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+    margin: 0px 5px;
+    color: black;
+    position: absolute;
+    float: left;
+    left: -1px;
+    top: 100%;
+    background: url(../../../ui/parchment.jpg) repeat;
+    border: 1px solid #808080;
+    width: calc(100% + 2px);
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 100;
+}
+
+.scene-sheet .journal-list {
+    max-height: 250px;
+}
+
+.journal-select.open .journal-list,
+.journal-list.open {
+    display: block;
+}
+
+.journal-list .journal-item .journal-title {
+    padding: 4px;
+    cursor: pointer;
+    min-height: 25px;
+    width: 100%;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.journal-list .journal-item.note-item .journal-title {
+    padding: 1px 4px;
+    overflow: hidden;
+}
+
+.journal-list .journal-item .journal-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 2px solid #000000;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px;
+    flex: 0 0 30px;
+}
+
+.journal-list .journal-item .journal-text {
+    line-height: 30px;
+    padding-left: 4px;
+}
+
+.journal-list .journal-item .journal-text.custom-text {
+    color: #333333;
+}
+
+.journal-list .journal-item:not(.folder):hover,
+.journal-list .journal-item.selected {
+    background-color: #1e90ff;
+    color: #fff;
+}
+
+.journal-list .journal-item.folder > .journal-title {
+    background: rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+}
+
+.journal-list .journal-item.folder > .journal-title:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.journal-list .subfolder {
+    border-left: 4px solid #c0c0c0;
+    border-bottom: 4px solid #c0c0c0;
+}
+
+.journal-list .subfolder .journal-item {
+    margin-left: 5px;
+}
+
+.journal-list .journal-item.folder .journal-title i {
+    margin-right: 8px;
+}
+
+.journal-list .journal-item.folder.collapse .journal-title i.fa-folder-open:before {
+    content: '\f07b';
+}
+
+.journal-list .journal-item.folder.collapse > ul {
+    display: none;
+}
+
+.journal-select .journal-list .subfolder {
+    padding-left: 1px;
+    margin-top: 0px;
+    list-style-type: none;
+    margin-bottom: 0px;
+}

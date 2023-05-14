@@ -237,6 +237,7 @@
 	"MonksTokenBar.IncreaseLevel": "Increase Level",
 	"MonksTokenBar.Creatures": "Creatures",
 	"MonksTokenBar.Tokenbar": "Tokenbar",
+	"MonksTokenBar.ReadyToUpdate": "{name} has enough xp to level up!",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

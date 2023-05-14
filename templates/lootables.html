@@ -59,7 +59,7 @@
                 <ul style="padding: 0px; margin: 0px;">
                     {{#each this.items}}
                     <li class="flexrow item" data-item-id="{{this.id}}">
-                        <img class="loot-item-image" src="{{this.img}}" />
+                        <img class="loot-item-image" src="{{this.img}}" onerror="$(this).css({visibility:'hidden'});" />
                         <span class="loot-item-name">{{this.name}}{{#if (gt this.sysQty 1)}} <small>(In qty of {{this.sysQty}})</small>{{/if}}</span>
                         <input class="loot-item-quantity" type="text" name="tokens.{{../id}}.items.{{this._id}}.quantity" value="{{this.quantity}}" />
                         <div class="flexrow" style="flex: 0 0 40px;margin: 0px 4px;line-height: 25px;">

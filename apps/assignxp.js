@@ -341,7 +341,7 @@ export class AssignXP {
             }
             await message.setFlag('monks-tokenbar', 'actors', actors);
         } else {
-            $(e.target).hide();
+            //$(e.target).hide();
             MonksTokenBar.emit('assignxp', { actorid: actorid, msgid: message.id });
         }
     }
