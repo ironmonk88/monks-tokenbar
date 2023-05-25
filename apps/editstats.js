@@ -25,6 +25,7 @@ export class EditStats extends FormApplication {
             template: "./modules/monks-tokenbar/templates/editstats.html",
             width: 400,
             closeOnSubmit: true,
+            resizable: true,
             popOut: true,
             dragDrop: [{ dragSelector: ".icon", dropSelector: ".item-list" }]
         });
