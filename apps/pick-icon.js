@@ -37,7 +37,19 @@ export class PickIcon extends FormApplication {
     activateListeners(html) {
         super.activateListeners(html);
         $(".icon", this.element).click(this.selectIcon.bind(this));
+        $(".search-icons", this.element).on("keyup", this.filterIcons.bind(this));
     };
+
+    filterIcons(ev) {
+        let filterTerm = $(ev.currentTarget).val().toLowerCase();
+        if (filterTerm == "") {
+            $(".icon", this.element).show();
+        } else {
+            $(".icon", this.element).each((idx, elem) => {
+                $(elem).toggle($(elem).attr("data-value").toLowerCase().includes(filterTerm));
+            });
+        }
+    }
 
     selectIcon(event) {
         //this.fonts.findSplice((id) => id == event.currentTarget.dataset.value);

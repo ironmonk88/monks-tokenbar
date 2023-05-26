@@ -1,7 +1,7 @@
-<div class="monks-tokenbar flexcol editstats">
-    <form>
-        <div class="dialog-content sheet" style="flex: 0 0 200px;height:200px;">
-            <ol class="items-list" style="overflow: visible;">
+<div class="monks-tokenbar flexcol editstats" style="height: 100%; overflow: hidden;">
+    <form class="flexcol" style="height: 100%; overflow: hidden;">
+        <div class="dialog-content sheet" style="height: 100%; overflow: hidden;">
+            <ol class="items-list" style="height: 100%; overflow: hidden;">
                 <li class="items-header flexrow" style="position: relative;">
                     <div class="item-controls"></div>
                     <div class="item-name" style="text-align: left;">Name</div>
@@ -10,7 +10,7 @@
                     </div>
                 </li>
 
-                <ol class="item-list" style="padding-left: 0px; max-height: 165px; overflow-y: auto;">
+                <ol class="item-list" style="padding-left: 0px; overflow-y: auto; height: calc(100% - 35px);">
                     {{#each stats}}
                     <li class="item flexrow" data-id="{{this.id}}" style="position:relative;">
                         <div class="item-controls icon" style="text-align: center;">
@@ -29,7 +29,7 @@
                 </ol>
             </ol>
         </div>
-        <footer class="sheet-footer flexrow">
+        <footer class="sheet-footer flexrow" style="flex-grow: 0;">
             <button type="button" name="submit">
                 <i class="far fa-save"></i> Save Changes
             </button>

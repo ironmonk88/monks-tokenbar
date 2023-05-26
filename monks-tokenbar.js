@@ -390,12 +390,16 @@ export class MonksTokenBar {
                 }
             } break;
             case 'assignxp': {
-                let message = game.messages.get(data.msgid);
-                AssignXP.onAssignXP(data.actorid, message);
+                if (game.user.isTheGM) {
+                    let message = game.messages.get(data.msgid);
+                    AssignXP.onAssignXP(data.actorid, message);
+                }
             } break;
             case 'assigndeathst': {
-                let message = game.messages.get(data.msgid);
-                SavingThrow.onAssignDeathST(data.tokenid, message);
+                if (game.user.isTheGM) {
+                    let message = game.messages.get(data.msgid);
+                    SavingThrow.onAssignDeathST(data.tokenid, message);
+                }
             } break;
             case 'movementchange': {
                 if (data.tokenid == undefined || canvas.tokens.get(data.tokenid)?.isOwner) {
@@ -863,7 +867,7 @@ export class MonksTokenBar {
                 return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
             else if (id == "convert")
                 return "Convert tokens";
-            else if (id == undefined) {
+            else if (id == "root") {
                 let lootsheet = setting('loot-sheet');
                 let isLootActor = ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
                 return `Creating ${isLootActor ? "Actor" : "Journal Entry"} in the root folder`;
@@ -872,7 +876,7 @@ export class MonksTokenBar {
         }
 
         function getEntries(folderID, contents) {
-            let result = [$('<li>').addClass('journal-item create-item').attr('data-uuid', folderID).html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())];
+            let result = [$('<li>').addClass('journal-item create-item').attr('data-uuid', folderID || "root").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())];
             return result.concat((contents || [])
                 .filter(c => {
                     return (c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot") || (c instanceof Actor)
@@ -1280,7 +1284,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { show: ['tile', 'token', 'within', 'players', 'previous', 'tagger'] },
+                options: { show: ['token', 'within', 'players', 'previous', 'tagger'] },
                 restrict: (entity) => { return (entity instanceof Token); }
             },
             {
@@ -1419,7 +1423,7 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 required: true,
-                options: { show: ['tile', 'token', 'within', 'players', 'previous'] },
+                options: { show: ['token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); },
                 defaultType: 'tokens',
                 placeholder: "Please select a token"
@@ -1619,7 +1623,7 @@ Hooks.on("setupTileActions", (app) => {
                 name: "Select Entity",
                 type: "select",
                 subtype: "entity",
-                options: { show: ['tile', 'token', 'within', 'players', 'previous'] },
+                options: { show: ['token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); }
             },
             {

@@ -1,3 +1,15 @@
+## Version 10.12
+
+Fixed issue where receiving xp would lock up Foundry
+
+Added the option to resize the edit stats dialog.
+
+Fixed issue with selecting the root folder to create a loot entry.
+
+Fixed issue with creating a Item Piles entry.
+
+Added option to filter icons when picking a stat icon.
+
 ## Version 10.11
 
 Allow drag and drop of items to the assign loot dialog if there are no items there.

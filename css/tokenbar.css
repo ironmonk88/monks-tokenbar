@@ -1403,3 +1403,8 @@ a.inline-request-roll {
     list-style-type: none;
     margin-bottom: 0px;
 }
+
+#tokenbar-editstats {
+    min-height: 170px;
+    min-width: 400px;
+}

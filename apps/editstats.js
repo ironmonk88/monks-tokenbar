@@ -2,10 +2,12 @@ import { MonksTokenBar, log, error, i18n, setting, makeid } from "../monks-token
 import { PickIcon } from "./pick-icon.js";
 
 export class EditStats extends FormApplication {
-    constructor(object, options) {
+    constructor(object, options = {}) {
+        let stats = object?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
+        options.height = 62 + (Math.max(stats.length, 4) * 27);
+
         super(object, options);
-        this.stats = object?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
-        this.stats = this.stats.map(s => {
+        this.stats = stats.map(s => {
             s.id = s.id || makeid();
             return s;
         });
@@ -23,8 +25,9 @@ export class EditStats extends FormApplication {
             id: "tokenbar-editstats",
             title: 'Edit Stats',
             template: "./modules/monks-tokenbar/templates/editstats.html",
-            width: 400,
+            width: 600,
             closeOnSubmit: true,
+            resizable: true,
             popOut: true,
             dragDrop: [{ dragSelector: ".icon", dropSelector: ".item-list" }]
         });

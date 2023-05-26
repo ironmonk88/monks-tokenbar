@@ -121,6 +121,10 @@ export class LootablesApp extends Application {
         };
         this.entries = this.entries.sort((a, b) => { return a.name.localeCompare(b.name); });
 
+        if (this.combat && this.combat.getFlag("monks-enhanced-journal", "encounterid")) {
+
+        }
+
         if (setting("auto-gold-cr")) {
             this.calcGold();
         }
@@ -486,7 +490,7 @@ export class LootablesApp extends Application {
             return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
         else if (entity == "convert")
             return "Convert tokens";
-        else if (entity)
+        else if (entity == "root")
             return `Creating ${(entity?.documentClass?.documentName || entity?.parent?.documentClass?.documentName) == "JournalEntry" ? "Journal Entry" : "Actor"} in the root folder`;
         else
             return "Unknown";
@@ -677,10 +681,10 @@ export class LootablesApp extends Application {
                 entity = await fromUuid(lootEntity);
             } catch { }
 
-            if (entity == undefined)
+            if (entity == undefined && lootEntity != "root")
                 warn("Could not find Loot Entity, defaulting to creating one");
 
-            created = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+            created = (entity == undefined || lootEntity == "root" || entity instanceof Folder || entity instanceof JournalEntry);
             if (created) {
                 //create the entity in the Correct Folder
                 if (name == undefined || name == '')
@@ -704,7 +708,7 @@ export class LootablesApp extends Application {
                 }
             }
 
-            if (!entity)
+            if (!entity && !(lootSheet == "item-piles" && lootEntity == "root"))
                 return ui.notifications.warn("Could not find Loot Entity");
 
             if (clear) {
@@ -717,7 +721,7 @@ export class LootablesApp extends Application {
                 }
             }
 
-            let ptAvg = { x: 0, y: 0, count: 0 };
+            let ptAvg = { x: this.entries.length ? 0 : canvas.scene._viewPosition.x, y: this.entries.length ? 0 : canvas.scene._viewPosition.y, count: this.entries.length ? 0 : 1 };
             let items = [];
 
             for (let entry of this.entries) {
@@ -756,7 +760,7 @@ export class LootablesApp extends Application {
 
             if (this.isLootActor(lootSheet)) {
                 if (lootSheet == "item-piles") {
-                    if (entity instanceof Folder) {
+                    if (entity instanceof Folder || lootEntity == "root") {
                         let ipOptions = {
                             position: { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count },
                             //items,
@@ -764,17 +768,20 @@ export class LootablesApp extends Application {
                         };
 
                         let folder = entity;
-                        let foldernames = [folder.name];
-                        while (folder.folder) {
-                            folder = folder.folder;
-                            foldernames.unshift(folder.name);
+                        let foldernames = [];
+                        if (entity) {
+                            foldernames = [folder?.name];
+                            while (folder?.folder) {
+                                folder = folder.folder;
+                                foldernames.unshift(folder.name);
+                            }
                         }
                         if (name == undefined || name == '')
                             name = this.getLootableName(entity);
                         ipOptions.actor = name;
                         ipOptions.actorOverrides = { name: name };
                         ipOptions.tokenOverrides = { name: name, actorLink: true };
-                        ipOptions.folders = foldernames;
+                        ipOptions.folders = foldernames.length ? foldernames : null;
                         ipOptions.createActor = true;
                         let uuids = await ItemPiles.API.createItemPile(ipOptions);
                         entity = await fromUuid(uuids.actorUuid);

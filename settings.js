@@ -336,7 +336,7 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.loot-entity.hint"),
 		scope: "world",
 		config: true,
-		default: "",
+		default: "root",
 		type: String,
 	});
 	game.settings.register(modulename, "loot-name", {

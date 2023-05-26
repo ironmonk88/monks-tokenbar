@@ -341,7 +341,10 @@ export class AssignXP {
             }
             await message.setFlag('monks-tokenbar', 'actors', actors);
         } else {
-            //$(e.target).hide();
+            if (e) $(e.target).prop("disabled", true);
+
+            if (!game.users.find(u => u.isGM))
+                return ui.notifications.warn("A GM needs to be logged in to receive the XP");
             MonksTokenBar.emit('assignxp', { actorid: actorid, msgid: message.id });
         }
     }
