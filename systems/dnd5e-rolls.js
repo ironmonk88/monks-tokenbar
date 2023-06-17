@@ -6,7 +6,7 @@ export class DnD5eRolls extends BaseRolls {
         super();
 
         this._requestoptions = [
-            { id: "misc", text: '', groups: { init: "MonksTokenBar.Initiative", death: "MonksTokenBar.DeathSavingThrow" } },
+            { id: "misc", text: '', groups: { death: "MonksTokenBar.DeathSavingThrow" } },
             { id: "ability", text: "MonksTokenBar.Ability", groups: this.config.abilities },
             { id: "save", text: "MonksTokenBar.SavingThrow", groups: this.config.abilities },
             { id: "skill", text: "MonksTokenBar.Skill", groups: this.config.skills }

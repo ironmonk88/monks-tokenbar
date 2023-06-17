@@ -56,7 +56,7 @@ export class LootablesApp extends Application {
                 this.entries.push(entry);
 
             // Update the entry items
-            let actorItems = (document.actorData.items || t.actor.items);
+            let actorItems = (document.actor.items || t.actor.items);
 
             let items = actorItems
                 .filter(item => {
@@ -108,7 +108,7 @@ export class LootablesApp extends Application {
 
             entry.items = entry.items.sort((a, b) => { return a.name.localeCompare(b.name); });
 
-            let actorCurrency = (document.actorData.currency || document.actor.system.currency);
+            let actorCurrency = (document.actor.currency || document.actor.system.currency);
             if (actorCurrency) {
                 for (let [key, value] of Object.entries(actorCurrency)) {
                     if (this.currency[key] != undefined) {
@@ -474,7 +474,7 @@ export class LootablesApp extends Application {
 
             entry.items = entry.items.sort((a, b) => { return a.name.localeCompare(b.name); });
 
-            let actorCurrency = (t.document.actorData.currency || t.actor.system.currency);
+            let actorCurrency = (t.document.actor.currency || t.actor.system.currency);
             for (let [key, value] of Object.entries(actorCurrency)) {
                 this.currency[key] = (this.currency[key] ?? 0) + value;
             }
@@ -656,17 +656,11 @@ export class LootablesApp extends Application {
                         await entry.token.update({
                             "overlayEffect": 'icons/svg/chest.svg',
                             "alpha": 0.6,
-                            "actorData": {
-                                "actor": {
-                                    "flags": {
-                                        "loot": {
-                                            "playersPermission": 2
-                                        }
-                                    }
-                                },
-                                "permission": permissions
-                            },
                             "flags.monks-tokenbar.alpha": oldAlpha
+                        });
+                        await entry.token.actor.update({
+                            "flags.loot.playersPermission": 2,
+                            "permission": permissions
                         });
                     }
                 }
@@ -962,11 +956,9 @@ export class LootablesApp extends Application {
         });
         await app.token.update({
             "overlayEffect": null,
-            "alpha": app.token.getFlag('monks-tokenbar', 'alpha'),
-            "actorData": {
-                "permission": permissions
-            }
+            "alpha": app.token.getFlag('monks-tokenbar', 'alpha')
         });
+        await app.token.actor.update({ "permission": permissions });
 
         actor._sheet = null;
 

@@ -283,7 +283,7 @@ export class TokenBar extends Application {
         let viewstats = tkn.token?.actor?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
         for (let stat of viewstats) {
-            let value = TokenBar.processStat(stat.stat, tkn.token.actor.system) || TokenBar.processStat(stat.stat, tkn.token.data);
+            let value = TokenBar.processStat(stat.stat, tkn.token.actor.system) || TokenBar.processStat(stat.stat, tkn.token);
 
             if (tkn.stats[stat.stat] == undefined) {
                 tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (!setting("show-undefined") && value == undefined) };
@@ -742,7 +742,7 @@ export class TokenBar extends Application {
                 const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
                 const tooltip = document.createElement("SPAN");
                 tooltip.classList.add("tooltip");
-                tooltip.textContent = entry.token.name;
+                tooltip.textContent = entry?.token.name;
                 li.appendChild(tooltip);
             }
         }

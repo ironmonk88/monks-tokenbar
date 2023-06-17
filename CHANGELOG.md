@@ -1,3 +1,11 @@
+## Version 11.01
+
+Added v11 compatibility.  ** This unfortunately means I had to remove Initiative requests as Foundry has locked me out of that specific roll **
+
+Fixed the attribute editor to have a better height.
+
+Fixed spacing when an icon is not specified for an attribute.
+
 ## Version 10.12
 
 Fixed issue where receiving xp would lock up Foundry

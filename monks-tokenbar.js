@@ -46,6 +46,17 @@ export let makeid = () => {
     return result;
 }
 
+export let patchFunc = (prop, func, type = "WRAPPER") => {
+    if (game.modules.get("lib-wrapper")?.active) {
+        libWrapper.register("monks-tokenbar", prop, func, type);
+    } else {
+        const oldFunc = eval(prop);
+        eval(`${prop} = function (event) {
+            return func.call(this, oldFunc.bind(this), ...arguments);
+        }`);
+    }
+}
+
 export const MTB_MOVEMENT_TYPE = {
     FREE: 'free',
     NONE: 'none',
