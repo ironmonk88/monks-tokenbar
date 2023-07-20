@@ -157,7 +157,8 @@ export class PF2eRolls extends BaseRolls {
         };
 
         if (request.type == 'attribute') {
-            rollfn = actor.system.attributes[request.key].roll;
+            rollfn = actor[request.key].check.roll;
+            actor = actor[request.key].check
             opts.options = ["ignore"];
         }
         else if (request.type == 'save') {
