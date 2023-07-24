@@ -121,7 +121,8 @@ export class PF2eRolls extends BaseRolls {
             }
         };
 
-        return combatxp;
+        // If the party is larger or smaller than four PCs, adjust the XP reward to account for it
+        return Math.floor(combatxp * 4 / (apl.count || 4));
     }
 
     get useDegrees() {
