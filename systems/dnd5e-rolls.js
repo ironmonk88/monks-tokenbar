@@ -73,7 +73,8 @@ export class DnD5eRolls extends BaseRolls {
         //get the monster xp
         let combatxp = 0;
         for (let monster of monsters) {
-            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+            monster.xp = (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+            combatxp += monster.xp;
         };
 
         return combatxp;
@@ -84,7 +85,7 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     defaultRequest(app) {
-        let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
+        //let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
         let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "system.attributes.hp.value") == 0).length;
         if (allZeroHP == app.entries.length && allZeroHP != 0)
@@ -95,7 +96,7 @@ export class DnD5eRolls extends BaseRolls {
             if (!app.entries.find(t => !game.combats.active.combatants.find(c => c.token.id == t.token.id)))
                 return { type: 'misc', key: 'init' };
         }
-        return allPlayers ? { type: 'skill', key: 'prc' } : null;
+        return { type: 'skill', key: 'prc' }; //allPlayers ? { type: 'skill', key: 'prc' } : null;
     }
 
     defaultContested() {
@@ -191,8 +192,14 @@ export class DnD5eRolls extends BaseRolls {
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(context, sysRequest, options).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-            } catch{
+                return rollfn.call(context, sysRequest, options).then((roll) => {
+                    return callback(roll);
+                }).catch((e) => {
+                    console.error(e);
+                    return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
+                });
+            } catch (e) {
+                console.error(e);
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
             }
         } else

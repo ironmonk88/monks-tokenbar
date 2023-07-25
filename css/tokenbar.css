@@ -164,6 +164,11 @@ body #tokenbar-window:first-child{
     height: fit-content;
 }
 
+#tokenbar .token-list .token.only-actor {
+    border: 1px solid #3a00ae;
+    background: rgba(60, 0, 120, 0.75);
+}
+
 /*#tokenbar #token-action-bar.closed {
     height: 0px;
 }*/
@@ -717,6 +722,10 @@ body #tokenbar-window:first-child{
     width: 100%;
 }
 
+.monks-tokenbar.chat-card .token-roll-container .dice-roll {
+    width: 100%;
+}
+
 .monks-tokenbar.chat-card .token-properties {
     text-align: left;
     width: 100%;
@@ -1032,12 +1041,12 @@ li.chat-message.message .message-content .monks-tokenbar *.noselect * {
     margin-top: 2px;
 }
 
-#tokenbar.vertical #token-action-bar .token-list{
+#tokenbar.vertical #token-action-bar .token-list {
     width: 102px;
     flex-direction: column;
 }
 
-#tokenbar.vertical #token-action-bar .token-list .token{
+#tokenbar.vertical #token-action-bar .token-list .token {
     flex-wrap: nowrap;
     flex-direction: row-reverse;
     width: 100px;

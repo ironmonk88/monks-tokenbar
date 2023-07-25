@@ -8,6 +8,7 @@ export class LootablesApp extends Application {
         this.lootEntity = setting("loot-entity");
         this.openLoot = setting("open-loot");
         this.createCanvasObject = setting("create-canvas-object");
+        this.hideCombatants = setting("hide-combatants");
         this.clearItems = false;
         this.entityName = "";
 
@@ -39,6 +40,7 @@ export class LootablesApp extends Application {
             let entry = {
                 id: document.id,
                 token: token,
+                tokens: [token],
                 actorId: document.actor.id,
                 name: document.actor.name,
                 img: document.texture.src,
@@ -50,6 +52,7 @@ export class LootablesApp extends Application {
                 if (_entry) {
                     entry = _entry;
                     entry.quantity += 1;
+                    entry.tokens.push(token);
                 } else
                     this.entries.push(entry);
             } else
@@ -196,6 +199,7 @@ export class LootablesApp extends Application {
             lootEntity: this.lootEntity,
             openLoot: this.openLoot,
             createCanvasObject: this.createCanvasObject,
+            hideCombatants: this.hideCombatants,
             clearItems: this.clearItems,
             entityName: this.entityName,
             openLootOptions: openLootOptions
@@ -223,6 +227,7 @@ export class LootablesApp extends Application {
         $('.delete-entry', html).click(this.deleteEntry.bind(this));
 
         $('[name="create-canvas-object"]', html).click(() => { this.createCanvasObject = $('[name="create-canvas-object"]', html).prop("checked"); });
+        $('[name="hide-combatants"]', html).click(() => { this.hideCombatants = $('[name="hide-combatants"]', html).prop("checked"); });
         $('[name="open-loot"]', html).change(() => { this.openLoot = $('[name="open-loot"]', html).val(); });
         $('[name="clear-items"]', html).click(() => { this.clearItems = $('[name="clear-items"]', html).prop("checked"); });
         $('[name="entity-name"]', html).blur(() => { this.entityName = $('[name="entity-name"]', html).val(); });
@@ -283,6 +288,7 @@ export class LootablesApp extends Application {
             lootEntity: this.lootEntity,
             openLoot: this.openLoot,
             createCanvasObject: this.createCanvasObject,
+            hideCombatants: this.hideCombatants,
             currency: this.currency
         });
     }
@@ -483,16 +489,16 @@ export class LootablesApp extends Application {
 
     async getEntityName(entity) {
         if (entity instanceof JournalEntryPage || entity instanceof Actor)
-            return "Adding to " + entity.name;
+            return "<i>Adding</i> to <b>" + entity.name + "</b>";
         else if (entity instanceof JournalEntry)
-            return "Adding new loot page to " + entity.name;
+            return "<i>Adding</i> new loot page to <b>" + entity.name + "</b>";
         else if (entity instanceof Folder)
-            return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
+            return (entity.documentClass.documentName == "JournalEntry" ? "<i>Creating</i> new Journal Entry within <b>" + entity.name + "</b> folder" : "<i>Creating</i> Actor within <b>" + entity.name + "</b> folder");
         else if (entity == "convert")
-            return "Convert tokens";
-        else if (entity == "root")
-            return `Creating ${(entity?.documentClass?.documentName || entity?.parent?.documentClass?.documentName) == "JournalEntry" ? "Journal Entry" : "Actor"} in the root folder`;
-        else
+            return "<i>Convert</i> tokens";
+        else if (entity == "root") {
+            return `<i>Creating</i> ${(entity?.documentClass?.documentName || entity?.parent?.documentClass?.documentName) == "JournalEntry" ? "Journal Entry" : "Actor"} in the <b>root</b> folder`;
+        } else
             return "Unknown";
     }
 
@@ -524,7 +530,7 @@ export class LootablesApp extends Application {
         return lootname;
     }
 
-    async convertToLootable({ clear = false, name = null, lootEntity = null, openLoot = null, createCanvasObject = null, currency = {} }) {
+    async convertToLootable({ clear = false, name = null, lootEntity = null, openLoot = null, createCanvasObject = null, hideCombatants = null, currency = {} }) {
         // Limit selection to Players and Trusted Players
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
         let lootSheet = setting('loot-sheet');
@@ -538,7 +544,7 @@ export class LootablesApp extends Application {
 
         if (lootEntity == 'convert') {
             if (lootSheet == "item-piles") {
-                let tokens = this.entries.map(t => t.token).filter(t => !!t);
+                let tokens = this.entries.flatMap(e => e.tokens).filter(t => !!t);
                 ItemPiles.API.turnTokensIntoItemPiles(tokens);
             } else {
                 for (let entry of this.entries) {
@@ -651,14 +657,15 @@ export class LootablesApp extends Application {
                         await game.cub.removeAllConditions(entry.actor);
                     }
 
-                    if (entry.token) {
-                        let oldAlpha = entry.token.alpha;
-                        await entry.token.update({
+                    for(let token of entry.tokens) {
+                        let oldAlpha = token.alpha;
+                        await token.document.update({
                             "overlayEffect": 'icons/svg/chest.svg',
                             "alpha": 0.6,
-                            "flags.monks-tokenbar.alpha": oldAlpha
+                            "flags.monks-tokenbar.alpha": oldAlpha,
                         });
-                        await entry.token.actor.update({
+
+                        await token.actor.update({
                             "flags.loot.playersPermission": 2,
                             "permission": permissions
                         });
@@ -719,15 +726,15 @@ export class LootablesApp extends Application {
             let items = [];
 
             for (let entry of this.entries) {
-                ptAvg.x += entry.token.x;
-                ptAvg.y += entry.token.y;
-                ptAvg.count++;
+                for (let token of entry.tokens) {
+                    ptAvg.x += token.x;
+                    ptAvg.y += token.y;
+                    ptAvg.count++;
+                }
 
                 let loots = entry.items.filter(i => i.quantity != "0");
                 for (let loot of loots) {
                     let item = loot.data;
-                    let sysPrice = game.MonksEnhancedJournal.getSystemPrice(item);
-                    let price = game.MonksEnhancedJournal.getPrice(sysPrice);
 
                     if (typeof loot.quantity == "string" && loot.quantity.indexOf("d") != -1) {
                         let r = new Roll(loot.quantity);
@@ -740,15 +747,30 @@ export class LootablesApp extends Application {
                         loot.quantity = 1;
 
                     item._id = randomID();
-                    setProperty(item, "flags.monks-enhanced-journal.quantity", loot.quantity);
-                    setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
-                    setProperty(item, "flags.monks-enhanced-journal.from", loot.from);
+                    if (game.modules.get("monks-enhanced-journal")?.active) {
+                        let sysPrice = game.MonksEnhancedJournal.getSystemPrice(item);
+                        let price = game.MonksEnhancedJournal.getPrice(sysPrice);
+                        setProperty(item, "flags.monks-enhanced-journal.quantity", loot.quantity);
+                        setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
+                        setProperty(item, "flags.monks-enhanced-journal.from", loot.from);
+                    }
                     if (lootSheet !== 'monks-enhanced-journal') {
                         //+++ Need to set to correct system quantity
-                        setProperty(item, "system.quantity", loot.quantity);
+                        let itemQty = getProperty(item, "system.quantity") || 1;
+                        if (isNaN(itemQty))
+                            itemQty = 1;
+                        setProperty(item, "system.quantity", itemQty * loot.quantity);
                     }
 
                     items.push(item);
+                }
+
+                if (hideCombatants) {
+                    for (let token of entry.tokens) {
+                        await token?.document?.update({
+                            "hidden": true
+                        });
+                    }
                 }
             }
 
@@ -808,9 +830,9 @@ export class LootablesApp extends Application {
                         if (isNaN(currency[curr]))
                             currency[curr] = 0;
 
-                        let value = entityCurr[curr].value ?? entityCurr[curr];
+                        let value = entityCurr[curr]?.value ?? entityCurr[curr];
                         value = currency[curr] + parseInt(value || 0);
-                        entityCurr[curr] = (entityCurr[curr].hasOwnProperty("value") ? { value: value } : value);
+                        entityCurr[curr] = (entityCurr[curr]?.hasOwnProperty("value") ? { value: value } : value);
                     }
                 }
 

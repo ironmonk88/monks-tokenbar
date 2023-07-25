@@ -21,6 +21,10 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>{{localize 'MonksTokenBar.HideNPCName'}}</label>
+                        <input id="monks-tokenbar-hidenpc" type="checkbox" {{#if hidenpcname}} checked{{/if}} />
+                    </div>
+                    <div class="form-group">
                         <label>{{localize 'MonksTokenBar.Flavor'}}</label>
                         <input type="text" id="monks-tokenbar-flavor" value="{{flavor}}" />
                     </div>

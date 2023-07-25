@@ -13,8 +13,6 @@ export const registerSettings = function () {
     // Register any custom module settings here
 	let modulename = "monks-tokenbar";
 
-	const debouncedReload = foundry.utils.debounce(function () { window.location.reload(); }, 100);
-
 	let imageoptions = {
 		'token': game.i18n.localize("MonksTokenBar.token-pictures.token"),
 		'actor': game.i18n.localize("MonksTokenBar.token-pictures.actor"),
@@ -94,6 +92,24 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "show-offline", {
+		name: game.i18n.localize("MonksTokenBar.show-offline.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-offline.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
+	});
+	game.settings.register(modulename, "include-actor", {
+		name: game.i18n.localize("MonksTokenBar.include-actor.name"),
+		hint: game.i18n.localize("MonksTokenBar.include-actor.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
+	});
 	game.settings.register(modulename, "minimum-ownership", {
 		name: game.i18n.localize("MonksTokenBar.minimum-ownership.name"),
 		hint: game.i18n.localize("MonksTokenBar.minimum-ownership.hint"),
@@ -119,7 +135,7 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "dblclick-action", {
@@ -130,7 +146,7 @@ export const registerSettings = function () {
 		default: 'sheet',
 		choices: dblclickoptions,
 		type: String,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 	//------------------------------------Icon settings--------------------------------------------
@@ -147,7 +163,7 @@ export const registerSettings = function () {
 		},
 		default: 50,
 		type: Number,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "resolution-size", {
@@ -162,7 +178,7 @@ export const registerSettings = function () {
 		},
 		default: 50,
 		type: Number,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "show-resource-bars", {
@@ -199,7 +215,7 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 	//------------------------------------Movement settings--------------------------------------------
@@ -271,6 +287,15 @@ export const registerSettings = function () {
 		scope: "world",
 		config: true,
 		default: true,
+		type: Boolean,
+	});
+
+	game.settings.register(modulename, "hide-combatants", {
+		name: game.i18n.localize("MonksTokenBar.hide-combatants.name"),
+		hint: game.i18n.localize("MonksTokenBar.hide-combatants.hint"),
+		scope: "world",
+		config: true,
+		default: false,
 		type: Boolean,
 	});
 
@@ -451,7 +476,7 @@ export const registerSettings = function () {
 		config: false,
 		default: null,//icon1, //MonksTokenBar.system._defaultSetting.icon1,
 		type: String,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 	game.settings.register(modulename, "stat1-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat1-resource.name"),
@@ -460,7 +485,7 @@ export const registerSettings = function () {
 		config: false,
 		default: null, //stat1, //MonksTokenBar.system._defaultSetting.stat1,
 		type: String,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 	game.settings.register(modulename, "stat2-icon", {
 		name: game.i18n.localize("MonksTokenBar.stat2-icon.name"),
@@ -470,7 +495,7 @@ export const registerSettings = function () {
 		default: null, //icon2, //MonksTokenBar.system._defaultSetting.icon2,
 		type: String,
 		//choices: imageoptions,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 	game.settings.register(modulename, "stat2-resource", {
 		name: game.i18n.localize("MonksTokenBar.stat2-resource.name"),
@@ -479,7 +504,7 @@ export const registerSettings = function () {
 		config: false,
 		default: null, //stat2, //MonksTokenBar.system._defaultSetting.stat2,
 		type: String,
-		onChange: debouncedReload
+		requiresReload: true
 	});
 
 };

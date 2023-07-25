@@ -169,6 +169,12 @@
 	"MonksTokenBar.only-use-defeated.hint": "Only use defeated creatures when collecting loot",
 	"MonksTokenBar.show-undefined.name": "Show Undefined Stat",
 	"MonksTokenBar.show-undefined.hint": "Any undefined stat will be shown as zero instead of being hidden",
+	"MonksTokenBar.show-offline.name": "Show Offline",
+	"MonksTokenBar.show-offline.hint": "Show tokens of players that aren't online",
+	"MonksTokenBar.include-actor.name": "Show Actors",
+	"MonksTokenBar.include-actor.hint": "Show character actors even if they have no token on the current scene",
+	"MonksTokenBar.hide-combatants.name": "Hide Combatants",
+	"MonksTokenBar.hide-combatants.hint": "Hide combatants after an encounter",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -238,6 +244,7 @@
 	"MonksTokenBar.Creatures": "Creatures",
 	"MonksTokenBar.Tokenbar": "Tokenbar",
 	"MonksTokenBar.ReadyToUpdate": "{name} has enough xp to level up!",
+	"MonksTokenBar.AddTokenbar": "Add Tokenbar",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

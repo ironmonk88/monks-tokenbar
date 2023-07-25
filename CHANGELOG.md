@@ -1,3 +1,53 @@
+## Version 11.02
+
+Fixed issue where xp was calculating with inactive monsters.
+
+Fixed issue where deactivating a monster wasn't recalculating the xp.
+
+Added support for the Anonymous module when requesting rolls or contested rolls.
+
+Added the option to hide npc names in a requested roll.
+
+Fixed issue with dice so nice not showing the ghost dice when the roll should be shown rolling but not displayed.
+
+Fixed issue where the owner of a character wasn't seeing the roll made by a different owner of the character.
+
+Added clarification of the edit stats dialog, that they're specifc for a character, but there's a generalised version in the settings.
+
+Added option to hide combatants after being converted to lootable.
+
+Fixed issue with lootables not altering all the tokens that have been looted.
+
+Fixed issue where lootables wouldn't work unless Monk's Enhanced Journal was also installed.
+
+Fixed issue if a lootable character didn't have currency when trying to add currency.
+
+Fixed issue with clicking on the dice roll sometimes causing the dice tooltip to open.
+
+Fixed issue with dice tooltip in the starfinder system.
+
+Added the option to display player characters on the tokenbar even if they aren't on the scene.
+
+Added the option to drag and drop from the tokenbar to bring a player character onto the scene.
+
+Added the option to only get the current tokens from players that are online.
+
+Removed the dependency to the sceneView hook, since that was causing Tokenbar to be false flagged for issues.
+
+Updated the function that collects tokens to turn group actors into their respective actors.
+
+Added support for Twilight 2000 system
+
+Remove the Tile option when selecting an entity in Monk's Active Tiles.
+
+Fixed the assign xp dialog to show how much each monster is contributing for xp.
+
+Fixed the xp for party sizes other than 4 in PF2E.
+
+Fixed the default requested roll to be perception.
+
+Fixed deprecated string value for perception in PF2E.
+
 ## Version 11.01
 
 Added v11 compatibility.  ** This unfortunately means I had to remove Initiative requests as Foundry has locked me out of that specific roll **

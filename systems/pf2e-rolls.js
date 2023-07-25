@@ -8,7 +8,7 @@ export class PF2eRolls extends BaseRolls {
         const { lore, ...skills } = this.config.skillList
 
         this._requestoptions = [
-            { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: CONFIG.PF2E.attributes.perception } },
+            { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: i18n("PF2E.PerceptionLabel") } },
             //{ id: "ability", text: i18n("MonksTokenBar.Ability"), groups: this.config.abilities },
             { id: "save", text: i18n("MonksTokenBar.SavingThrow"), groups: this.config.saves },
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: skills }
@@ -57,7 +57,7 @@ export class PF2eRolls extends BaseRolls {
 
     dynamicRequest(entries) {
         let lore = {};
-        //get the first token's tools
+
         for (let entry of entries) {
             for (let item of (entry.token.actor?.items || [])) {
                 if (item.type == 'lore') {
@@ -70,20 +70,6 @@ export class PF2eRolls extends BaseRolls {
                 }
             }
         }
-        /*
-        //see if the other tokens have these tools
-        if (Object.keys(lore).length > 0) {
-            for (let i = 1; i < entries.length; i++) {
-                for (let [k, v] of Object.entries(lore)) {
-                    let _lore = entries[i].token.actor.items.find(l => {
-                        return l.type == 'lore' && l.id == k;
-                    });
-                    if (_lore == undefined)
-                        delete lore[k];
-                }
-            }
-        }
-        */
 
         if (Object.keys(lore).length == 0)
             return;
@@ -116,12 +102,12 @@ export class PF2eRolls extends BaseRolls {
         for (let monster of monsters) {
             if (monster.active) {
                 let monstLevel = parseInt(MonksTokenBar.system.getLevel(monster.actor));
-                let monstXP = xpchart[Math.clamped(5 + (monstLevel - calcAPL), 0, xpchart.length - 1)];
-                combatxp += monstXP;
+                monster.xp = xpchart[Math.clamped(5 + (monstLevel - calcAPL), 0, xpchart.length - 1)];
+                combatxp += monster.xp;
             }
         };
 
-        return combatxp;
+        return Math.floor(combatxp * 4 / (apl.count || 4));;
     }
 
     get useDegrees() {
@@ -182,18 +168,14 @@ export class PF2eRolls extends BaseRolls {
 
         if (rollfn != undefined) {
             try {
-                return rollfn.call(actor, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-                /*
-                if (request.type != 'skill' && request.type != 'lore')
-                    return rollfn.call(actor, e, opts).then((roll) => { return callback(roll); }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-                else {
-                    return new Promise(function (resolve, reject) {
-                        rollfn.call(actor, { event: e, options: opts, extraRollOptions: ["ignore"], callback: function (roll) { resolve(callback(roll)); } });
-                    }).catch((err) => { error(err); return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-                }
-                */
-            } catch(err)
-            {
+                return rollfn.call(actor, opts).then((roll) => {
+                    return callback(roll);
+                }).catch((e) => {
+                    console.error(e);
+                    return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") }
+                });
+            } catch (err) {
+                console.error(err);
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };
             }
         } else

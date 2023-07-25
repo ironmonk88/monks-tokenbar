@@ -16,8 +16,8 @@
         {{/each}}
     </div>
     <nav id="token-action-bar" class="flexrow{{#if collapsed}} collapsed{{/if}}">
-        <ol class="flexrow token-list">{{#each tokens}}
-            <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.id}}" {{/if}} movement="{{this.movement}}">
+        <ol class="flexrow token-list">{{#each entries}}
+            <li class="token flexcol {{this.cssClass}}" {{#if this.token}} data-token-id="{{this.token.id}}" {{/if}} {{#if this.actor}} data-actor-id="{{this.actor.id}}" {{/if}} movement="{{this.movement}}">
                 <div class="token-stats flexcol">
                     {{#each this.stats}}
                     <div class="token-stat flexrow" data-stat="{{@key}}" {{#if this.hidden}}style="visibility:hidden;"{{/if}} >{{#if this.icon}}<i class="fas {{this.icon}}"></i><span>{{/if}}{{this.value}}</span></div>

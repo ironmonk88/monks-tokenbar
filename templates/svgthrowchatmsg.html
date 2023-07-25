@@ -10,7 +10,7 @@
     <div class="message-content" style="margin:5px 0px;">
         <div class="card-content"></div>
 	    <div class="form-group sheet actor">
-            <ol class="items-list inventory-list">
+            <ol class="items-list inventory-list" style="overflow-y: visible;">
                 <li class="items-header flexrow">
                     <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
@@ -26,14 +26,15 @@
 
                 <ol class="item-list">
                     {{#each tokens}}
-                    <li class="item flexcol" data-item-id="{{this.id}}" style="display:none;">
+                    <li class="item flexcol {{#unless this.showtoken}}gm-only{{/unless}}" data-item-id="{{this.id}}" style="display:none;">
                         <div class="flexrow token-roll-container" >
                             <div class="dice-roll flexcol">
                                 <div class="item-row flexrow">
                                     <div class="item-name flexrow">
                                         <div class="item-image" style="background-image: url('{{this.icon}}')"></div>
                                         <h4 class="noselect">
-                                            {{this.name}}
+                                            <span class="gm-only" {{#if (or (ne this.realname this.name) (eq this.showname false))}}style="font-style:italic;"{{/if}}>{{this.realname}}</span>
+                                            <span class="player-only">{{#if this.showname}}{{this.name}}{{/if}}</span>
                                         </h4>
                                     </div>
 

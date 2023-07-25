@@ -77,6 +77,14 @@ export class ContestedRollApp extends Application {
                     r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
                     return r;
                 });
+
+                let name = item.token.name;
+
+                if (game.modules.get("anonymous")?.active) {
+                    const api = game.modules.get("anonymous")?.api;
+                    if (!api.playersSeeName(item.token.actor))
+                        name = api.getName(item.token.actor);
+                }
                 
                 return {
                     id: item.token.id,
@@ -84,7 +92,8 @@ export class ContestedRollApp extends Application {
                     actorid: item.token.actor.id,
                     requests: requests,
                     icon: (VideoHelper.hasVideoExtension(item.token.document.texture.src) ? item.token.actor.img : item.token.document.texture.src),
-                    name: item.token.name,
+                    name: name,
+                    realname: t.token.name,
                     showname: item.token.actor.hasPlayerOwner || this.hidenpcname !== true,
                     showtoken: item.token.actor.hasPlayerOwner || item.token.document.hidden !== true,
                     npc: item.token.actor.hasPlayerOwner,
@@ -234,18 +243,33 @@ export class ContestedRoll {
         if (roll != undefined) {
             let finishroll;
 
-            let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-            //if (rollmode == 'gmroll' && !game.user.isGM)
-            //    whisper.push(game.user.id);
+            let canSee = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+            let cantSee = [];
+            let owners = actor.ownership.default == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ?
+                game.users.filter(u => !u.isGM).map(u => u.id) :
+                Object.entries(actor.ownership).filter(([k, v]) => game.users.get(k)?.isGM === false && v == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER).map(([k, v]) => k);
 
-            if (game.dice3d != undefined && roll instanceof Roll && MonksTokenBar.system.showRoll) { // && !fastForward) {
-                finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, rollmode !== 'roll' && !game.user.isGM, (rollmode == 'selfroll' ? msgId : null)).then(() => {
+            if (rollmode == 'gmroll') {
+                canSee = canSee.concat(owners);
+                cantSee = game.users.filter(u => !canSee.includes(u.id)).map(u => u.id);
+            } else if (rollmode == 'blindroll')
+                cantSee = owners;
+
+            if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && game.settings.get("core", "noCanvas")) {
+                let promises = [game.dice3d.showForRoll(roll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? msgId : null))];
+                if (cantSee.length) {
+                    roll.ghost = true;
+                    promises.push(game.dice3d.showForRoll(roll, game.user, true, cantSee, canSee.includes(game.user.id), null));
+                }
+                finishroll = Promise.all(promises).then(() => {
                     return { id: id, reveal: true, userid: game.userId };
                 });
+            } else {
+                finishroll = { id: id, reveal: true, userid: game.userId };
             }
             const sound = MonksTokenBar.getDiceSound();
             if (sound != undefined && (rollmode != 'selfroll' || setting('gm-sound')))
-                MonksTokenBar.playSound(sound, (rollmode == 'roll' || rollmode == 'gmroll' ? 'all' : whisper));
+                MonksTokenBar.playSound(sound, (rollmode == 'roll' || rollmode == 'gmroll' ? 'all' : canSee.concat(cantSee)));
 
             return { id: id, roll: roll, finish: finishroll };
         }
@@ -303,6 +327,11 @@ export class ContestedRoll {
         if (ids == undefined) return;
         if (!$.isArray(ids))
             ids = [ids];
+
+        if (evt && evt.preventDefault && evt.stopPropagation) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
 
         let flags = message.flags['monks-tokenbar'];
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');

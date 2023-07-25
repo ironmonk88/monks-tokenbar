@@ -36,6 +36,8 @@ export class SavingThrowApp extends Application {
         this.request = MonksTokenBar.findBestRequest(options.request, this.baseoptions);
         this.flavor = options.flavor;
 
+        this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
+
         this.dc = options.dc;
         this.showdc = options.showdc;
         this.callback = options.callback;
@@ -73,6 +75,7 @@ export class SavingThrowApp extends Application {
             flavor: this.flavor,
             dc: this.dc,
             showdc: this.showdc,
+            hidenpcname: this.hidenpcname,
             dclabel: MonksTokenBar.system.dcLabel,
             options: dispOptions
         };
@@ -166,12 +169,24 @@ export class SavingThrowApp extends Application {
         if (this.entries.length > 0) {
             SavingThrow.lastTokens = this.entries;
             let msgEntries = this.entries.map(t => {
+                let name = t.token.name;
+
+                if (game.modules.get("anonymous")?.active) {
+                    const api = game.modules.get("anonymous")?.api;
+                    if (!api.playersSeeName(t.token.actor))
+                        name = api.getName(t.token.actor);
+                }
+
                 return {
                     id: t.token.id,
                     uuid: t.token.document.uuid,
                     actorid: t.token.actor.id,
                     icon: (t.token.document.texture.src.endsWith('webm') ? t.token.actor.img : t.token.document.texture.src),
-                    name: t.token.name,
+                    name: name,
+                    realname: t.token.name,
+                    showname: t.token.actor.hasPlayerOwner || this.hidenpcname !== true,
+                    showtoken: t.token.actor.hasPlayerOwner || t.token.document.hidden !== true,
+                    npc: t.token.actor.hasPlayerOwner,
                     keys: t.keys,
                 };
             });
@@ -237,7 +252,8 @@ export class SavingThrowApp extends Application {
                         await Combatant.createDocuments(combatants, { parent: combat });
                 }
             }
-            
+
+            game.user.setFlag("monks-tokenbar", "lastmodeHideNPCName", this.hidenpcname);
             let requestdata = {
                 dc: this.dc || (this.request[0].key == 'death' && ['dnd5e', 'sw5e'].includes(game.system.id) ? '10' : ''),
                 showdc: this.showdc,
@@ -327,6 +343,9 @@ export class SavingThrowApp extends Application {
         }, this));
         $('#monks-tokenbar-showdc', html).click($.proxy(function (e) {
             this.showdc = $(e.currentTarget).prop('checked');
+        }, this));
+        $('#monks-tokenbar-hidenpc', html).change($.proxy(function (e) {
+            this.hidenpcname = $(e.currentTarget).is(':checked');
         }, this));
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
             this.flavor = $(e.currentTarget).val();
@@ -472,17 +491,33 @@ export class SavingThrow {
                         roll = Roll.fromJSON(roll);
                 }
 
-                let whisper = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
-                if (rollmode == 'gmroll' && !game.user.isGM)
-                    whisper.push(game.user.id);
-                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll) {
-                    finishroll = game.dice3d.showForRoll(roll, game.user, true, whisper, rollmode !== 'roll' && !game.user.isGM, (rollmode == 'selfroll' ? msgId : null)).then(() => { //
+                let canSee = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+                let cantSee = [];
+                let owners = actor.ownership.default == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ?
+                    game.users.filter(u => !u.isGM).map(u => u.id) :
+                    Object.entries(actor.ownership).filter(([k, v]) => game.users.get(k)?.isGM === false && v == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER).map(([k, v]) => k);
+
+                if (rollmode == 'gmroll') {
+                    canSee = canSee.concat(owners);
+                    cantSee = game.users.filter(u => !canSee.includes(u.id)).map(u => u.id);
+                } else if (rollmode == 'blindroll')
+                    cantSee = owners;
+
+                if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
+                    let promises = [game.dice3d.showForRoll(roll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? msgId : null))];
+                    if (cantSee.length) {
+                        roll.ghost = true;
+                        promises.push(game.dice3d.showForRoll(roll, game.user, true, cantSee, canSee.includes(game.user.id), null));
+                    }
+                    finishroll = Promise.all(promises).then(() => {
                         return { id: id, reveal: true, userid: game.userId };
                     });
+                } else {
+                    finishroll = { id: id, reveal: true, userid: game.userId };
                 }
                 const sound = MonksTokenBar.getDiceSound();
                 if (sound != undefined && (rollmode != 'selfroll' || setting('gm-sound')))
-                    MonksTokenBar.playSound(sound, (rollmode == 'roll' || rollmode == 'gmroll' ? 'all' : whisper));
+                    MonksTokenBar.playSound(sound, (rollmode == 'roll' || rollmode == 'gmroll' ? 'all' : canSee.concat(cantSee)));
 
                 return { id: id, roll: roll, finish: finishroll };
             }
@@ -545,6 +580,11 @@ export class SavingThrow {
         if (ids == undefined) return;
         if (!$.isArray(ids))
             ids = [ids];
+
+        if (evt && evt.preventDefault && evt.stopPropagation) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
 
         let flags = message.flags['monks-tokenbar'];
 
@@ -645,7 +685,11 @@ export class SavingThrow {
                         msgtoken.passed = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
-                    $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
+                    let tooltipElem = $(tooltip);
+                    if (!tooltipElem.hasClass("dice-tooltip")) {
+                        tooltipElem = $("<div>").addClass("dice-tooltip").append(tooltipElem);
+                    }
+                    tooltipElem.removeClass("expanded").insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(

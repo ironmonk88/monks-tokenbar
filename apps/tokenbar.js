@@ -6,7 +6,7 @@ export class TokenBar extends Application {
 	constructor(options) {
 	    super(options);
 
-        this.tokens = [];
+        this.entries = [];
         this.thumbnails = {};
 
         this._hover = null;
@@ -28,28 +28,28 @@ export class TokenBar extends Application {
             if ((game.user.isGM || setting("allow-player")) && getProperty(data, "flags.monks-tokenbar.include") != undefined) {
                 this.refresh();
             } else if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
-                let tkn = this.tokens.find(t => t.token.id == document.id);
-                if (tkn)
-                    this.updateToken(tkn, options.ignoreRefresh !== true)
+                let entry = this.entries.find(t => t.token?.id == document.id);
+                if (entry)
+                    this.updateEntry(entry, options.ignoreRefresh !== true)
             }
         });
 
         Hooks.on('updateOwnedItem', (actor, item, data) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
-                let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
-                if (tkn != undefined) {
-                    setTimeout(function () { this.updateToken(tkn); }, 100); //delay slightly so the PF2E condition can be rendered properly.
+                let entry = this.entries.find(t => t.actor?.id == actor.id);
+                if (entry != undefined) {
+                    setTimeout(function () { this.updateEntry(entry); }, 100); //delay slightly so the PF2E condition can be rendered properly.
                 }
             }
         });
 
         Hooks.on('updateActor', (actor, data) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
-                let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
+                let entry = this.entries.find(t => t.actor?.id == actor.id);
                 if (data.ownership != undefined) {
                     this.refresh();
-                } else if (tkn != undefined) {
-                    this.updateToken(tkn)
+                } else if (entry != undefined) {
+                    this.updateEntry(entry)
                 }
             }
         });
@@ -58,9 +58,9 @@ export class TokenBar extends Application {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let actor = effect.parent;
                 if (actor instanceof Actor) {
-                    let tkn = this.tokens.find(t => t.token.actor.id == actor.id);
-                    if (tkn != undefined) {
-                        this.updateToken(tkn)
+                    let entry = this.entries.find(t => t.actor?.id == actor.id);
+                    if (entry != undefined) {
+                        this.updateEntry(entry)
                     } else if (actor.ownership != undefined) {
                         this.refresh();
                     }
@@ -80,7 +80,8 @@ export class TokenBar extends Application {
     return mergeObject(super.defaultOptions, {
         id: "tokenbar-window",
         template: "./modules/monks-tokenbar/templates/tokenbar.html",
-        popOut: false
+        popOut: false,
+        dragDrop: [{ dragSelector: ".token" }],
     });
     }
 
@@ -90,7 +91,7 @@ export class TokenBar extends Application {
     getData(options) {
         let css = [
             !game.user.isGM ? "hidectrl" : null,
-            setting('show-vertical') ? "vertical" : null
+            setting('show-vertical') ? "vertical" : null,
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();
 
@@ -101,7 +102,7 @@ export class TokenBar extends Application {
             collapseIcon = this._collapsed ? "fa-caret-right" : "fa-caret-left";
 
         return {
-            tokens: this.tokens,
+            entries: this.entries,
             movement: setting("movement"),
             stat1icon: setting("stat1-icon"),
             stat2icon: setting("stat2-icon"),
@@ -141,7 +142,7 @@ export class TokenBar extends Application {
         if (this.pos == undefined) {
             let hbpos = $('#ui-bottom').offset();
             let width = $('#hotbar').width();
-            this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
+            this.pos = { left: hbpos.left + width + 36, right: '', top: '', bottom: 10 };
             game.user.setFlag("monks-tokenbar", "position", this.pos);
         }
 
@@ -149,6 +150,17 @@ export class TokenBar extends Application {
         $(this.element).css(this.pos);
 
         return this;
+    }
+
+    _canDragStart(selector) {
+        return game.user.isGM;
+    }
+
+    _onDragStart(event) {
+        const target = event.currentTarget;
+
+        const dragData = { uuid: `Actor.${target.dataset.actorId}`, type: "Actor" };
+        event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
     }
 
     refresh() {
@@ -195,42 +207,68 @@ export class TokenBar extends Application {
 
     async getCurrentTokens() {
         //log('Get current Tokens');
-        this.tokens = (canvas.scene?.tokens || [])
+        this.entries = (canvas.scene?.tokens || [])
             .filter(t => {
                 let include = t.getFlag('monks-tokenbar', 'include');
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
 
                 let hasActor = (t.actor != undefined);
                 let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
+                let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id)
                 let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
                 let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
 
-                let addToken = hasActor && canView && disp && !mlt;
-                debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include);
+                let addToken = hasActor && canView && disp && !mlt && showOnline;
+                debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include, "Online", showOnline);
 
                 return addToken;
             })
-            .sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); })
             .map(t => {
                 return {
                     id: t.id,
                     token: t,
+                    actor: t.actor,
                     img: null,
                     thumb: null,
                     movement: t.flags["monks-tokenbar"]?.movement,
                     stats: { },
                     resource1: { },
-                    resource2: { }
+                    resource2: {},
+                    cssClass: ""
                 }
             });
 
-        for (let t of this.tokens)
-            await this.updateToken(t, false);
+        if (setting("include-actor")) {
+            for (let user of game.users) {
+                if ((user.active || setting("show-offline")) && user.character && !this.entries.find(t => t.actor?.id === user.character?.id)) {
+                    this.entries.push({
+                        id: user.character.id,
+                        token: null,
+                        actor: user.character,
+                        img: null,
+                        thumb: null,
+                        stats: {},
+                        resource1: {},
+                        resource2: {},
+                        cssClass: "only-actor"
+                    });
+                }
+            }
+        }
+
+        this.entries = this.entries.sort(function (a, b) {
+            let aName = a.token?.name || a.actor?.name || "";
+            let bName = a.token?.name || a.actor?.name || "";
+            return aName.localeCompare(bName);
+        })
+
+        for (let t of this.entries)
+            await this.updateEntry(t, false);
 
         //this is causing token to disappear
-        //if(this.tokens.length)
-        //    this.tokens[0].token.constructor.updateDocuments(this.tokens.map(t => { return { _id: t.id, 'flags.monks-tokenbar.-=notified': null } }), { parent: canvas.scene, options: { ignoreRefresh: true } })
+        //if(this.entries.length)
+        //    this.entries[0].token.constructor.updateDocuments(this.entries.map(t => { return { _id: t.id, 'flags.monks-tokenbar.-=notified': null } }), { parent: canvas.scene, options: { ignoreRefresh: true } })
     }
 
     getResourceBar(token, bar) {
@@ -268,29 +306,29 @@ export class TokenBar extends Application {
         return resource;
     }
 
-    async updateToken(tkn, refresh = true) {
+    async updateEntry(entry, refresh = true) {
         let diff = {};
 
-        if (game.settings.get("monks-tokenbar", "show-resource-bars")) {
-            if (tkn?.resource1?.value != tkn.token.getBarAttribute('bar1')?.value) {
-                diff.resource1 = this.getResourceBar(tkn.token, "bar1");
+        if (game.settings.get("monks-tokenbar", "show-resource-bars") && entry.token) {
+            if (entry?.resource1?.value != entry.token.getBarAttribute('bar1')?.value) {
+                diff.resource1 = this.getResourceBar(entry.token, "bar1");
             }
-            if (tkn?.resource2?.value != tkn.token.getBarAttribute('bar2')?.value) {
-                diff.resource2 = this.getResourceBar(tkn.token, "bar2");
+            if (entry?.resource2?.value != entry.token.getBarAttribute('bar2')?.value) {
+                diff.resource2 = this.getResourceBar(entry.token, "bar2");
             }
         }
 
-        let viewstats = tkn.token?.actor?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
+        let viewstats = entry.actor?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
         for (let stat of viewstats) {
-            let value = TokenBar.processStat(stat.stat, tkn.token.actor.system) || TokenBar.processStat(stat.stat, tkn.token);
+            let value = TokenBar.processStat(stat.stat, entry.actor.system) || TokenBar.processStat(stat.stat, entry.token);
 
-            if (tkn.stats[stat.stat] == undefined) {
-                tkn.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (!setting("show-undefined") && value == undefined) };
-                diffstats[stat.stat] = tkn.stats[stat.stat];
+            if (entry.stats[stat.stat] == undefined) {
+                entry.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (!setting("show-undefined") && value == undefined) };
+                diffstats[stat.stat] = entry.stats[stat.stat];
             }
             else {
-                let tokenstat = duplicate(tkn.stats[stat.stat]);
+                let tokenstat = duplicate(entry.stats[stat.stat]);
                 if (tokenstat.value != value) {
                     tokenstat.value = value;
                     tokenstat.hidden = (!setting("show-undefined") && value == undefined);
@@ -298,16 +336,16 @@ export class TokenBar extends Application {
                 }
             }
         }
-        for (let [k,v] of Object.entries(tkn.stats)) {
+        for (let [k, v] of Object.entries(entry.stats)) {
             if (!viewstats.find(s => s.stat == k))
-                delete tkn.stats[k];
+                delete entry.stats[k];
         }
         if (Object.keys(diffstats).length > 0) {
             diff.stats = diffstats;
         }
 
-        if (tkn.img != (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.img : tkn.token.texture.src)) {
-            diff.img = (setting("token-pictures") == "actor" && tkn.token.actor != undefined ? tkn.token.actor.img : tkn.token.texture.src);
+        if (entry.img != (setting("token-pictures") == "actor" && entry.actor != undefined ? entry.actor.img : entry.token?.texture.src || entry.actor?.img)) {
+            diff.img = (setting("token-pictures") == "actor" && entry.actor != undefined ? entry.actor.img : entry.token?.texture.src || entry.actor?.img);
             let thumb = this.thumbnails[diff.img];
             if (!thumb) {
                 try {
@@ -321,23 +359,23 @@ export class TokenBar extends Application {
             diff.thumb = (thumb?.thumb || thumb);
         }
 
-        if (tkn.movement != tkn.token.flags['monks-tokenbar']?.movement) {
-            diff.movement = tkn.token.flags['monks-tokenbar']?.movement;
+        if (entry.token && entry.movement != getProperty(entry.token, "flags.monks-tokenbar.movement")) {
+            diff.movement = getProperty(entry.token, "flags.monks-tokenbar.movement");
         }
 
-        if (tkn.inspiration != (tkn.token.actor.system?.attributes?.inspiration && setting('show-inspiration')))
-            diff.inspiration = (tkn.token.actor.system?.attributes?.inspiration && setting('show-inspiration'));
+        if (entry.inspiration != (entry.actor.system?.attributes?.inspiration && setting('show-inspiration')))
+            diff.inspiration = (entry.actor.system?.attributes?.inspiration && setting('show-inspiration'));
 
         if (setting("show-disable-panning-option")) {
-            if (tkn.nopanning != tkn.token.flags['monks-tokenbar']?.nopanning) {
-                diff.nopanning = tkn.token.flags['monks-tokenbar']?.nopanning;
+            if (entry.nopanning != entry.token.flags['monks-tokenbar']?.nopanning) {
+                diff.nopanning = entry.token.flags['monks-tokenbar']?.nopanning;
             }
         } else {
             diff.nopanning = false;
         }
 
         if (Object.keys(diff).length > 0) {
-            mergeObject(tkn, diff);
+            mergeObject(entry, diff);
             if(refresh)
                 this.render();
         }
@@ -451,21 +489,21 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.PrivateMessage",
                 icon: '<i class="fas fa-microphone"></i>',
                 condition: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    if (!game.user.isGM && entry.token?.actor?.isOwner)
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
+                    if (!game.user.isGM && entry.actor?.isOwner)
                         return false;
 
                     let players = game.users.contents
                         .filter(u =>
-                            !u.isGM && (entry.token.actor.ownership[u.id] == 3 || entry.token.actor.ownership.default == 3)
+                            !u.isGM && (entry.actor.ownership[u.id] == 3 || entry.actor.ownership.default == 3)
                     );
                     return players.length > 0;
                 },
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
                     let players = game.users.contents
                     .filter(u =>
-                        !u.isGM && (entry.token.actor.ownership[u.id] == 3 || entry.token.actor.ownership.default == 3)
+                        !u.isGM && (entry.actor?.ownership[u.id] == 3 || entry.actor?.ownership.default == 3)
                     )
                     .map(u => {
                         return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);
@@ -481,15 +519,17 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.ExcludeFromTokenBar",
                 icon: '<i class="fas fa-ban"></i>',
                 condition: li => {
-                    return game.user.isGM;
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
+                    return game.user.isGM && entry?.token;
                 },
                 callback: (li) => {
                     Dialog.confirm({
                         title: "Exclude Token",
                         content: "Are you sure you wish to remove this token from the Tokenbar?",
                         yes: () => {
-                            const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                            entry.token.setFlag("monks-tokenbar", "include", "exclude");
+                            const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                            if (entry)
+                                entry.token.setFlag("monks-tokenbar", "include", "exclude");
                         }
                     });
                 }
@@ -498,42 +538,47 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.EditCharacter",
                 icon: '<i class="fas fa-edit"></i>',
                 condition: li => {
-                    if (game.user.isGM) return true;
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    if (entry?.token?.actor?.testUserPermission(game.user, "OWNER"))
+                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    if (game.user.isGM && entry?.actor)
+                        return true;
+                    if (entry?.actor && entry?.actor?.testUserPermission(game.user, "OWNER"))
                         return true;
                     return false;
                 },
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    if (entry.token.actor) entry.token.actor.sheet.render(true);
+                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    if (entry.actor) entry.actor.sheet.render(true);
                 }
             },
             {
                 name: "MonksTokenBar.EditToken",
                 icon: '<i class="fas fa-edit"></i>',
                 condition: li => {
-                    if (game.user.isGM) return true;
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    if (entry?.token?.actor?.testUserPermission(game.user, "OWNER"))
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    if (entry?.actor?.testUserPermission(game.user, "OWNER") && entry?.token)
                         return true;
                     return false;
                 },
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    if (entry.token.actor) entry.token.sheet.render(true)
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (entry.token) entry.token.sheet.render(true)
                 }
             },
             {
                 name: "MonksTokenBar.EditStats",
                 icon: '<i class="fas fa-list-ul"></i>',
                 condition: li => {
-                    return game.user.isGM;
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
                 },
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
                     if (entry)
-                        new EditStats(entry.token.actor).render(true);
+                        new EditStats(entry.actor).render(true);
                 }
             },
             {
@@ -541,52 +586,75 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-user-slash no-panning"></i>',
                 condition: li => {
                     if (game.settings.get("monks-tokenbar", "show-disable-panning-option")) {
-                        if (game.user.isGM) return true;
-                        const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                        if (entry?.token?.actor?.testUserPermission(game.user, "OWNER"))
+                        const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                        if (game.user.isGM && entry?.token)
+                            return true;
+                        if (entry?.token && entry?.token?.actor?.testUserPermission(game.user, "OWNER"))
                             return true;
                     }
                     return false;
                 },
                 callback: li => {
-                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
                     MonksTokenBar.changeTokenPanning(entry.token);
                 }
             },
             {
                 name: "MonksTokenBar.TargetToken",
                 icon: '<i class="fas fa-bullseye"></i>',
-                condition: game.user.isGM,
+                condition: li => {
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
                 callback: li => {
-                    const entry = this.tokens.find(t => t.id === li[0].dataset.tokenId);
-                    const targeted = !entry.token.isTargeted;
-                    entry.token._object?.setTarget(targeted, { releaseOthers: false });
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (entry) {
+                        const targeted = !entry.token.isTargeted;
+                        entry.token._object?.setTarget(targeted, { releaseOthers: false });
+                    }
                 }
             },
             {
                 name: "MonksTokenBar.FreeMovement",
                 icon: '<i class="fas fa-running" data-movement="free"></i>',
-                condition: game.user.isGM,
+                condition: li => {
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
                 callback: li => {
-                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
                     MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.FREE, entry.token);
                 }
             },
             {
                 name: "MonksTokenBar.NoMovement",
                 icon: '<i class="fas fa-street-view" data-movement="none"></i>',
-                condition: game.user.isGM,
+                condition: li => {
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
                 callback: li => {
-                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
                     MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.NONE, entry.token);
                 }
             },
             {
                 name: "MonksTokenBar.CombatTurn",
                 icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
-                condition: game.user.isGM,
+                condition: li => {
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
                 callback: li => {
-                    let entry = this.getEntry(li[0].dataset.tokenId);
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
                     MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.COMBAT, entry.token);
                 }
             }
@@ -597,7 +665,7 @@ export class TokenBar extends Application {
             let result = oldRender.call(this, target);
 
             //Highlight the current movement if different from the global
-            const entry = MonksTokenBar?.tokenbar.tokens.find(t => t.id === target[0].dataset.tokenId);
+            const entry = MonksTokenBar?.tokenbar.entries.find(t => t.id === target[0].dataset.tokenId);
             let movement = entry?.token.getFlag("monks-tokenbar", "movement");
             let html = $("#context-menu");
             if (movement != undefined) {
@@ -659,13 +727,13 @@ export class TokenBar extends Application {
     }
 
     getEntry(id) {
-        return this.tokens.find(t => t.id === id);
+        return this.entries.find(t => t.id === id);
     }
     
     async _onClickToken(event) {
         event.preventDefault();
         const li = event.currentTarget;
-        const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
+        const entry = this.entries.find(t => t.token?.id === li.dataset.tokenId);
 
         let that = this;
         if (!this.dbltimer) {
@@ -685,10 +753,10 @@ export class TokenBar extends Application {
                     } else if (event?.originalEvent?.altKey && setting("movement") == "none" && game.user.isGM) {
                         if (entry && (entry.movement == undefined || entry.movement == "")) {
                             // Dungeon mode
-                            for (let token of that.tokens) {
-                                if (token.movement == "free") {
-                                    token.movement = null;
-                                    await token.token.unsetFlag("monks-tokenbar", "movement");
+                            for (let entry of that.entries) {
+                                if (entry.movement == "free") {
+                                    entry.movement = null;
+                                    await entry.token.unsetFlag("monks-tokenbar", "movement");
                                 }
                             }
                             entry.movement = "free";
@@ -696,7 +764,7 @@ export class TokenBar extends Application {
                             that.render(true);
                         }
                     } else {
-                        if (game.user.isGM || entry.token?.actor?.testUserPermission(game.user, "OBSERVER")) {
+                        if (game.user.isGM || entry.actor?.testUserPermission(game.user, "OBSERVER")) {
                             let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
 
                             if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
@@ -714,14 +782,14 @@ export class TokenBar extends Application {
     async _onDblClickToken(event) {
         event.preventDefault();
         const li = event.currentTarget;
-        const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
+        const entry = this.entries.find(t => t.token?.id === li.dataset.tokenId);
 
         if (setting("dblclick-action") == "request" && (game.user.isGM || setting("allow-roll"))) {
             let entries = MonksTokenBar.getTokenEntries([entry.token._object]);
             new SavingThrowApp(entries).render(true);
         } else {
-            if (entry.token.actor)
-                entry.token.actor.sheet.render(true);
+            if (entry.actor)
+                entry.actor.sheet.render(true);
         }
         this.doubleclick = true;
     }
@@ -739,10 +807,10 @@ export class TokenBar extends Application {
         if ( event.type === "mouseenter" ) {
             this._hover = li.dataset.tokenId;
             if (hasAction) {
-                const entry = this.tokens.find(t => t.id === li.dataset.tokenId);
+                const entry = this.entries.find(e => e.token?.id === li.dataset.tokenId || e.actor?.id === li.dataset.actorId);
                 const tooltip = document.createElement("SPAN");
                 tooltip.classList.add("tooltip");
-                tooltip.textContent = entry?.token.name;
+                tooltip.textContent = entry?.token?.name || entry?.actor?.name;
                 li.appendChild(tooltip);
             }
         }

@@ -207,11 +207,12 @@ export class AssignXPApp extends Application {
 
     activateMonster(event) {
         let id = $(event.currentTarget).closest(".item")[0].dataset["itemId"];
-        let actor = this.monsters.find(a => a.actor._id == id);
-        if (actor)
-            actor.active = $(event.currentTarget).prop("checked");
+        let monster = this.monsters.find(m => m.actor._id == id);
+        if (monster)
+            monster.active = $(event.currentTarget).prop("checked");
 
-        this.xp = MonksTokenBar.system.calcXP(this.actors, this.monsters);
+        this.xp = MonksTokenBar.system.calcXP(this.actors, this.monsters.filter(m => m.active));
+        this.changeXP.call(this, this.xp);
 
         this.render(true);
     }
@@ -253,7 +254,7 @@ export class AssignXPApp extends Application {
                 this.render(true);
                 break;
             case 'disable':
-                this.monsters = this.monsters.map(m => { m.active = false; return m });
+                this.monsters = this.monsters.map(m => { m.active = false; return m; });
                 this.render(true);
                 break;
         }

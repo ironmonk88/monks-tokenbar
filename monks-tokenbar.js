@@ -20,6 +20,7 @@ import { SFRPGRolls } from "./systems/sfrpg-rolls.js";
 import { SwadeRolls } from "./systems/swade-rolls.js";
 import { SW5eRolls } from "./systems/sw5e-rolls.js";
 import { CoC7Rolls } from "./systems/coc7-rolls.js";
+import { T2K4ERolls } from "./systems/t2k4e-rolls.js";
 
 export let debug = (...args) => {
     if (MonksTokenBar.debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
@@ -171,9 +172,10 @@ export class MonksTokenBar {
             }
         }
 
+        /*
         let sceneView = async function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
-                MonksTokenBar.tokenbar.tokens = [];
+                MonksTokenBar.tokenbar.entries = [];
                 MonksTokenBar.tokenbar.refresh();
             }
             return await wrapped.call(this, ...args);
@@ -187,6 +189,7 @@ export class MonksTokenBar {
                 return sceneView.call(this, oldSceneView.bind(this), ...arguments);
             }
         }
+        */
 
         if (setting('token-size') != 50) {
             let innerHTML = `
@@ -244,27 +247,34 @@ export class MonksTokenBar {
             } else if (!(t instanceof Token || t instanceof Actor))
                 t = null;
 
-            return t;
+            if (t?.actor?.type == "group") {
+                return Array.from(t.actor.system.members);
+            } else
+                return [t];
         }
 
-        tokens = (tokens || []).map(t => {
+        tokens = (tokens || []).flatMap(t => {
             if (typeof t == 'string' && t.startsWith('{') && t.endsWith('}'))
                 t = JSON.parse(t);
 
-            t = {
-                token: findToken(typeof t == 'object' && t.token && t.constructor.name == 'Object' ? t.token : t),
-                keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage },
-                request: t.request,
-                fastForward: t.fastForward
-            };
+            let ts = findToken(typeof t == 'object' && t.token && t.constructor.name == 'Object' ? t.token : t);
 
-            Object.defineProperty(t, 'id', {
-                get: function () {
-                    return this.token.id;
-                }
-            });
+            return ts.map(t => {
+                t = {
+                    token: t,
+                    keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage },
+                    request: t.request,
+                    fastForward: t.fastForward
+                };
 
-            return (!!t.token || !!t.request ? t: null);
+                Object.defineProperty(t, 'id', {
+                    get: function () {
+                        return this.token.id;
+                    }
+                });
+
+                return (!!t.token || !!t.request ? t : null);
+            })
         }).filter(c => !!c);
 
         return tokens;
@@ -501,9 +511,9 @@ export class MonksTokenBar {
         //clear all the tokens individual movement settings
         if (MonksTokenBar.tokenbar != undefined) {
             let tokenbar = MonksTokenBar.tokenbar;
-            for (let i = 0; i < tokenbar.tokens.length; i++) {
-                await tokenbar.tokens[i].token.setFlag("monks-tokenbar", "movement", null);
-                tokenbar.tokens[i].token.unsetFlag("monks-tokenbar", "notified");
+            for (let i = 0; i < tokenbar.entries.length; i++) {
+                await tokenbar.entries[i].token?.setFlag("monks-tokenbar", "movement", null);
+                tokenbar.entries[i].token?.unsetFlag("monks-tokenbar", "notified");
             };
             tokenbar.render(true);
         }
@@ -535,7 +545,7 @@ export class MonksTokenBar {
                 MonksTokenBar.displayNotification(dispMove, token);
 
                 /*if (MonksTokenBar.tokenbar != undefined) {
-                    let tkn = MonksTokenBar.tokenbar.tokens.find(t => { return t.id == token.id });
+                    let tkn = MonksTokenBar.tokenbar.entries.find(t => { return t.id == token.id });
                     if (tkn != undefined)
                         tkn.movement = newMove;
                 } */
@@ -871,17 +881,17 @@ export class MonksTokenBar {
             }
 
             if (entity instanceof JournalEntryPage || entity instanceof Actor)
-                return "Adding to " + entity.name;
+                return "<i>Adding</i> to <b>" + entity.name + "</b>";
             else if (entity instanceof JournalEntry)
-                return "Adding new loot page to " + entity.name;
+                return "<i>Adding</i> new loot page to <b>" + entity.name + "</b>";
             else if (entity instanceof Folder)
-                return (entity.documentClass.documentName == "JournalEntry" ? "Creating new Journal Entry within " + entity.name + " folder" : "Creating Actor within " + entity.name + " folder");
+                return (entity.documentClass.documentName == "JournalEntry" ? "<i>Creating</i> new Journal Entry within <b>" + entity.name + "</b> folder" : "<i>Creating</i> Actor within <b>" + entity.name + "</b> folder");
             else if (id == "convert")
-                return "Convert tokens";
+                return "<i>Convert</i> tokens";
             else if (id == "root") {
                 let lootsheet = setting('loot-sheet');
                 let isLootActor = ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
-                return `Creating ${isLootActor ? "Actor" : "Journal Entry"} in the root folder`;
+                return `<i>Creating</i> ${isLootActor ? "Actor" : "Journal Entry"} in the <b>root</b> folder`;
             } else
                 return "Unknown";
         }
@@ -1026,8 +1036,8 @@ Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
 Hooks.on("updateCombat", function (combat, delta) {
     if (game.user.isTheGM) {
         if (MonksTokenBar.tokenbar) {
-            $(MonksTokenBar.tokenbar.tokens).each(function () {
-                this.token.unsetFlag("monks-tokenbar", "notified");
+            $(MonksTokenBar.tokenbar.entries).each(function () {
+                this.token?.unsetFlag("monks-tokenbar", "notified");
             });
         }
 
@@ -1065,6 +1075,8 @@ Hooks.on("setup", () => {
             MonksTokenBar.system = new SwadeRolls(); break;
         case 'coc7':
             MonksTokenBar.system = new CoC7Rolls(); break;
+        case 't2k4e':
+            MonksTokenBar.system = new T2K4ERolls(); break; 
     }
 
     MonksTokenBar.system.constructor.activateHooks();
@@ -1452,7 +1464,7 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 required: true,
-                options: { show: ['tile', 'token', 'within', 'players'] },
+                options: { show: ['token', 'within', 'players', 'previous'] },
                 restrict: (entity) => { return (entity instanceof Token); },
                 defaultType: 'tokens',
                 placeholder: "Please select a token"
@@ -1523,7 +1535,8 @@ Hooks.on("setupTileActions", (app) => {
                 return;
 
             let request1 = mergeObject((MonksTokenBar.getTokenEntries([entity1])[0] || {}), { request: action.data.request1 });
-            let request2 = mergeObject((MonksTokenBar.getTokenEntries([entity2])[0] || {}), { request: action.data.request2 });
+            let idx2 = entity1.id == entity2.id ? 1 : 0;
+            let request2 = mergeObject((MonksTokenBar.getTokenEntries([entity2])[idx2] || {}), { request: action.data.request2 });
 
             let flavor = action.data.flavor;
 
@@ -1719,5 +1732,12 @@ Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
 Hooks.on("updateActor", (actor, data, dif, userId) => {
     if (getProperty(data, "system.details.xp") != undefined && game.user.isTheGM) {
         MonksTokenBar.system.checkXP(actor);
+    }
+});
+
+Hooks.on("canvasInit", () => {
+    if (MonksTokenBar.tokenbar) {
+        MonksTokenBar.tokenbar.entries = [];
+        MonksTokenBar.tokenbar.refresh();
     }
 });

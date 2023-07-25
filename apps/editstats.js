@@ -35,6 +35,7 @@ export class EditStats extends FormApplication {
 
     getData(options) {
         return {
+            hasObject: this.object instanceof Actor,
             stats: this.stats
         };
     }

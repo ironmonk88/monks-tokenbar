@@ -34,7 +34,8 @@ export class D35eRolls extends BaseRolls {
         //get the monster xp
         let combatxp = 0;
         for (let monster of monsters) {
-            combatxp += (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+            monster.xp = (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+            combatxp += monster.xp;
         };
 
         return combatxp;
