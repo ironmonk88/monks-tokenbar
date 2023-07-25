@@ -626,6 +626,8 @@ export class SavingThrow {
                 if (update.roll) {
                     let tooltip = '';
                     if (update.roll instanceof Roll) {
+                        await this.asyncHooksCallAll('tokenBarInfluenceRoll', this, message, update);
+
                         msgtoken.roll = update.roll.toJSON();
                         if (msgtoken.roll.terms.length)
                             msgtoken.roll.terms = duplicate(msgtoken.roll.terms);
@@ -637,7 +639,7 @@ export class SavingThrow {
                         msgtoken.reveal = update.reveal || reveal;
                         msgtoken.request = update.request;
                         tooltip = await update.roll.getTooltip();
-
+                      
                         Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
                     }
 
@@ -850,6 +852,17 @@ export class SavingThrow {
             e.cancelBubble = true;
             e.returnValue = false;
         }
+    }
+
+    // Note: this is a straight extract from midiQoL
+    // https://gitlab.com/tposney/midi-qol/-/blob/master/src/module/utils.ts#L3167
+    static async asyncHooksCallAll(hook, ...args) {
+        if (!Hooks._hooks.hasOwnProperty(hook)) return true;
+        const fns = new Array(...Hooks._hooks[hook]);
+        for (let fn of fns) {
+            await Hooks._call(hook, fn, args);
+        }
+        return true;
     }
 }
 
