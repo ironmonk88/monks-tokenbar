@@ -34,6 +34,10 @@ export class BaseRolls {
         return this._config;
     }
 
+    get canReroll() {
+        return true;
+    }
+
     get showRoll() {
         return true;
     }

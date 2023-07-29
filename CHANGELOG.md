@@ -1,3 +1,29 @@
+## Version 11.03
+
+Removed the option of using a group actor for a contested roll.
+
+Added integration with the Anonymous module to hide the names of chat card NPCs.
+
+Fixed issues with showing ghost rolls using Dice so nice.
+
+Fixed issues where dice tooltips were being shown to players that shouldn't have acces to that information.
+
+Added the option to reroll a dice result, using the context menu.
+
+Fixed issue where clicking on the roll result was expanding the tooltip.
+
+Fixed issue where refreshing when a tooltip was open would open all tooltips.
+
+Fixed issue with the roll result check and x were being shown before the dice roll completed.
+
+Added support for rolling when the canvas is disabled.
+
+Fixed an issue where the dice roll wouldn't complete properly.
+
+Fixed issue with the stats if they were somehow saved as not an array.
+
+Fixed issue with the player display showing the check and x in a small font.
+
 ## Version 11.02
 
 Fixed issue where xp was calculating with inactive monsters.

@@ -172,6 +172,101 @@ export class MonksTokenBar {
             }
         }
 
+        patchFunc("ChatLog.prototype._getEntryContextOptions", function (wrapped, ...args) {
+            let menu = wrapped.call(...args);
+
+            let canHeroPointReroll = ($li) => {
+                const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+                if (!message.getFlag("monks-tokenbar", "what"))
+                    return false;
+
+                let msgToken = message.getFlag("monks-tokenbar", `token${MonksTokenBar.contextId}`);
+                if (!msgToken)
+                    return false;
+
+                let token = fromUuidSync(msgToken.uuid);
+                let actor = token?.actor ? token.actor : token;
+
+                return game.system.id == "pf2e" && !!msgToken.roll && actor.type == "character" && actor.heroPoints.value > 0 && (game.user.isGM || actor.isOwner);
+
+                //return game.user.isGM && !!message.flags.pf2e.context
+                //message.isRerollable && !!actor?.isOfType("character") && actor.heroPoints.value > 0
+            };
+            let canReroll = ($li) => {
+                const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+
+                if (!MonksTokenBar.system.canReroll)
+                    return false;
+
+                if (!message.getFlag("monks-tokenbar", "what"))
+                    return false;
+
+                let msgToken = message.getFlag("monks-tokenbar", `token${MonksTokenBar.contextId}`);
+                if (!msgToken)
+                    return false;
+
+                let token = fromUuidSync(msgToken.uuid);
+                let actor = token?.actor ? token.actor : token;
+
+                return !!msgToken.roll && actor.type == "character" && (game.user.isGM || actor.isOwner);
+            };
+
+            return [...menu, ...[
+                {
+                    name: "PF2E.RerollMenu.HeroPoint",
+                    icon: '<i class="fas fa-hospital-symbol"></i>',
+                    condition: canHeroPointReroll,
+                    callback: $li => {
+                        const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+                        let what = message.getFlag("monks-tokenbar", "what");
+                        if (what == "savingthrow")
+                            SavingThrow.rerollFromMessage(message, MonksTokenBar.contextId, { heroPoint: !0 });
+                        else if (what == "contestedroll")
+                            ContestedRoll.rerollFromMessage(message, MonksTokenBar.contextId, { heroPoint: !0 });
+                    }
+                },
+                {
+                    name: "Reroll and keep the new result",
+                    icon: '<i class="fas fa-dice"></i>',
+                    condition: canReroll,
+                    callback: $li => {
+                        const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+                        let what = message.getFlag("monks-tokenbar", "what");
+                        if (what == "savingthrow")
+                            SavingThrow.rerollFromMessage(message, MonksTokenBar.contextId);
+                        else if (what == "contestedroll")
+                            ContestedRoll.rerollFromMessage(message, MonksTokenBar.contextId);
+                    }
+                },
+                {
+                    name: "Reroll and keep the worst result",
+                    icon: '<i class="fas fa-dice-one"></i>',
+                    condition: canReroll,
+                    callback: $li => {
+                        const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+                        let what = message.getFlag("monks-tokenbar", "what");
+                        if (what == "savingthrow")
+                            SavingThrow.rerollFromMessage(message, MonksTokenBar.contextId, { keep: "worst" });
+                        else if (what == "contestedroll")
+                            ContestedRoll.rerollFromMessage(message, MonksTokenBar.contextId, { keep: "worst" });
+                    }
+                },
+                {
+                    name: "Reroll and keep the better result",
+                    icon: '<i class="fas fa-dice-six"></i>',
+                    condition: canReroll,
+                    callback: $li => {
+                        const message = game.messages.get($li[0].dataset.messageId, { strict: !0 });
+                        let what = message.getFlag("monks-tokenbar", "what");
+                        if (what == "savingthrow")
+                            SavingThrow.rerollFromMessage(message, MonksTokenBar.contextId, { keep: "best" });
+                        else if (what == "contestedroll")
+                            ContestedRoll.rerollFromMessage(message, MonksTokenBar.contextId, { keep: "best" });
+                    }
+                }
+            ]];
+        });
+
         /*
         let sceneView = async function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
@@ -335,7 +430,7 @@ export class MonksTokenBar {
 
     static get stats() {
         let stats = setting('stats');
-        return stats.default ? MonksTokenBar.system.defaultStats : stats;
+        return (stats.default ? MonksTokenBar.system.defaultStats : stats) || [];
     }
 
     static ready() {
@@ -470,7 +565,18 @@ export class MonksTokenBar {
                         await SavingThrow.updateMessage([response], msg, revealDice);
                     }
                 }
-            }
+            } break;
+            case 'updateReroll': {
+                if (game.user.isTheGM) {
+                    let msg = game.messages.get(data.msgid);
+                    if (msg) {
+                        if (data.type == "savingthrow")
+                            SavingThrow.updateReroll(msg, data.tokenid, Roll.fromData(data.roll), data.options);
+                        else if(data.type == "contestedroll")
+                            ContestedRoll.updateReroll(msg, data.tokenid, Roll.fromData(data.roll), data.options);
+                    }
+                }
+            } break;
         }
     }
 
@@ -1726,6 +1832,13 @@ Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
             let oldroll = message.getFlag('monks-tokenbar', 'oldrollmode') || "gmroll";
             setProperty(data, "flags.monks-tokenbar.rollmode", oldroll);
         }
+    }
+});
+
+Hooks.on("updateChatMessage", (message, data, dif, userId) => {
+    let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
+    if (rollmode && message._rollExpanded) {
+        message._rollExpanded = false;
     }
 });
 

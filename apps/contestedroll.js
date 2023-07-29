@@ -21,7 +21,7 @@ export class ContestedRollApp extends Application {
         this.hidenpcname = (options?.hidenpcname != undefined ? options?.hidenpcname : null) || (game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") != undefined ? game.user.getFlag("monks-tokenbar", "lastmodeHideNPCName") : null) || false;
         this.flavor = options.flavor;
 
-        let available = canvas.tokens.controlled;
+        let available = canvas.tokens.controlled.filter(t => t.actor.type != "group");
         if (game.user.targets.values()?.next()?.value)
             available.splice(Math.min(available.length, 2) - 1, 0, game.user.targets.values()?.next()?.value);
 
@@ -78,25 +78,26 @@ export class ContestedRollApp extends Application {
                     return r;
                 });
 
+                let actor = item.token?.actor ? item.token.actor : item.token;
                 let name = item.token.name;
 
                 if (game.modules.get("anonymous")?.active) {
                     const api = game.modules.get("anonymous")?.api;
-                    if (!api.playersSeeName(item.token.actor))
-                        name = api.getName(item.token.actor);
+                    if (!api.playersSeeName(actor))
+                        name = api.getName(actor);
                 }
                 
                 return {
                     id: item.token.id,
-                    uuid: item.token.document.uuid,
-                    actorid: item.token.actor.id,
+                    uuid: item.token.document?.uuid || item.token.uuid,
+                    actorid: actor.id,
                     requests: requests,
-                    icon: (VideoHelper.hasVideoExtension(item.token.document.texture.src) ? item.token.actor.img : item.token.document.texture.src),
+                    icon: (VideoHelper.hasVideoExtension(item.token?.document?.texture.src) || !item.token?.document?.texture ? actor.img : item.token.document.texture.src),
                     name: name,
-                    realname: t.token.name,
-                    showname: item.token.actor.hasPlayerOwner || this.hidenpcname !== true,
-                    showtoken: item.token.actor.hasPlayerOwner || item.token.document.hidden !== true,
-                    npc: item.token.actor.hasPlayerOwner,
+                    realname: item.token.name,
+                    showname: actor.hasPlayerOwner || this.hidenpcname !== true,
+                    showtoken: actor.hasPlayerOwner || item.token.document.hidden !== true,
+                    npc: !actor.hasPlayerOwner,
                     passed: 'waiting',
                     keys: item.keys,
                 };
@@ -255,7 +256,7 @@ export class ContestedRoll {
             } else if (rollmode == 'blindroll')
                 cantSee = owners;
 
-            if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && game.settings.get("core", "noCanvas")) {
+            if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
                 let promises = [game.dice3d.showForRoll(roll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? msgId : null))];
                 if (cantSee.length) {
                     roll.ghost = true;
@@ -265,7 +266,9 @@ export class ContestedRoll {
                     return { id: id, reveal: true, userid: game.userId };
                 });
             } else {
-                finishroll = { id: id, reveal: true, userid: game.userId };
+                finishroll = new Promise((resolve) => {
+                    resolve({ id: id, reveal: true, userid: game.userId })
+                });
             }
             const sound = MonksTokenBar.getDiceSound();
             if (sound != undefined && (rollmode != 'selfroll' || setting('gm-sound')))
@@ -419,12 +422,17 @@ export class ContestedRoll {
                     }
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
-                    $(tooltip).hide().insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
+                    let tooltipElem = $(tooltip);
+                    if (!tooltipElem.hasClass("dice-tooltip")) {
+                        tooltipElem = $("<div>").addClass("dice-tooltip").append(tooltipElem);
+                    }
+
+                    $(tooltip).removeClass("expanded").insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow noselect" style="display:none;">
-                        <div class= "dice-result noselect">${msgtoken.total}</div >
+                        `<div class="reroll"></div><div class="dice-total flexrow noselect" style="display:none;">
+                        <div class= "dice-result noselect ${(msgtoken.reveal ? 'reveal' : '')}"><span class="total">${msgtoken.total}</span></div >
                         <a class="item-control roll-result" title="${(game.user.isGM || rollmode == 'roll' ? i18n("MonksTokenBar.RollResult") : '')}" data-control="rollResult">
                             <i class="fas"></i>
                         </a>
@@ -507,7 +515,10 @@ export class ContestedRoll {
         }
     }
 
-    static async finishRolling(updates, message) {
+    static async finishRolling(updates, message, event) {
+        if (event?.stopPropagation) event.stopPropagation();
+        if (event?.preventDefault) event.preventDefault();
+
         if (updates.length == 0) return;
 
         if (!game.user.isGM) {
@@ -575,7 +586,10 @@ export class ContestedRoll {
         return (hidden == undefined);
     }
 
-    static async setRollSuccess(tokenid, message, success) {
+    static async setRollSuccess(tokenid, message, success, event) {
+        if (event.stopPropagation) event.stopPropagation();
+        if (event.preventDefault) event.preventDefault();
+
         let flags = {};
         let tokens = ContestedRoll.getTokens(message);
         for (let i = 0; i < 2; i++) {
@@ -615,10 +629,119 @@ export class ContestedRoll {
 
         return (animate ? canvas.animatePan({ x: token.x, y: token.y }) : true);
     }
+
+    static async rerollFromMessage(message, tokenid, { heroPoint = !1, keep = "new" } = {}) {
+        let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
+        if (!msgToken) return;
+
+        let token = fromUuidSync(msgToken.uuid);
+        if (!token) return;
+
+        let actor = token?.actor ? token.actor : token;
+
+        if (!(actor.isOwner || game.user.isGM)) {
+            return ui.notifications.error("Can't reroll for an actor you don't own");
+        }
+
+        if (heroPoint) {
+            if (actor instanceof Actor && actor.type == "character") {
+                const heroPointCount = actor.heroPoints.value;
+                if (heroPointCount)
+                    await token.actor.update({ "system.resources.heroPoints.value": Math.clamped(heroPointCount - 1, 0, 3) });
+                else {
+                    return ui.notifications.warn("Does not have a hero point");
+                }
+            } else {
+                return ui.notifications.error("No actor selected");
+            }
+        }
+
+        const oldRoll = msgToken.roll;
+        const newData = deepClone(oldRoll.data);
+        const newOptions = { ...oldRoll.options, isReroll: !0 };
+        const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
+        const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
+        const rollmode = message.getFlag("monks-tokenbar", "rollmode");
+
+        if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
+            let canSee = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+            let cantSee = [];
+            let owners = actor.ownership.default == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ?
+                game.users.filter(u => !u.isGM).map(u => u.id) :
+                Object.entries(actor.ownership).filter(([k, v]) => game.users.get(k)?.isGM === false && v == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER).map(([k, v]) => k);
+
+            if (rollmode == 'gmroll') {
+                canSee = canSee.concat(owners);
+                cantSee = game.users.filter(u => !canSee.includes(u.id)).map(u => u.id);
+            } else if (rollmode == 'blindroll')
+                cantSee = owners;
+
+            let promises = [game.dice3d.showForRoll(newRoll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? message.id : null))];
+            if (cantSee.length) {
+                roll.ghost = true;
+                promises.push(game.dice3d.showForRoll(newRoll, game.user, true, cantSee, canSee.includes(game.user.id), null));
+            }
+            await Promise.all(promises);
+        }
+
+        if (!game.user.isGM) {
+            MonksTokenBar.emit('updateReroll',
+                {
+                    type: 'contestedroll',
+                    msgid: message.id,
+                    tokenid: tokenid,
+                    roll: newRoll,
+                    options: { heroPoint, keep }
+                }
+            );
+        } else {
+            ContestedRoll.updateReroll(message, tokenid, newRoll, { heroPoint, keep });
+        }
+    }
+
+    static async updateReroll(message, tokenid, roll, { heroPoint = !1, keep = "new" } = {}) {
+        let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
+        if (!msgToken) return;
+
+        const oldRoll = msgToken.roll;
+        let keptRoll = roll;
+        if (keep === "best" && oldRoll.total > roll.total || keep === "worst" && oldRoll.total < roll.total) {
+            keptRoll = oldRoll;
+        }
+
+        let dc = message.getFlag('monks-tokenbar', 'dc');
+        if ($.isNumeric(dc)) {
+            dc = parseInt(dc);
+            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+        }
+
+        msgToken.reroll = roll.toJSON();;
+        msgToken.total = keptRoll.total;
+        msgToken.rerollIcon = heroPoint ? "hospital-symbol" : "dice";
+        message.setFlag("monks-tokenbar", `token${tokenid}`, msgToken);
+        let flags = {};
+        flags[`token${tokenid}`] = msgToken;
+
+        let content = $(message.content);
+
+        $(`.item[data-item-id="${tokenid}"] .reroll`, content).html(`<i class="fas fa-${msgToken.rerollIcon}"></i>`);
+        $(`.item[data-item-id="${tokenid}"] .dice-roll .dice-total .total`, content).html(msgToken.total);
+
+        let tooltip = await roll.getTooltip();
+        let tooltipElem = $(tooltip);
+        if (tooltipElem.hasClass("dice-tooltip")) {
+            tooltipElem = $(".tooltip-part", tooltipElem).toggleClass("ignored", keptRoll == oldRoll);
+        }
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip .tooltip-part:gt(0)`, content).remove();
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip .tooltip-part`, content).toggleClass("ignored", keptRoll == roll);
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip`, content).append(tooltipElem);
+
+        await message.update({ content: content[0].outerHTML, flags: flags });
+    }
 }
 
 Hooks.on('controlToken', (token, delta) => {
-    if (MonksTokenBar && MonksTokenBar.system) {
+    if (MonksTokenBar && MonksTokenBar.system && token.document.actor.type != "group") {
         let contestedroll = MonksTokenBar.system.contestedroll;
         if (game.user.isGM && delta === true && contestedroll != undefined && contestedroll._state != -1) {
             for (let entry of contestedroll.entries) {
@@ -643,7 +766,7 @@ Hooks.on("renderContestedRollApp", (app, html) => {
 Hooks.on("renderChatMessage", async (message, html, data) => {
     const svgCard = html.find(".monks-tokenbar.contested-roll");
     if (svgCard.length !== 0) {
-
+        html.addClass("monks-tokenbar");
         if (!game.user.isGM)
             html.find(".gm-only").remove();
         if (game.user.isGM)
@@ -666,22 +789,30 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor?.isOwner)
-                    $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id))
+                    $('.item-image', item).on('click', $.proxy(ContestedRoll._onClickToken, this, msgtoken.id));
+                $('.token-roll-container', item).contextmenu((ev) => {
+                    MonksTokenBar.contextId = tokenId;//$(ev.currentTarget).closest(".item").data("itemId");
+                    let elem = $(ev.currentTarget).closest(".item");
+                    elem.closest(".chat-message").css("position", "relative");
+                    var r = document.querySelector(':root');
+                    r.style.setProperty('--monks-tokenbar-context-top', `${elem.position().top + elem.height()}px`);
+                });
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll'))));
 
                 if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
                     //let roll = Roll.fromData(msgtoken.roll);
                     let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.isOwner);
-                    $('.dice-result', item).toggle(showroll || (rollmode == 'blindroll' && actor.isOwner));
+                    $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal).toggle(showroll || (rollmode == 'blindroll' && actor.isOwner));
                     if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM))
-                        $('.dice-result', item).html(!msgtoken.reveal ? '...' : '-');
+                        $('.dice-result .total', item).html(!msgtoken.reveal ? '...' : '-');
                     if (!msgtoken.reveal && game.user.isGM)
-                        $('.dice-result', item).on('click', $.proxy(ContestedRoll.finishRolling, ContestedRoll, [msgtoken.id], message));
-                    //if (showroll && !msgtoken.rolling && $('.dice-tooltip', item).is(':empty')) {
-                    //    let tooltip = await roll.getTooltip();
-                    //    $('.dice-tooltip', item).empty().append(tooltip);
-                    //}
+                        $('.dice-result', item).on('click', $.proxy(ContestedRoll.finishRolling, ContestedRoll, [{ id: msgtoken.id, reveal: true }], message));
+                    if (!actor.isOwner)
+                        $('.dice-tooltip', item).remove();
+                    else
+                        $('.dice-tooltip', item).toggleClass('noshow', !showroll);
+
                     if (game.user.isGM)
                         $('.roll-result', item).click($.proxy(ContestedRoll.setRollSuccess, this, msgtoken.id, message, true));
 

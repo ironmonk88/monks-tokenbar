@@ -754,6 +754,18 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls {
     justify-content: flex-end;
+    position: relative;
+}
+
+.monks-tokenbar .sheet.actor .inventory-list .roll-controls .reroll {
+    position: absolute;
+    top: 8px;
+    left: -17px;
+}
+
+.monks-tokenbar.chat-card .dice-tooltip .tooltip-part.ignored {
+    filter: grayscale(1);
+    opacity: 0.4;
 }
 
 .monks-tokenbar .sheet.actor .items-list .item .item-name {
@@ -892,7 +904,7 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar li.item .dice-roll .dice-total .dice-text {
     flex: 1;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total .dice-text.passed {
@@ -1416,4 +1428,8 @@ a.inline-request-roll {
 #tokenbar-editstats {
     min-height: 250px;
     min-width: 400px;
+}
+
+.chat-message.monks-tokenbar #context-menu {
+    top: var(--monks-tokenbar-context-top);
 }

@@ -168,31 +168,33 @@ export class SavingThrowApp extends Application {
         let msg = null;
         if (this.entries.length > 0) {
             SavingThrow.lastTokens = this.entries;
+            let actors = [];
             let msgEntries = this.entries.map(t => {
                 let name = t.token.name;
 
+                let actor = t.token?.actor ? t.token.actor : t.token;
+                actors.push(actor);
+
                 if (game.modules.get("anonymous")?.active) {
                     const api = game.modules.get("anonymous")?.api;
-                    if (!api.playersSeeName(t.token.actor))
-                        name = api.getName(t.token.actor);
+                    if (!api.playersSeeName(actor))
+                        name = api.getName(actor);
                 }
 
                 return {
                     id: t.token.id,
-                    uuid: t.token.document.uuid,
-                    actorid: t.token.actor.id,
-                    icon: (t.token.document.texture.src.endsWith('webm') ? t.token.actor.img : t.token.document.texture.src),
+                    uuid: t.token.document?.uuid || t.token.uuid,
+                    actorid: actor.id,
+                    icon: (t.token?.document?.texture.src.endsWith('webm') || !t.token?.document?.texture ? actor.img : t.token.document.texture.src),
                     name: name,
                     realname: t.token.name,
-                    showname: t.token.actor.hasPlayerOwner || this.hidenpcname !== true,
-                    showtoken: t.token.actor.hasPlayerOwner || t.token.document.hidden !== true,
-                    npc: t.token.actor.hasPlayerOwner,
+                    showname: actor.hasPlayerOwner || this.hidenpcname !== true,
+                    showtoken: actor.hasPlayerOwner || t.token.document?.hidden !== true,
+                    npc: !actor.hasPlayerOwner,
                     keys: t.keys,
                 };
             });
             SavingThrow.lastRequest = this.request;
-
-            let actors = this.entries.map(t => t?.token?.actor).filter(t => !!t);
 
             if (this.request == undefined || !this.request.length) {
                 log('Invalid request');
@@ -513,7 +515,9 @@ export class SavingThrow {
                         return { id: id, reveal: true, userid: game.userId };
                     });
                 } else {
-                    finishroll = { id: id, reveal: true, userid: game.userId };
+                    finishroll = new Promise((resolve) => {
+                        resolve({ id: id, reveal: true, userid: game.userId })
+                    });
                 }
                 const sound = MonksTokenBar.getDiceSound();
                 if (sound != undefined && (rollmode != 'selfroll' || setting('gm-sound')))
@@ -693,7 +697,7 @@ export class SavingThrow {
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls .dice-total', content).remove();
                     $('.item[data-item-id="' + update.id + '"] .item-row .roll-controls', content).append(
-                        `<div class="dice-total flexrow noselect" style="display:none;">
+                        `<div class="reroll"></div><div class="dice-total flexrow noselect" style="display:none;">
                         <div class="dice-result noselect ${(msgtoken.reveal ? 'reveal' : '')}"><span class="smoke-screen">...</span><span class="total">${msgtoken.total}</span></div >
                         <a class="item-control result-passed gm-only" data-control="rollPassed">
                             <i class="fas fa-check"></i>
@@ -796,7 +800,10 @@ export class SavingThrow {
         }
     }
 
-    static async finishRolling(updates, message) {
+    static async finishRolling(updates, message, event) {
+        if (event?.stopPropagation) event.stopPropagation();
+        if (event?.preventDefault) event.preventDefault();
+
         if (updates.length == 0) return;
 
         if (!game.user.isGM) {
@@ -839,7 +846,9 @@ export class SavingThrow {
         }
     }
 
-    static async setRollSuccess(tokenid, message, success) {
+    static async setRollSuccess(tokenid, message, success, event) {
+        if (event?.stopPropagation) event.stopPropagation();
+        if (event?.preventDefault) event.preventDefault();
         //let actors = JSON.parse(JSON.stringify(message.getFlag('monks-tokenbar', 'actors')));
         let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + tokenid)); //actors.find(a => { return a.id == actorid; });
 
@@ -852,8 +861,8 @@ export class SavingThrow {
     }
 
     static async _onClickToken(tokenId, event) {
-        if (event.stopPropagation) event.stopPropagation();
-        if (event.preventDefault) event.preventDefault();
+        if (event?.stopPropagation) event.stopPropagation();
+        if (event?.preventDefault) event.preventDefault();
         event.cancelBubble = true;
         event.returnValue = false;
 
@@ -894,6 +903,115 @@ export class SavingThrow {
             e.cancelBubble = true;
             e.returnValue = false;
         }
+    }
+
+    static async rerollFromMessage (message, tokenid, { heroPoint = !1, keep = "new" } = {}) {
+        let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
+        if (!msgToken) return;
+
+        let token = fromUuidSync(msgToken.uuid);
+        if (!token) return;
+
+        let actor = token?.actor ? token.actor : token;
+
+        if (!(actor.isOwner || game.user.isGM)) {
+            return ui.notifications.error("Can't reroll for an actor you don't own");
+        }
+
+        if (heroPoint) {
+            if (actor instanceof Actor && actor.type == "character") {
+                const heroPointCount = actor.heroPoints.value;
+                if (heroPointCount)
+                    await actor.update({ "system.resources.heroPoints.value": Math.clamped(heroPointCount - 1, 0, 3) });
+                else {
+                    return ui.notifications.warn("Does not have a hero point");
+                }
+            } else {
+                return ui.notifications.error("No actor selected");
+            }
+        }
+
+        const oldRoll = msgToken.roll;
+        const newData = deepClone(oldRoll.data);
+        const newOptions = { ...oldRoll.options, isReroll: !0 };
+        const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
+        const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
+        const rollmode = message.getFlag("monks-tokenbar", "rollmode");
+
+        if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
+            let canSee = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
+            let cantSee = [];
+            let owners = actor.ownership.default == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ?
+                game.users.filter(u => !u.isGM).map(u => u.id) :
+                Object.entries(actor.ownership).filter(([k, v]) => game.users.get(k)?.isGM === false && v == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER).map(([k, v]) => k);
+
+            if (rollmode == 'gmroll') {
+                canSee = canSee.concat(owners);
+                cantSee = game.users.filter(u => !canSee.includes(u.id)).map(u => u.id);
+            } else if (rollmode == 'blindroll')
+                cantSee = owners;
+
+            let promises = [game.dice3d.showForRoll(newRoll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? message.id : null))];
+            if (cantSee.length) {
+                roll.ghost = true;
+                promises.push(game.dice3d.showForRoll(newRoll, game.user, true, cantSee, canSee.includes(game.user.id), null));
+            }
+            await Promise.all(promises);
+        }
+
+        if (!game.user.isGM) {
+            MonksTokenBar.emit('updateReroll',
+                {
+                    type: 'savingthrow',
+                    msgid: message.id,
+                    tokenid: tokenid,
+                    roll: newRoll,
+                    options: { heroPoint, keep }
+                }
+            );
+        } else {
+            SavingThrow.updateReroll(message, tokenid, newRoll, { heroPoint, keep });
+        }
+    }
+
+    static async updateReroll(message, tokenid, roll, { heroPoint = !1, keep = "new" } = {}) {
+        let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
+        if (!msgToken) return;
+
+        const oldRoll = msgToken.roll;
+        let keptRoll = roll;
+        if (keep === "best" && oldRoll.total > roll.total || keep === "worst" && oldRoll.total < roll.total) {
+            keptRoll = oldRoll;
+        }
+
+        let dc = message.getFlag('monks-tokenbar', 'dc');
+        if ($.isNumeric(dc)) {
+            dc = parseInt(dc);
+            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+        }
+
+        msgToken.reroll = roll.toJSON();
+        msgToken.total = keptRoll.total;
+        msgToken.rerollIcon = heroPoint ? "hospital-symbol" : "dice";
+        message.setFlag("monks-tokenbar", `token${tokenid}`, msgToken);
+        let flags = {};
+        flags[`token${tokenid}`] = msgToken;
+
+        let content = $(message.content);
+
+        $(`.item[data-item-id="${tokenid}"] .reroll`, content).html(`<i class="fas fa-${msgToken.rerollIcon}"></i>`);
+        $(`.item[data-item-id="${tokenid}"] .dice-roll .dice-total .total`, content).html(msgToken.total);
+
+        let tooltip = await roll.getTooltip();
+        let tooltipElem = $(tooltip);
+        if (tooltipElem.hasClass("dice-tooltip")) {
+            tooltipElem = $(".tooltip-part", tooltipElem).toggleClass("ignored", keptRoll == oldRoll);
+        }
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip .tooltip-part:gt(0)`, content).remove();
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip .tooltip-part`, content).toggleClass("ignored", keptRoll == roll);
+        $(`.item[data-item-id="${tokenid}"] .dice-tooltip`, content).append(tooltipElem);
+
+        await message.update({ content: content[0].outerHTML, flags: flags });
     }
 }
 
@@ -936,6 +1054,7 @@ Hooks.on("renderSavingThrowApp", (app, html) => {
 Hooks.on("renderChatMessage", async (message, html, data) => {
     const svgCard = html.find(".monks-tokenbar.savingthrow");
     if (svgCard.length !== 0) {
+        html.addClass("monks-tokenbar");
         log('Rendering chat message', message);
         if (!game.user.isGM)
             html.find(".gm-only").remove();
@@ -967,7 +1086,14 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                 $(item).toggle(game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll' || (rollmode == 'blindroll' && actor.isOwner));
 
                 if (game.user.isGM || actor?.isOwner)
-                    $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id))
+                    $('.item-image', item).on('click', $.proxy(SavingThrow._onClickToken, this, msgtoken.id));
+                $('.token-roll-container', item).contextmenu((ev) => {
+                    MonksTokenBar.contextId = tokenId;//$(ev.currentTarget).closest(".item").data("itemId");
+                    let elem = $(ev.currentTarget).closest(".item");
+                    elem.closest(".chat-message").css("position", "relative");
+                    var r = document.querySelector(':root');
+                    r.style.setProperty('--monks-tokenbar-context-top', `${elem.position().top + elem.height()}px`);
+                });
                 $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
                 $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll')));
                 if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
@@ -979,8 +1105,8 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
                         $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
 
-                    let critpass = (roll.dice.length ? roll.dice[0].total >= roll.dice[0].options.critical : false);
-                    let critfail = (roll.dice.length ? roll.dice[0].total <= roll.dice[0].options.fumble : false);
+                    let critpass = (roll.dice.length ? msgtoken.total >= roll.dice[0].options.critical : false);
+                    let critfail = (roll.dice.length ? msgtoken.total <= roll.dice[0].options.fumble : false);
 
                     if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll'){
                         $('.dice-result', item)
@@ -990,11 +1116,10 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 
                     if (!msgtoken.reveal && game.user.isGM)
                         $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken], message));
-                    //if (showroll && msgactor.reveal && $('.dice-tooltip', item).is(':empty')) {
-                    //    let tooltip = await roll.getTooltip();
-                    //    $('.dice-tooltip', item).empty().append(tooltip);
-                    //}
-                    $('.dice-tooltip', item).toggleClass('noshow', !showroll);
+                    if (!actor.isOwner)
+                        $('.dice-tooltip', item).remove();
+                    else
+                        $('.dice-tooltip', item).toggleClass('noshow', !showroll);
                     $('.result-passed', item)
                         .toggle(request.key != 'init')
                         .toggleClass('recommended', dc != '' && roll.total >= dc)
@@ -1023,7 +1148,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     if (game.user.isGM || rollmode == 'roll')
                         $('.dice-total', item).attr("title", dicetext);
                     $('.dice-text', item)
-                        .toggle(showroll && msgtoken.passed != undefined)
+                        .toggle(showroll && msgtoken.reveal && msgtoken.passed != undefined)
                         //.toggleClass('clickable', request.key == 'death' && !msgtoken.assigned)
                         .toggleClass('passed', msgtoken.passed === true || msgtoken.passed === "success")
                         .toggleClass('failed', msgtoken.passed === false || msgtoken.passed === "failed")

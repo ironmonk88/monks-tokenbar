@@ -14,27 +14,28 @@
                 <ol class="item-list">
                     {{#each tokens}}
                     <li class="item flexrow {{#unless this.showtoken}}gm-only{{/unless}}" data-item-id="{{this.id}}" style="display:none;">
-                        <div class="dice-roll flexcol">
-                            <div class="item-row flexrow">
-                                <div class="item-name flexrow">
-                                    <div class="item-image" style="background-image: url('{{this.icon}}')">
+                        <div class="flexrow token-roll-container">
+                            <div class="dice-roll flexcol">
+                                <div class="item-row flexrow">
+                                    <div class="item-name flexrow">
+                                        <div class="item-image" style="background-image: url('{{this.icon}}')"></div>
+                                        <h4 class="noselect">
+                                            <span class="gm-only" {{#if (or (ne this.realname this.name) (eq this.showname false))}} style="font-style:italic;" {{/if}}>{{this.realname}}</span>
+                                            <span class="player-only">{{#if this.showname}}{{this.name}}{{/if}}</span>
+                                        </h4>
                                     </div>
-                                    <h4 class="noselect">
-                                        <span class="gm-only" {{#if (or (ne this.realname this.name) (eq this.showname false))}}style="font-style:italic;"{{/if}}>{{this.realname}}</span>
-                                        <span class="player-only">{{#if this.showname}}{{this.name}}{{/if}}</span>
-                                    </h4>
-                                </div>
 
-                                <div class="roll-controls flexrow noselect">
-                                    <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;">
-                                        {{#if ../showAdvantage}}
-                                        <div class="adv-btn advantage" title="Advantage"><i class="fas fa-circle-plus advantage"></i></div>
-                                        <div class="adv-btn disadvantage" title="Disadvantage"><i class="fas fa-circle-minus disadvantage"></i></div>
-                                        {{/if}}
-                                    </a>
+                                    <div class="roll-controls flexrow noselect">
+                                        <a class="item-control item-roll" title="{{localize 'MonksTokenBar.Roll'}}" style="display:none;">
+                                            {{#if ../showAdvantage}}
+                                            <div class="adv-btn advantage" title="Advantage"><i class="fas fa-circle-plus advantage"></i></div>
+                                            <div class="adv-btn disadvantage" title="Disadvantage"><i class="fas fa-circle-minus disadvantage"></i></div>
+                                            {{/if}}
+                                        </a>
+                                    </div>
                                 </div>
+                                <div class="dice-tooltip" style="display:none;"></div>
                             </div>
-                            <div class="dice-tooltip" style="display:none;"></div>
                         </div>
                     </li>
                     {{/each}}

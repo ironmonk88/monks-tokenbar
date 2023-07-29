@@ -7,7 +7,7 @@ export class EditStats extends FormApplication {
         options.height = 62 + (Math.max(stats.length, 4) * 27);
 
         super(object, options);
-        this.stats = stats.map(s => {
+        this.stats = (stats || []).map(s => {
             s.id = s.id || makeid();
             return s;
         });
