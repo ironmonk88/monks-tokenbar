@@ -1,4 +1,4 @@
-## Version 11.03
+## Version 11.02
 
 Removed the option of using a group actor for a contested roll.
 
@@ -23,8 +23,6 @@ Fixed an issue where the dice roll wouldn't complete properly.
 Fixed issue with the stats if they were somehow saved as not an array.
 
 Fixed issue with the player display showing the check and x in a small font.
-
-## Version 11.02
 
 Fixed issue where xp was calculating with inactive monsters.
 
