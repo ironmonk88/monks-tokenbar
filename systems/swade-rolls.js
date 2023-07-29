@@ -101,7 +101,7 @@ export class SwadeRolls extends BaseRolls {
             rollfn = actor.rollAttribute;
         }
         else if (request.type == 'skill') {
-            let item = actor.items.find(i => i.name == request.key && i.type == 'skill');
+            let item = actor.items.find(i => MonksTokenBar.slugify(i.name) == request.key && i.type == 'skill');
             sysRequest = item.id;
             rollfn = actor.rollSkill;
         } else {
