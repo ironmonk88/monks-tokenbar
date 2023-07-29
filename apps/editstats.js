@@ -5,9 +5,12 @@ export class EditStats extends FormApplication {
     constructor(object, options = {}) {
         let stats = object?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         options.height = 62 + (Math.max(stats.length, 4) * 27);
-
+        
         super(object, options);
-        this.stats = (stats || []).map(s => {
+        if (!Array.isArray(stats)) {
+            stats = []; // If the stats is not an array, construct an empty array instead.
+        }
+        this.stats = stats.map(s => {
             s.id = s.id || makeid();
             return s;
         });
