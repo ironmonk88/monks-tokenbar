@@ -143,7 +143,7 @@
 	"MonksTokenBar.show-vertical.hint": "将掷骰栏以垂直方向进行显示",
 	"MonksTokenBar.capture-savingthrows.name": "抓取豁免骰",
 	"MonksTokenBar.capture-savingthrows.hint": "在请求豁免掷骰的时候，创建一块豁免掷骰聊天消息",
-	"MonksTokenBar.token-size.name": 指示物尺寸",
+	"MonksTokenBar.token-size.name": "指示物尺寸",
 	"MonksTokenBar.token-size.hint": "改变指示物栏中指示物的尺寸大小，以防资源数值被挤出指示物栏边界",
 	"MonksTokenBar.open-loot.name": "打开战利品实体",
 	"MonksTokenBar.open-loot.hint": "在实体被创建后或物品被转移进实体后打开战利品实体",
