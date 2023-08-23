@@ -49,6 +49,11 @@
       "lang": "fr",
       "name": "Français",
       "path": "lang/fr.json"
+    },
+    {
+      "lang": "cn",
+      "name": "简体中文",
+      "path": "lang/cn.json"
     }
   ],
   "esmodules": [
