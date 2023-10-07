@@ -543,8 +543,10 @@ export class SavingThrow {
                 } else {
                     let buttons = requests.map(r => {
                         let disabled = !MonksTokenBar.system.requestoptions.find(o => o.id == r.type) && !actor.items.find(i => i.type == r.type && (MonksTokenBar.slugify(i.name) == r.key || i.getFlag("core", "sourceId") == r.key));
+                        let value = MonksTokenBar.system.getValue(actor, r.type, r.key, e);
+                        let label = r.name + (value != undefined ? ` (${value > 0 ? "+" : ""}${value})` : '');
                         return {
-                            label: r.name,
+                            label: label,
                             disabled: disabled,
                             callback: () => r
                         }

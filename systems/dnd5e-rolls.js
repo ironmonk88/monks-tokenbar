@@ -227,4 +227,10 @@ export class DnD5eRolls extends BaseRolls {
         e.ctrlKey = e.ctrlKey || keys.disadvantage || e.disadvantage;
         e.altKey = e.altKey || keys.advantage || e.advantage;
     }
+
+    getValue(actor, type, key) {
+        let prop = type == "skill" ? "skills" : type == "save" ? "saves" : "attributes";
+        let value = getProperty(actor, "system." + prop + "." + key + ".total");
+        return value;
+    }
 }

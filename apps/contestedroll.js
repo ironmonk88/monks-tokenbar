@@ -74,9 +74,10 @@ export class ContestedRollApp extends Application {
 
                 let requests = item.request instanceof Array ? item.request : [item.request];
                 requests = requests.map(r => {
+                    if (!r) return;
                     r.name = MonksTokenBar.getRequestName(this.requestoptions, r);
                     return r;
-                });
+                }).filter(r => !!r);
 
                 let actor = item.token?.actor ? item.token.actor : item.token;
                 let name = item.token.name;
@@ -292,8 +293,10 @@ export class ContestedRoll {
                     request = requests[0];
                 } else {
                     let buttons = requests.map(r => {
+                        let value = MonksTokenBar.system.getValue(actor, r.type, r.key, e);
+                        let label = r.name + (value != undefined ? ` (${value > 0 ? "+" : ""}${value})` : '');
                         return {
-                            label: r.name,
+                            label: label,
                             callback: () => r
                         }
                     });
@@ -741,7 +744,7 @@ export class ContestedRoll {
 }
 
 Hooks.on('controlToken', (token, delta) => {
-    if (MonksTokenBar && MonksTokenBar.system && token.document.actor.type != "group") {
+    if (MonksTokenBar && MonksTokenBar.system && token.document.actor?.type != "group") {
         let contestedroll = MonksTokenBar.system.contestedroll;
         if (game.user.isGM && delta === true && contestedroll != undefined && contestedroll._state != -1) {
             for (let entry of contestedroll.entries) {

@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, error, i18n, setting, makeid } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, setting } from "../monks-tokenbar.js";
 import { PickIcon } from "./pick-icon.js";
 
 export class EditStats extends FormApplication {
@@ -8,7 +8,7 @@ export class EditStats extends FormApplication {
 
         super(object, options);
         this.stats = (stats || []).map(s => {
-            s.id = s.id || makeid();
+            s.id = s.id || randomID();
             return s;
         });
         //let's just grab the first player character we can find
@@ -50,11 +50,11 @@ export class EditStats extends FormApplication {
     }
 
     addStat(event) {
-        this.stats.push({ id: makeid(), stat: "", icon: "fa-address-book" });
+        this.stats.push({ id: randomID(), stat: "", icon: "fa-address-book" });
         this.render(true);
     }
 
-    removeStat() {
+    removeStat(event) {
         let statid = event.currentTarget.closest('.item').dataset.id;
         this.stats.findSplice(s => s.id === statid);
         $('.item[data-id="' + statid + '"]', this.element).remove();

@@ -37,16 +37,6 @@ export let setting = key => {
     return game.settings.get("monks-tokenbar", key);
 };
 
-export let makeid = () => {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for (var i = 0; i < 16; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}
-
 export let patchFunc = (prop, func, type = "WRAPPER") => {
     if (game.modules.get("lib-wrapper")?.active) {
         libWrapper.register("monks-tokenbar", prop, func, type);
@@ -354,21 +344,23 @@ export class MonksTokenBar {
 
             let ts = findToken(typeof t == 'object' && t.token && t.constructor.name == 'Object' ? t.token : t);
 
-            return ts.map(t => {
-                t = {
-                    token: t,
+            return ts.map(tkn => {
+                if (!tkn) return null;
+
+                tkn = {
+                    token: tkn,
                     keys: { ctrlKey: t.ctrlKey, shiftKey: t.shiftKey, altKey: t.altKey, advantage: t.advantage, disadvantage: t.disadvantage },
                     request: t.request,
                     fastForward: t.fastForward
                 };
 
-                Object.defineProperty(t, 'id', {
+                Object.defineProperty(tkn, 'id', {
                     get: function () {
                         return this.token.id;
                     }
                 });
 
-                return (!!t.token || !!t.request ? t : null);
+                return (!!tkn.token || !!tkn.request ? tkn : null);
             })
         }).filter(c => !!c);
 
@@ -1284,7 +1276,7 @@ Hooks.on("renderCombatTracker", (app, html, data) => {
                 $($('<a>')
                     .addClass('combatant-control')
                     .toggleClass('active', combatant.token.getFlag('monks-tokenbar', 'movement') == MTB_MOVEMENT_TYPE.FREE)
-                    .attr('title', 'Allow Movement')
+                    .attr('data-tooltip', 'Allow Movement')
                     .attr('data-control', 'toggleMovement')
                     .html('<i class="fas fa-running"></i>')
                     .click(MonksTokenBar.toggleMovement.bind(MonksTokenBar, combatant))

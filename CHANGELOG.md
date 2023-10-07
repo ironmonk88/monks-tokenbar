@@ -1,3 +1,27 @@
+## Version 11.03
+
+Fixed issue with contested roll when request doesn't exist.
+
+Fixed issue with contested roll when controlling a token that has no associated actor.
+
+Added modifier value when selecting multiple rolls.
+
+Fixed issues with lootables when removing the equipped flagged
+
+Fixed issue when creating a loot sheet that's not MEJ or ItemPiles
+
+Added the option to add hero points or inspiration to the context menu on the tokenbar.
+
+Fixed issue when collecting the tokens to use for a request roll
+
+Fixed issues with determining XP in the PF2E system.
+
+Removed the xp label when assigning xp and MTB can't determing individual XP.
+
+Added a skull icon beside monsters that have been defeated when assigning XP.
+
+Switched to adding and removing actors from the creature list when assigning XP, rather than disabling them.
+
 ## Version 11.02
 
 Removed the option of using a group actor for a contested roll.

@@ -28,6 +28,9 @@
                                     <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Creatures'}}</h3>
 
                                     <div class="item-controls flexrow">
+                                        <a class="item-control" title="{{localize 'MonksTokenBar.AddActor'}}" data-type="monster">
+                                            <i class="fas fa-plus"></i>{{localize 'MonksTokenBar.XPAdd'}}
+                                        </a>
                                         <a class="item-control" title="{{localize 'MonksTokenBar.ClearAll'}}" data-type="disable">
                                             <i class="fas fa-trash-alt"></i>{{localize 'MonksTokenBar.Clear'}}
                                         </a>
@@ -36,21 +39,21 @@
 
                                 <ol class="item-list">
                                     {{#each monsters}}
-                                    <li class="item flexrow{{#unless this.active}} disabled{{/unless}}" data-item-id="{{this.actor._id}}" draggable="false">
+                                    <li class="item flexrow" data-item-id="{{this.actor._id}}" draggable="false">
                                         <div class="item-name flexrow rollable">
                                             <div class="item-image" style="background-image: url('{{this.actor.img}}')">
                                                 <video width="30" height="30"><source src="{{this.actor.img}}" /></video>
                                                 <i class="fas fa-ban"></i>
                                             </div>
                                             <h4>
-                                                {{this.actor.name}}
+                                                {{this.actor.name}} {{#if this.defeated}}<i class="fas fa-skull"></i>{{/if}}
                                             </h4>
                                         </div>
                                         <div class="item-controls flexrow" style="text-align: right;">
-                                            <small>{{this.xp}}xp</small>
+                                            {{#if this.xp}}<small>{{this.xp}}xp</small>{{/if}}
                                         </div>
-                                        <div class="item-controls flexrow" style="flex: 0 0 40px;">
-                                            <input type="checkbox" class="item-active" {{checked this.active}} />
+                                        <div class="item-controls flexrow">
+                                            <a class="item-control item-delete" title="{{localize 'MonksTokenBar.RemoveActor'}}"><i class="fas {{#if this.disabled}}fa-plus{{else}}fa-trash{{/if}}"></i></a>
                                         </div>
                                     </li>
                                     {{/each}}

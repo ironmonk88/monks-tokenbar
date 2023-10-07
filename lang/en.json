@@ -245,6 +245,8 @@
 	"MonksTokenBar.Tokenbar": "Tokenbar",
 	"MonksTokenBar.ReadyToUpdate": "{name} has enough xp to level up!",
 	"MonksTokenBar.AddTokenbar": "Add Tokenbar",
+	"MonksTokenBar.AddHeroPoint": "Add Hero Point",
+	"MonksTokenBar.AddInspiration": "Add Inspiration",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

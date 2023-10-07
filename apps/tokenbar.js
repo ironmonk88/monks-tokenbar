@@ -483,8 +483,8 @@ export class TokenBar extends Application {
         this._contextMenu(html);
     }
 
-    _contextMenu(html) {
-        let context = new ContextMenu(html, ".token", [
+    _getEntryContextOptions() {
+        let menuitems = [
             {
                 name: "MonksTokenBar.PrivateMessage",
                 icon: '<i class="fas fa-microphone"></i>',
@@ -496,18 +496,18 @@ export class TokenBar extends Application {
                     let players = game.users.contents
                         .filter(u =>
                             !u.isGM && (entry.actor.ownership[u.id] == 3 || entry.actor.ownership.default == 3)
-                    );
+                        );
                     return players.length > 0;
                 },
                 callback: li => {
                     const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
                     let players = game.users.contents
-                    .filter(u =>
-                        !u.isGM && (entry.actor?.ownership[u.id] == 3 || entry.actor?.ownership.default == 3)
-                    )
-                    .map(u => {
-                        return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);
-                    });
+                        .filter(u =>
+                            !u.isGM && (entry.actor?.ownership[u.id] == 3 || entry.actor?.ownership.default == 3)
+                        )
+                        .map(u => {
+                            return (u.name.indexOf(" ") > -1 ? "[" + u.name + "]" : u.name);
+                        });
                     if (ui.sidebar.activeTab !== "chat")
                         ui.sidebar.activateTab("chat");
 
@@ -579,6 +579,47 @@ export class TokenBar extends Application {
                     const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
                     if (entry)
                         new EditStats(entry.actor).render(true);
+                }
+            },
+            {
+                name: "MonksTokenBar.AddHeroPoint",
+                icon: '<i class="fas fa-circle-h"></i>',
+                condition: li => {
+                    if (game.system.id != "pf2e")
+                        return false;
+
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
+                callback: li => {
+                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    if (entry) {
+                        let heroPoints = Math.min((getProperty(entry.actor, 'system.resources.heroPoints.value') ?? 0) + 1, 3);
+                        Actor.updateDocuments([{ _id: entry.actor.id, 'system.resources.heroPoints.value': heroPoints }]);
+                        ChatMessage.create({ content: `${entry.actor.name} gained a Hero Point!` });
+                    }
+                }
+            },
+            {
+                name: "MonksTokenBar.AddInspiration",
+                icon: '<i class="fas fa-crown"></i>',
+                condition: li => {
+                    if (game.system.id != "dnd5e")
+                        return false;
+
+                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    if (game.user.isGM && entry?.token)
+                        return true;
+                    return false;
+                },
+                callback: li => {
+                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    if (entry) {
+                        Actor.updateDocuments([{ _id: entry.actor.id, 'system.attributes.inspiration': true }]);
+                        ChatMessage.create({ content: `${entry.actor.name} gained Inspiration!` });
+                    }
                 }
             },
             {
@@ -658,7 +699,16 @@ export class TokenBar extends Application {
                     MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.COMBAT, entry.token);
                 }
             }
-        ]);
+        ];
+
+        Hooks.callAll("MonksTokenBar.ContextMenu", menuitems);
+
+        return menuitems;
+    }
+
+    _contextMenu(html) {
+        let menuitems = this._getEntryContextOptions();
+        let context = new ContextMenu(html, ".token", menuitems);
 
         let oldRender = context.render;
         context.render = function (target) {

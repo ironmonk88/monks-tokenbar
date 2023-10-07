@@ -124,9 +124,11 @@ export class LootablesApp extends Application {
         };
         this.entries = this.entries.sort((a, b) => { return a.name.localeCompare(b.name); });
 
+        /*
         if (this.combat && this.combat.getFlag("monks-enhanced-journal", "encounterid")) {
 
         }
+        */
 
         if (setting("auto-gold-cr")) {
             this.calcGold();
@@ -760,6 +762,9 @@ export class LootablesApp extends Application {
                         if (isNaN(itemQty))
                             itemQty = 1;
                         setProperty(item, "system.quantity", itemQty * loot.quantity);
+
+                        if (getProperty(item, "system.equipped") != undefined)
+                            setProperty(item, "system.equipped", false);
                     }
 
                     items.push(item);
@@ -806,14 +811,7 @@ export class LootablesApp extends Application {
                     }
                     await ItemPiles.API.addItems(entity, items, { removeExistingActorItems: clear });
                 } else {
-                    let itemData = items.map(i => {
-                        let data = i.data;
-                        data.system.quantity = i.quantity * i.sysQty;
-                        if (data.system.equipped != undefined)
-                            data.system.equipped = false;
-                        return data;
-                    });
-                    entity.createEmbeddedDocuments("Item", itemData);
+                    entity.createEmbeddedDocuments("Item", items);
                 }
 
                 let entityCurr = entity.system.currency || {};
@@ -880,7 +878,7 @@ export class LootablesApp extends Application {
                 // Validate the final position
                 if (canvas.dimensions.rect.contains(pt.x, pt.y)) {
                     if (this.isLootActor(lootSheet)) {
-                        const td = await entity.getTokenData(mergeObject(pt, { texture: { src: "icons/svg/chest.svg" } }));
+                        const td = await entity.getTokenDocument(mergeObject(pt, { texture: { src: "icons/svg/chest.svg" } }));
 
                         const cls = getDocumentClass("Token");
                         await cls.create(td, { parent: canvas.scene });

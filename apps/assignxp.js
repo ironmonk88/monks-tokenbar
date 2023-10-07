@@ -32,7 +32,8 @@ export class AssignXPApp extends Application {
                 if (token.disposition == 1 && token.actorLink && actor.hasPlayerOwner && (actor.type == 'character' || actor?.type == 'Player Character')) {
                     this.actors.push({ actor: actor, xp: 0 });
                 } else if (token.disposition != 1 && !actor.hasPlayerOwner) {
-                    this.monsters.push({ actor: actor, active: true });
+
+                    this.monsters.push({ actor: actor, defeated: AssignXPApp.isDefeated(actor) });
                 }
             }
         }
@@ -41,9 +42,11 @@ export class AssignXPApp extends Application {
             return self.findIndex((i) => { return i?.actor.id == a.actor.id }) === index;
         });
 
-        this.xp = options?.xp || MonksTokenBar.system.calcXP(this.actors, this.monsters);
+        this.changeXP(options?.xp);
+    }
 
-        this.changeXP();
+    static isDefeated(actor) {
+        return (actor && (actor.combatant && actor.combatant.defeated) || actor.statuses.has(CONFIG.specialStatusEffects.DEFEATED));
     }
 
     static get defaultOptions() {
@@ -72,8 +75,11 @@ export class AssignXPApp extends Application {
     }
 
     changeXP(xp) {
-        if(xp !== undefined)
+        if (xp !== undefined)
             this.xp = xp;
+        else {
+            this.xp = MonksTokenBar.system.calcXP(this.actors, this.monsters);
+        }
 
         let sortedByLevel = this.actors.sort(function (a, b) {
             const aXP = MonksTokenBar.system.getXP(a.actor);
@@ -127,7 +133,7 @@ export class AssignXPApp extends Application {
 
     }
 
-    addToken(tokens) {
+    addToken(tokens, collection = "actors") {
         if (!$.isArray(tokens))
             tokens = [tokens];
 
@@ -136,7 +142,7 @@ export class AssignXPApp extends Application {
             if (t.actor == undefined)
                 return false;
             //don't add this token a second time
-            if (this.actors.some(e => e.actor._id == t.actor._id))
+            if (this.actors.some(e => e.actor._id == t.actor._id) || this.monsters.some(e => e.actor._id == t.actor._id))
                 return false;
 
             return true;
@@ -146,10 +152,10 @@ export class AssignXPApp extends Application {
             ui.notifications.warn(i18n("MonksTokenBar.TokenNoActorAttrs"));
 
         if (tokens.length > 0)
-            this.actors = this.actors.concat(tokens.map(t => {
+            this[collection] = this[collection].concat(tokens.map(t => {
                 let actor = t.actor;
                 actor = (actor.isPolymorphed ? game.actors.find(a => a.id == actor.getFlag(game.system.id, 'originalActor')) : actor);
-                return { actor: actor, xp: 0 }
+                return { actor: actor, defeated: AssignXPApp.isDefeated(actor) }
             }));
 
         this.changeXP();
@@ -160,6 +166,10 @@ export class AssignXPApp extends Application {
         let idx = this.actors.findIndex(a => a.actor._id === id);
         if (idx > -1) {
             this.actors.splice(idx, 1);
+        }
+        idx = this.monsters.findIndex(a => a.actor._id === id);
+        if (idx > -1) {
+            this.monsters.splice(idx, 1);
         }
         $(`li[data-item-id="${id}"]`, this.element).remove();
         this.changeXP();
@@ -194,7 +204,7 @@ export class AssignXPApp extends Application {
         });
 
         $('.charxp', html).blur(this.adjustCharXP.bind(this));
-        $('.item-active', html).change(this.activateMonster.bind(this));
+        //$('.item-active', html).change(this.activateMonster.bind(this));
     };
 
     adjustCharXP(event) {
@@ -205,6 +215,7 @@ export class AssignXPApp extends Application {
         this.render(true);
     }
 
+    /*
     activateMonster(event) {
         let id = $(event.currentTarget).closest(".item")[0].dataset["itemId"];
         let monster = this.monsters.find(m => m.actor._id == id);
@@ -216,6 +227,7 @@ export class AssignXPApp extends Application {
 
         this.render(true);
     }
+    */
 
     changeTokens(e) {
         let type = e.target.dataset.type;
@@ -247,6 +259,14 @@ export class AssignXPApp extends Application {
                     ui.notifications.error('No tokens are currently selected');
                 else {
                     this.addToken(tokens);
+                }
+                break;
+            case 'monster':
+                let monsters = canvas.tokens.controlled.filter(t => t.actor != undefined);
+                if (monsters.length == 0)
+                    ui.notifications.error('No tokens are currently selected');
+                else {
+                    this.addToken(monsters, "monsters");
                 }
                 break;
             case 'clear':

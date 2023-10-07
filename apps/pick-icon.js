@@ -1,4 +1,4 @@
-import { MonksTokenBar, log, error, i18n, setting, makeid } from "../monks-tokenbar.js";
+import { MonksTokenBar, log, error, i18n, setting } from "../monks-tokenbar.js";
 
 export class PickIcon extends FormApplication {
     constructor(object, parent, options) {

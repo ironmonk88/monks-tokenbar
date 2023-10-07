@@ -822,6 +822,11 @@ body #tokenbar-window:first-child{
     opacity: 1;
 }
 
+.monks-tokenbar li.item .dice-roll,
+.monks-tokenbar li.item .dice-roll .item-row {
+    overflow: hidden;
+}
+
 .monks-tokenbar li.item .dice-roll .dice-total {
     flex: 1;
     height: 24px;
@@ -962,6 +967,7 @@ body #tokenbar-window:first-child{
 .monks-tokenbar.editstats .dialog-content div.remove,
 .monks-tokenbar.editstats .dialog-content div.add {
     cursor: pointer;
+    background-color: transparent;
 }
 
 .monks-tokenbar.pick-icon .font-picker .icon {

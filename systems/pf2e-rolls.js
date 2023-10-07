@@ -86,9 +86,10 @@ export class PF2eRolls extends BaseRolls {
     }
 
     calcXP(actors, monsters) {
-        let xpchart = [0, 10, 15, 20, 30, 40, 60, 80, 120, 160];
-
         var apl = { count: 0, levels: 0 };
+        var xp = 0;
+        let npcLevels = [];
+        let hazardLevels = [];
 
         //get the actors
         for (let actor of actors) {
@@ -98,16 +99,22 @@ export class PF2eRolls extends BaseRolls {
         let calcAPL = apl.count > 0 ? Math.round(apl.levels / apl.count) : 0;
 
         //get the monster xp
-        let combatxp = 0;
         for (let monster of monsters) {
-            if (monster.active) {
-                let monstLevel = parseInt(MonksTokenBar.system.getLevel(monster.actor));
-                monster.xp = xpchart[Math.clamped(5 + (monstLevel - calcAPL), 0, xpchart.length - 1)];
-                combatxp += monster.xp;
+            if (monster.actor.type == "hazard") {
+                hazardLevels.push({
+                    level: parseInt(MonksTokenBar.system.getLevel(monster.actor), 10),
+                    isComplex: monster.actor.system.details.isComplex ?? false,
+                });
+            } else {
+                npcLevels.push(parseInt(MonksTokenBar.system.getLevel(monster.actor), 10));
             }
         };
 
-        return Math.floor(combatxp * 4 / (apl.count || 4));;
+        xp = game.pf2e.gm.calculateXP(calcAPL, apl.count, npcLevels, hazardLevels, {
+            proficiencyWithoutLevel: game.settings.get('pf2e', 'proficiencyVariant') === 'ProficiencyWithoutLevel',
+        });
+
+        return xp.totalXP;
     }
 
     get useDegrees() {
@@ -204,5 +211,11 @@ export class PF2eRolls extends BaseRolls {
                 }
             });
         }
+    }
+
+    getValue(actor, type, key) {
+        let prop = type == "skill" ? "skills" : type == "save" ? "saves" : "attributes";
+        let value = getProperty(actor, prop + "." + key + ".mod");
+        return value;
     }
 }

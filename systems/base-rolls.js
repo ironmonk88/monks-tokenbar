@@ -15,6 +15,10 @@ export class BaseRolls {
         return false;
     }
 
+    getValue(actor, type, key) {
+        return null;
+    }
+
     rollProperties(request) {
         return [];
     }
