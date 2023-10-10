@@ -159,8 +159,11 @@ export class PF2eRolls extends BaseRolls {
             actor = actor.saves[request.key].check;
         }
         else if (request.type == 'skill') {
-            rollfn = actor.skills[request.key].check.roll;
-            actor = actor.skills[request.key].check;
+            if (actor.skills[request.key]) {
+                rollfn = actor.skills[request.key].check.roll;
+                actor = actor.skills[request.key].check;
+            } else
+                return { id: id, error: true, msg: i18n("MonksTokenBar.ActorNoSkill") };
         }
         else if (request.type == 'lore') {
             let lore = actor.items.find(i => { return i.type == request.type && MonksTokenBar.slugify(i.name) == request.key; });

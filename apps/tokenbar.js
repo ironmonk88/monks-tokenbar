@@ -207,52 +207,83 @@ export class TokenBar extends Application {
 
     async getCurrentTokens() {
         //log('Get current Tokens');
-        this.entries = (canvas.scene?.tokens || [])
-            .filter(t => {
-                let include = t.getFlag('monks-tokenbar', 'include');
-                include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-
-                let hasActor = (t.actor != undefined);
-                let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
-                let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id)
-                let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
-
-                let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
-
-                let addToken = hasActor && canView && disp && !mlt && showOnline;
-                debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include, "Online", showOnline);
-
-                return addToken;
-            })
-            .map(t => {
-                return {
-                    id: t.id,
-                    token: t,
-                    actor: t.actor,
-                    img: null,
-                    thumb: null,
-                    movement: t.flags["monks-tokenbar"]?.movement,
-                    stats: { },
-                    resource1: { },
-                    resource2: {},
-                    cssClass: ""
-                }
-            });
-
-        if (setting("include-actor")) {
-            for (let user of game.users) {
-                if ((user.active || setting("show-offline")) && user.character && !this.entries.find(t => t.actor?.id === user.character?.id)) {
-                    this.entries.push({
-                        id: user.character.id,
+        if (game.system.id == "pf2e" && setting("use-party")) {
+            this.entries = game.actors.party.members.map(a => {
+                let token = canvas.tokens.placeables.find(t => t.actor?.id == a.id);
+                if (token) {
+                    return {
+                        id: token.id,
+                        token: token.document,
+                        actor: a,
+                        img: null,
+                        thumb: null,
+                        movement: token.document.flags["monks-tokenbar"]?.movement,
+                        stats: {},
+                        resource1: {},
+                        resource2: {},
+                        cssClass: ""
+                    }
+                } else {
+                    return {
+                        id: a.id,
                         token: null,
-                        actor: user.character,
+                        actor: a,
                         img: null,
                         thumb: null,
                         stats: {},
                         resource1: {},
                         resource2: {},
                         cssClass: "only-actor"
-                    });
+                    }
+                }
+            });
+        } else {
+            this.entries = (canvas.scene?.tokens || [])
+                .filter(t => {
+                    let include = t.getFlag('monks-tokenbar', 'include');
+                    include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+
+                    let hasActor = (t.actor != undefined);
+                    let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
+                    let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id)
+                    let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
+
+                    let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
+
+                    let addToken = hasActor && canView && disp && !mlt && showOnline;
+                    debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include, "Online", showOnline);
+
+                    return addToken;
+                }).map(t => {
+                    return {
+                        id: t.id,
+                        token: t,
+                        actor: t.actor,
+                        img: null,
+                        thumb: null,
+                        movement: t.flags["monks-tokenbar"]?.movement,
+                        stats: {},
+                        resource1: {},
+                        resource2: {},
+                        cssClass: ""
+                    }
+                });
+
+            if (setting("include-actor")) {
+                for (let user of game.users) {
+                    if ((user.active || setting("show-offline")) && user.character && !this.entries.find(t => t.actor?.id === user.character?.id)) {
+                        this.entries.push({
+                            id: user.character.id,
+                            token: null,
+                            actor: user.character,
+                            img: null,
+                            thumb: null,
+                            stats: {},
+                            resource1: {},
+                            resource2: {},
+                            cssClass: "only-actor"
+                        });
+                    }
                 }
             }
         }
@@ -489,7 +520,8 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.PrivateMessage",
                 icon: '<i class="fas fa-microphone"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     if (!game.user.isGM && entry.actor?.isOwner)
                         return false;
 
@@ -500,7 +532,8 @@ export class TokenBar extends Application {
                     return players.length > 0;
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     let players = game.users.contents
                         .filter(u =>
                             !u.isGM && (entry.actor?.ownership[u.id] == 3 || entry.actor?.ownership.default == 3)
@@ -519,7 +552,10 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.ExcludeFromTokenBar",
                 icon: '<i class="fas fa-ban"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId || t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
                     return game.user.isGM && entry?.token;
                 },
                 callback: (li) => {
@@ -527,7 +563,8 @@ export class TokenBar extends Application {
                         title: "Exclude Token",
                         content: "Are you sure you wish to remove this token from the Tokenbar?",
                         yes: () => {
-                            const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                            let id = li[0].dataset.tokenId;
+                            const entry = this.entries.find(t => t.token?.id === id);
                             if (entry)
                                 entry.token.setFlag("monks-tokenbar", "include", "exclude");
                         }
@@ -554,7 +591,10 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.EditToken",
                 icon: '<i class="fas fa-edit"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
                     if (game.user.isGM && entry?.token)
                         return true;
                     if (entry?.actor?.testUserPermission(game.user, "OWNER") && entry?.token)
@@ -570,13 +610,13 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.EditStats",
                 icon: '<i class="fas fa-list-ul"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
+                    return (game.user.isGM && entry);
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     if (entry)
                         new EditStats(entry.actor).render(true);
                 }
@@ -588,13 +628,14 @@ export class TokenBar extends Application {
                     if (game.system.id != "pf2e")
                         return false;
 
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
+
+                    return (game.user.isGM && entry);
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     if (entry) {
                         let heroPoints = Math.min((getProperty(entry.actor, 'system.resources.heroPoints.value') ?? 0) + 1, 3);
                         Actor.updateDocuments([{ _id: entry.actor.id, 'system.resources.heroPoints.value': heroPoints }]);
@@ -609,13 +650,14 @@ export class TokenBar extends Application {
                     if (game.system.id != "dnd5e")
                         return false;
 
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
+
+                    return (game.user.isGM && entry);
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.actor?.id === li[0].dataset.actorId);
+                    let id = li[0].dataset.tokenId || li[0].dataset.actorId;
+                    const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     if (entry) {
                         Actor.updateDocuments([{ _id: entry.actor.id, 'system.attributes.inspiration': true }]);
                         ChatMessage.create({ content: `${entry.actor.name} gained Inspiration!` });
@@ -627,7 +669,11 @@ export class TokenBar extends Application {
                 icon: '<i class="fas fa-user-slash no-panning"></i>',
                 condition: li => {
                     if (game.settings.get("monks-tokenbar", "show-disable-panning-option")) {
-                        const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                        let id = li[0].dataset.tokenId;
+                        if (!id) return false;
+
+                        const entry = this.entries.find(t => t.token?.id === id);
+
                         if (game.user.isGM && entry?.token)
                             return true;
                         if (entry?.token && entry?.token?.actor?.testUserPermission(game.user, "OWNER"))
@@ -636,7 +682,10 @@ export class TokenBar extends Application {
                     return false;
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
                     MonksTokenBar.changeTokenPanning(entry.token);
                 }
             },
@@ -644,13 +693,18 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.TargetToken",
                 icon: '<i class="fas fa-bullseye"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+
+                    return (game.user.isGM && entry?.token);
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
                     if (entry) {
                         const targeted = !entry.token.isTargeted;
                         entry.token._object?.setTarget(targeted, { releaseOthers: false });
@@ -661,42 +715,60 @@ export class TokenBar extends Application {
                 name: "MonksTokenBar.FreeMovement",
                 icon: '<i class="fas fa-running" data-movement="free"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    return (game.user.isGM && entry?.token)
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.FREE, entry.token);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    if (entry) {
+                        MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.FREE, entry.token);
+                    }
                 }
             },
             {
                 name: "MonksTokenBar.NoMovement",
                 icon: '<i class="fas fa-street-view" data-movement="none"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    return (game.user.isGM && entry?.token)
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.NONE, entry.token);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    if (entry) {
+                        MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.NONE, entry.token);
+                    }
                 }
             },
             {
                 name: "MonksTokenBar.CombatTurn",
                 icon: '<i class="fas fa-fist-raised" data-movement="combat"></i>',
                 condition: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    if (game.user.isGM && entry?.token)
-                        return true;
-                    return false;
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    return (game.user.isGM && entry?.token)
                 },
                 callback: li => {
-                    const entry = this.entries.find(t => t.token?.id === li[0].dataset.tokenId);
-                    MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.COMBAT, entry.token);
+                    let id = li[0].dataset.tokenId;
+                    if (!id) return false;
+
+                    const entry = this.entries.find(t => t.token?.id === id);
+                    if (entry) {
+                        MonksTokenBar.changeTokenMovement(MTB_MOVEMENT_TYPE.COMBAT, entry.token);
+                    }
                 }
             }
         ];
@@ -715,15 +787,16 @@ export class TokenBar extends Application {
             let result = oldRender.call(this, target);
 
             //Highlight the current movement if different from the global
-            const entry = MonksTokenBar?.tokenbar.entries.find(t => t.id === target[0].dataset.tokenId);
-            let movement = entry?.token.getFlag("monks-tokenbar", "movement");
+            let id = target[0].dataset.tokenId || target[0].dataset.actorId;
+            const entry = MonksTokenBar?.tokenbar.entries.find(t => t.token?.id === id || t.actor?.id === id);
+            let movement = entry?.token?.getFlag("monks-tokenbar", "movement");
             let html = $("#context-menu");
             if (movement != undefined) {
                 $('i[data-movement="' + movement + '"]', html).parent().addClass('selected');
             }
 
             //Highlight if nopanning option is selected
-            let nopanning = entry?.token.getFlag("monks-tokenbar", "nopanning");
+            let nopanning = entry?.token?.getFlag("monks-tokenbar", "nopanning");
             if (nopanning) {
                 $('i.no-panning', html).parent().addClass('selected');
             }
@@ -783,7 +856,8 @@ export class TokenBar extends Application {
     async _onClickToken(event) {
         event.preventDefault();
         const li = event.currentTarget;
-        const entry = this.entries.find(t => t.token?.id === li.dataset.tokenId);
+        const id = li.dataset.tokenId || li.dataset.actorId;
+        const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
 
         let that = this;
         if (!this.dbltimer) {
@@ -832,7 +906,7 @@ export class TokenBar extends Application {
     async _onDblClickToken(event) {
         event.preventDefault();
         const li = event.currentTarget;
-        const entry = this.entries.find(t => t.token?.id === li.dataset.tokenId);
+        const entry = this.entries.find(t => t.id == li.dataset.actorId || t.token?.id === li.dataset.tokenId);
 
         if (setting("dblclick-action") == "request" && (game.user.isGM || setting("allow-roll"))) {
             let entries = MonksTokenBar.getTokenEntries([entry.token._object]);
@@ -854,10 +928,11 @@ export class TokenBar extends Application {
         if ( tooltip ) li.removeChild(tooltip);
 
         // Handle hover-in
-        if ( event.type === "mouseenter" ) {
-            this._hover = li.dataset.tokenId;
+        if (event.type === "mouseenter") {
+            const id = li.dataset.tokenId || li.dataset.actorId;
+            this._hover = id;
             if (hasAction) {
-                const entry = this.entries.find(e => e.token?.id === li.dataset.tokenId || e.actor?.id === li.dataset.actorId);
+                const entry = this.entries.find(e => e.token?.id === id || e.actor?.id === id);
                 const tooltip = document.createElement("SPAN");
                 tooltip.classList.add("tooltip");
                 tooltip.textContent = entry?.token?.name || entry?.actor?.name;

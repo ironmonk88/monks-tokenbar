@@ -101,6 +101,15 @@ export const registerSettings = function () {
 		type: Boolean,
 		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
 	});
+	game.settings.register(modulename, "use-party", {
+		name: game.i18n.localize("MonksTokenBar.use-party.name"),
+		hint: game.i18n.localize("MonksTokenBar.use-party.hint"),
+		scope: "world",
+		config: game.system.id == "pf2e",
+		default: false,
+		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
+	});
 	game.settings.register(modulename, "include-actor", {
 		name: game.i18n.localize("MonksTokenBar.include-actor.name"),
 		hint: game.i18n.localize("MonksTokenBar.include-actor.hint"),

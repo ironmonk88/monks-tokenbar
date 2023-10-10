@@ -1,3 +1,13 @@
+## Version 11.04
+
+Added the option in Pathfinder 2e to use the Party List instead of the usual Tokenbar tokens.
+
+Fixed issues with the tokenbar context menu and tooltip when using Actors on the bar.
+
+Fixed issue with PF2e when a skill was requested that doesn't exist.
+
+Fixed issue with SWADE getting skill rolls.
+
 ## Version 11.03
 
 Fixed issue with contested roll when request doesn't exist.

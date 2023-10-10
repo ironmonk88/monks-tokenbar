@@ -63,6 +63,7 @@
 	"MonksTokenBar.ActorNoRollFunction": ": Could not find function to roll",
 	"MonksTokenBar.ActorNoTool": ": Does not have that tool",
 	"MonksTokenBar.ActorNoLore": ": Does not know that Lore",
+	"MonksTokenBar.ActorNoSkill": ": Does not have that skill",
 	"MonksTokenBar.UnknownSystem": "You're not using a system that Monk's Tokenbar supports.",
 	"MonksTokenBar.ActorNotCombatant": "Actor is not part of combat to roll initiative",
 
@@ -175,6 +176,8 @@
 	"MonksTokenBar.include-actor.hint": "Show character actors even if they have no token on the current scene",
 	"MonksTokenBar.hide-combatants.name": "Hide Combatants",
 	"MonksTokenBar.hide-combatants.hint": "Hide combatants after an encounter",
+	"MonksTokenBar.use-party.name": "Use Party",
+	"MonksTokenBar.use-party.hint": "Use the party to determine actors to display on the tokenbar",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",

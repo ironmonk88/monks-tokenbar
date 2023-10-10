@@ -101,9 +101,11 @@ export class SwadeRolls extends BaseRolls {
             rollfn = actor.rollAttribute;
         }
         else if (request.type == 'skill') {
-            let item = actor.items.find(i => i.name == request.key && i.type == 'skill');
-            sysRequest = item.id;
-            rollfn = actor.rollSkill;
+            let item = actor.items.find(i => i.name.toLowerCase() == request.key && i.type == 'skill');
+            if (item) {
+                sysRequest = item.id;
+                rollfn = actor.rollSkill;
+            }
         } else {
             if (request.key == 'init') {
                 rollfn = actor.rollInitiative;
