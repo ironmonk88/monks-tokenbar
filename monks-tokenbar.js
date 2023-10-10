@@ -611,7 +611,8 @@ export class MonksTokenBar {
             let tokenbar = MonksTokenBar.tokenbar;
             for (let i = 0; i < tokenbar.entries.length; i++) {
                 await tokenbar.entries[i].token?.setFlag("monks-tokenbar", "movement", null);
-                tokenbar.entries[i].token?.unsetFlag("monks-tokenbar", "notified");
+                if (tokenbar.entries[i].token)
+                    tokenbar.entries[i].token._movementNotified = null;
             };
             tokenbar.render(true);
         }
@@ -637,7 +638,7 @@ export class MonksTokenBar {
             let oldMove = token.getFlag("monks-tokenbar", "movement");
             if (newMove != oldMove) {
                 await token.setFlag("monks-tokenbar", "movement", newMove);
-                await token.unsetFlag("monks-tokenbar", "notified");
+                delete token._movementNotified;
 
                 let dispMove = token.getFlag("monks-tokenbar", "movement") || game.settings.get("monks-tokenbar", "movement") || MTB_MOVEMENT_TYPE.FREE;
                 MonksTokenBar.displayNotification(dispMove, token);
@@ -719,13 +720,13 @@ export class MonksTokenBar {
                 //prevent the token from moving
                 if (setting('debug'))
                     log('blocking movement');
-                if (notify && (!token.getFlag("monks-tokenbar", "notified") || false)) {
+                if (notify && (!(token._movementNotified ?? false))) {
                     ui.notifications.warn(movement == MTB_MOVEMENT_TYPE.COMBAT ? i18n("MonksTokenBar.CombatTurnMovementLimited") : i18n("MonksTokenBar.NormalMovementLimited"));
-                    token.setFlag("monks-tokenbar", "notified", true);
+                    token._movementNotified = true;
                     setTimeout(function (token) {
+                        delete token._movementNotified;
                         log('unsetting notified', token);
-                        token.unsetFlag("monks-tokenbar", "notified");
-                    }, 30000, token);
+                    }, 2000, token);
                 }
                 return false;
             }
@@ -1134,9 +1135,10 @@ Hooks.on("deleteCombat", MonksTokenBar.onDeleteCombat);
 Hooks.on("updateCombat", function (combat, delta) {
     if (game.user.isTheGM) {
         if (MonksTokenBar.tokenbar) {
-            $(MonksTokenBar.tokenbar.entries).each(function () {
-                this.token?.unsetFlag("monks-tokenbar", "notified");
-            });
+            for (let entry of MonksTokenBar.tokenbar.entries) {
+                if (entry.token)
+                    entry.token._movementNotified = null;
+            }
         }
 
         if (delta.round === 1 && combat.turn === 0 && combat.started === true && setting("change-to-combat")) {

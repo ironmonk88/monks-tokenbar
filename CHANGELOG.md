@@ -1,3 +1,9 @@
+## Version 11.05
+
+Fixed some ineffecient code
+
+Updated the code that uses the Party characters to respect the minimum player permission 
+
 ## Version 11.04
 
 Added the option in Pathfinder 2e to use the Party List instead of the usual Tokenbar tokens.

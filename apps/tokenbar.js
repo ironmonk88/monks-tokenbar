@@ -209,7 +209,15 @@ export class TokenBar extends Application {
         //log('Get current Tokens');
         if (game.system.id == "pf2e" && setting("use-party")) {
             this.entries = game.actors.party.members.map(a => {
+                if (!a)
+                    return null;
+
                 let token = canvas.tokens.placeables.find(t => t.actor?.id == a.id);
+                let canView = (game.user.isGM || a.isOwner || a.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
+
+                if (!canView)
+                    return null;
+
                 if (token) {
                     return {
                         id: token.id,
@@ -236,7 +244,7 @@ export class TokenBar extends Application {
                         cssClass: "only-actor"
                     }
                 }
-            });
+            }).filter(a => !!a);
         } else {
             this.entries = (canvas.scene?.tokens || [])
                 .filter(t => {
