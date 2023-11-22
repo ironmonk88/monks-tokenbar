@@ -691,7 +691,7 @@ export class SavingThrow {
 
                     if ($.isNumeric(dc)) {
                         msgtoken.roll.actor = actor;
-                        msgtoken.roll.requestKey = msgtoken.request?.key;
+                        msgtoken.roll.requestKey = msgtoken?.request?.key;
                         msgtoken.passed = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
                     }
 
