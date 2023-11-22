@@ -648,7 +648,7 @@ export class SavingThrow {
     }
 
     static collectResults() {
-        
+
     }
 
     static async updateMessage(updates, message, reveal = true) {
@@ -667,6 +667,8 @@ export class SavingThrow {
         for (let update of updates) {
             if (update != undefined) {
                 let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
+                let tokenOrActor = await fromUuid(msgtoken.uuid);
+                let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
                 log('updating actor', msgtoken, update.roll);
 
                 if (update.roll) {
@@ -687,8 +689,11 @@ export class SavingThrow {
                         Hooks.callAll('tokenBarUpdateRoll', this, message, update.id, msgtoken.roll);
                     }
 
-                    if ($.isNumeric(dc))
+                    if ($.isNumeric(dc)) {
+                        msgtoken.roll.actor = actor;
+                        msgtoken.roll.requestKey = msgtoken.request?.key;
                         msgtoken.passed = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
+                    }
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
                     let tooltipElem = $(tooltip);
@@ -713,9 +718,6 @@ export class SavingThrow {
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 } else if (update.error === true) {
                     //let actor = game.actors.get(msgtoken.actorid);
-                    let tokenOrActor = await fromUuid(msgtoken.uuid);
-                    let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
-
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
@@ -753,6 +755,8 @@ export class SavingThrow {
                 let pass = null;
                 if (token.roll) {
                     total += token.roll.total;
+                    token.roll.actor = game.actors.get(token.actorid);
+                    token.roll.requestKey = msgtoken?.request?.key;
                     pass = (isNaN(dc) || MonksTokenBar.system.rollSuccess(token.roll, dc));
                     if (pass === true || pass === "success")
                         passed++;
@@ -978,6 +982,8 @@ export class SavingThrow {
 
     static async updateReroll(message, tokenid, roll, { heroPoint = !1, keep = "new" } = {}) {
         let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
+        let tokenOrActor = await fromUuid(msgToken.uuid);
+        let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
         if (!msgToken) return;
 
         const oldRoll = msgToken.roll;
@@ -989,6 +995,8 @@ export class SavingThrow {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         if ($.isNumeric(dc)) {
             dc = parseInt(dc);
+            keptRoll.actor = actor;
+            keptRoll.requestKey = msgToken?.request?.key;
             msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
         }
 
@@ -1104,7 +1112,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     let showroll = game.user.isGM || rollmode == 'roll' || (rollmode == 'gmroll' && actor.isOwner);
                     $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal); //|| (rollmode == 'blindroll' && actor.isOwner)
 
-                    if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
+                    if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM)
                         $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
 
                     let critpass = (roll.dice.length ? msgtoken.total >= roll.dice[0].options.critical : false);

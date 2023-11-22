@@ -121,6 +121,63 @@ export class PF2eRolls extends BaseRolls {
         return true;
     }
 
+    dealWithEdgeCases(adjustment) {
+        switch (adjustment) {
+            case "to-critical-failure":
+                return -1;
+            case "to-failure":
+                return 0
+            case "to-success":
+                return 1
+            case "to-critical-success":
+                return 2;
+        }
+    }
+
+    isEdgeCase(adjustment) {
+        return adjustment === "to-critical-failure" ||
+            adjustment === "to-failure" ||
+            adjustment === "to-success" ||
+            adjustment === "to-critical-success";
+    }
+
+    adjustDegree(adjustment, degree) {
+        switch (adjustment) {
+            case "one-degree-better":
+                degree++;
+                break;
+            case "two-degrees-better":
+                degree+=2;
+                break;
+            case "one-degree-worse":
+                degree--;
+                break;
+            case "two-degrees-worse":
+                degree-=2;
+                break;
+        }
+        return degree;
+    }
+
+    handleDegreeAdjusting(relevantTypeREs, successRate, type) {
+        const relevantDegreeRes = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.adjustment[type]);
+        for (let adjustment of relevantDegreeRes) {
+            if (this.isEdgeCase(adjustment)) {
+                return this.dealWithEdgeCases(adjustment);
+            }
+            successRate = this.adjustDegree(adjustment, successRate);
+        }
+        return successRate;
+    }
+
+    getRollResultType(rollResult) {
+        if (rollResult > 1) return "criticalSuccess";
+        else if (rollResult < 0) return "criticalFailure";
+        else if (rollResult) return "success";
+        else return "failure";
+    }
+
+
     rollSuccess(roll, dc) {
         let total = roll.total;
         let success = (total >= dc) ? 1 : 0;
@@ -130,6 +187,13 @@ export class PF2eRolls extends BaseRolls {
         const diceResult = roll.terms[0]?.results?.find(r => r.active)?.result;
         if (diceResult === 1) success--;
         if (diceResult === 20) success++;
+
+        const type = this.getRollResultType(success);
+
+        if (roll.actor) {
+            const relevantREs = roll.actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === roll.requestKey);
+            success = this.handleDegreeAdjusting(relevantREs, success, type);
+        }
 
         if (success > 0)
             return (success > 1 ? "success" : true);
