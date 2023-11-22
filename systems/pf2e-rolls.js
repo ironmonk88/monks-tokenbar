@@ -194,9 +194,9 @@ export class PF2eRolls extends BaseRolls {
 
         if (roll.actor) {
             const relevantREs = roll.actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === roll.requestKey);
-            const { success: finalSuccess, degreeReasons: finalDegreeReasons } = this.handleDegreeAdjusting(relevantREs, success, type);
-            success = finalSuccess;
-            degreeReasons = finalDegreeReasons
+            const result = this.handleDegreeAdjusting(relevantREs, success, type);
+            degreeReasons = result.degreeReasons;
+            success = result.success;
         }
 
         if (success)
