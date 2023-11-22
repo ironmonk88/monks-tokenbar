@@ -147,27 +147,28 @@ export class PF2eRolls extends BaseRolls {
                 degree++;
                 break;
             case "two-degrees-better":
-                degree+=2;
+                degree += 2;
                 break;
             case "one-degree-worse":
                 degree--;
                 break;
             case "two-degrees-worse":
-                degree-=2;
+                degree -= 2;
                 break;
         }
         return degree;
     }
 
-    handleDegreeAdjusting(relevantTypeREs, successRate, type) {
+    handleDegreeAdjusting(relevantTypeREs, success, type) {
+        const degreeReasons = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.label);
         const relevantDegreeRes = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.adjustment[type]);
         for (let adjustment of relevantDegreeRes) {
             if (this.isEdgeCase(adjustment)) {
                 return this.dealWithEdgeCases(adjustment);
             }
-            successRate = this.adjustDegree(adjustment, successRate);
+            success = this.adjustDegree(adjustment, success);
         }
-        return successRate;
+        return { success, degreeReasons };
     }
 
     getRollResultType(rollResult) {
@@ -181,6 +182,7 @@ export class PF2eRolls extends BaseRolls {
     rollSuccess(roll, dc) {
         let total = roll.total;
         let success = (total >= dc) ? 1 : 0;
+        let degreeReasons = [];
         if (total >= dc + 10) success++;
         if (total <= dc - 10) success--;
 
@@ -192,13 +194,15 @@ export class PF2eRolls extends BaseRolls {
 
         if (roll.actor) {
             const relevantREs = roll.actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === roll.requestKey);
-            success = this.handleDegreeAdjusting(relevantREs, success, type);
+            const { success: finalSuccess, degreeReasons: finalDegreeReasons } = this.handleDegreeAdjusting(relevantREs, success, type);
+            success = finalSuccess;
+            degreeReasons = finalDegreeReasons
         }
 
-        if (success > 0)
-            return (success > 1 ? "success" : true);
+        if (success)
+            return ({ passed: success > 1 ? "success" : true, degreeReasons });
         else
-            return (success < 0 ? "failed" : false);
+            return ({ passed: success < 0 ? "failed" : false, degreeReasons });
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {

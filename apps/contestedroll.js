@@ -715,7 +715,8 @@ export class ContestedRoll {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         if ($.isNumeric(dc)) {
             dc = parseInt(dc);
-            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            const { passed } = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            msgToken.passed = passed
         }
 
         msgToken.reroll = roll.toJSON();;

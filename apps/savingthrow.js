@@ -373,7 +373,7 @@ export class SavingThrowApp extends Application {
                     if (this.request.length > 1 && this.request.some(r => r.type == type && r.key == key)) {
                         this.request.findSplice(r => r.type == type && r.key == key);
                         target.removeClass('selected');
-                    } else if (!this.request.some(r => r.type == type && r.key == key)){
+                    } else if (!this.request.some(r => r.type == type && r.key == key)) {
                         this.request.push({ type, key });
                         target.addClass('selected');
                     }
@@ -420,7 +420,7 @@ export class SavingThrow {
         return r.evaluate({ async: true });
     }
 
-    static async returnRoll (id, roll, actor, rollmode, msgId) {
+    static async returnRoll(id, roll, actor, rollmode, msgId) {
         log("Roll", roll, actor);
         if (roll != undefined) {
             if (roll instanceof Combat) {
@@ -692,7 +692,9 @@ export class SavingThrow {
                     if ($.isNumeric(dc)) {
                         msgtoken.roll.actor = actor;
                         msgtoken.roll.requestKey = msgtoken?.request?.key;
-                        msgtoken.passed = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
+                        const { passed, degreeReasons } = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
+                        msgtoken.passed = passed
+                        msgtoken.degreeReasons = degreeReasons
                     }
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
@@ -753,11 +755,14 @@ export class SavingThrow {
             })
             .map(([k, token]) => {
                 let pass = null;
+                let finalDegreeReasons = null;
                 if (token.roll) {
                     total += token.roll.total;
                     token.roll.actor = game.actors.get(token.actorid);
                     token.roll.requestKey = msgtoken?.request?.key;
-                    pass = (isNaN(dc) || MonksTokenBar.system.rollSuccess(token.roll, dc));
+                    const { passed, degreeReasons } = MonksTokenBar.system.rollSuccess(token.roll, dc);
+                    pass = (isNaN(dc) || passed);
+                    finalDegreeReasons = degreeReasons;
                     if (pass === true || pass === "success")
                         passed++;
                     else if (pass === false || pass === "failed")
@@ -770,6 +775,7 @@ export class SavingThrow {
                     roll: token.roll,
                     name: token.name,
                     passed: (pass === true || pass === "success"),
+                    degreeReasons: finalDegreeReasons,
                     actor: game.actors.get(token.actorid)
                 };
                 if (MonksTokenBar.system.useDegrees)
@@ -911,7 +917,7 @@ export class SavingThrow {
         }
     }
 
-    static async rerollFromMessage (message, tokenid, { heroPoint = !1, keep = "new" } = {}) {
+    static async rerollFromMessage(message, tokenid, { heroPoint = !1, keep = "new" } = {}) {
         let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
         if (!msgToken) return;
 
@@ -997,7 +1003,9 @@ export class SavingThrow {
             dc = parseInt(dc);
             keptRoll.actor = actor;
             keptRoll.requestKey = msgToken?.request?.key;
-            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            const { passed, degreeReasons } = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            msgToken.passed = passed;
+            msgToken.degreeReasons = degreeReasons;
         }
 
         msgToken.reroll = roll.toJSON();
@@ -1118,7 +1126,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     let critpass = (roll.dice.length ? msgtoken.total >= roll.dice[0].options.critical : false);
                     let critfail = (roll.dice.length ? msgtoken.total <= roll.dice[0].options.fumble : false);
 
-                    if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll'){
+                    if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll') {
                         $('.dice-result', item)
                             .toggleClass('success', critpass)
                             .toggleClass('fail', critfail);
@@ -1149,11 +1157,12 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 
                     let diceicon = "";
                     let dicetext = "";
+                    const seperator = msgtoken?.degreeReasons?.length ? "\nReasons:\n" : "";
                     switch (msgtoken.passed) {
-                        case true: diceicon = '<i class="fas fa-check"></i>'; dicetext = i18n("MonksTokenBar.RollPassed");break;
-                        case "success": diceicon = '<i class="fas fa-check-double"></i>'; dicetext = i18n("MonksTokenBar.RollCritPassed"); break;
-                        case false: diceicon = '<i class="fas fa-times"></i>'; dicetext = i18n("MonksTokenBar.RollFailed"); break;
-                        case "failed": diceicon = '<i class="fas fa-ban"></i>'; dicetext = i18n("MonksTokenBar.RollCritFailed"); break;
+                        case true: diceicon = '<i class="fas fa-check"></i>'; dicetext = `${i18n("MonksTokenBar.RollPassed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case "success": diceicon = '<i class="fas fa-check-double"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritPassed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case false: diceicon = '<i class="fas fa-times"></i>'; dicetext = `${i18n("MonksTokenBar.RollFailed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case "failed": diceicon = '<i class="fas fa-ban"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritFailed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
                     }
                     if (game.user.isGM || rollmode == 'roll')
                         $('.dice-total', item).attr("title", dicetext);
