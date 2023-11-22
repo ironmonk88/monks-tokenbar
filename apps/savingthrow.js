@@ -755,14 +755,14 @@ export class SavingThrow {
             })
             .map(([k, token]) => {
                 let pass = null;
-                let finalDegreeReasons = null;
+                let degreeReasons = null;
                 if (token.roll) {
                     total += token.roll.total;
                     token.roll.actor = game.actors.get(token.actorid);
                     token.roll.requestKey = msgtoken?.request?.key;
-                    const { passed, degreeReasons } = MonksTokenBar.system.rollSuccess(token.roll, dc);
-                    pass = (isNaN(dc) || passed);
-                    finalDegreeReasons = degreeReasons;
+                    const result = MonksTokenBar.system.rollSuccess(token.roll, dc);
+                    pass = (isNaN(dc) || result.passed);
+                    degreeReasons = result.degreeReasons;
                     if (pass === true || pass === "success")
                         passed++;
                     else if (pass === false || pass === "failed")
@@ -775,7 +775,7 @@ export class SavingThrow {
                     roll: token.roll,
                     name: token.name,
                     passed: (pass === true || pass === "success"),
-                    degreeReasons: finalDegreeReasons,
+                    degreeReasons,
                     actor: game.actors.get(token.actorid)
                 };
                 if (MonksTokenBar.system.useDegrees)
