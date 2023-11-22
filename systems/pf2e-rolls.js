@@ -164,7 +164,7 @@ export class PF2eRolls extends BaseRolls {
         const relevantDegreeRes = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.adjustment[type]);
         for (let adjustment of relevantDegreeRes) {
             if (this.isEdgeCase(adjustment)) {
-                return this.dealWithEdgeCases(adjustment);
+                return { success: this.dealWithEdgeCases(adjustment), degreeReasons };
             }
             success = this.adjustDegree(adjustment, success);
         }
