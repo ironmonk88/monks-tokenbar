@@ -171,7 +171,7 @@ export class PF2eRolls extends BaseRolls {
         return { success, degreeReasons };
     }
 
-    getRollResultType(rollResult) {
+    getResultTDegreeType(rollResult) {
         if (rollResult > 1) return "criticalSuccess";
         else if (rollResult < 0) return "criticalFailure";
         else if (rollResult) return "success";
@@ -190,7 +190,7 @@ export class PF2eRolls extends BaseRolls {
         if (diceResult === 1) success--;
         if (diceResult === 20) success++;
 
-        const type = this.getRollResultType(success);
+        const type = this.getResultTDegreeType(success);
 
         if (roll.actor) {
             const relevantREs = roll.actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === roll.requestKey);
