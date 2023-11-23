@@ -1157,12 +1157,12 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 
                     let diceicon = "";
                     let dicetext = "";
-                    const seperator = msgtoken?.degreeReasons?.length ? "\nReasons:\n" : "";
+                    const separator = msgtoken?.degreeReasons?.length ? "\nReasons:\n" : "";
                     switch (msgtoken.passed) {
-                        case true: diceicon = '<i class="fas fa-check"></i>'; dicetext = `${i18n("MonksTokenBar.RollPassed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
-                        case "success": diceicon = '<i class="fas fa-check-double"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritPassed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
-                        case false: diceicon = '<i class="fas fa-times"></i>'; dicetext = `${i18n("MonksTokenBar.RollFailed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
-                        case "failed": diceicon = '<i class="fas fa-ban"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritFailed")}${seperator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case true: diceicon = '<i class="fas fa-check"></i>'; dicetext = `${i18n("MonksTokenBar.RollPassed")}${separator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case "success": diceicon = '<i class="fas fa-check-double"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritPassed")}${separator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case false: diceicon = '<i class="fas fa-times"></i>'; dicetext = `${i18n("MonksTokenBar.RollFailed")}${separator}${msgtoken.degreeReasons.join(',\n')}`; break;
+                        case "failed": diceicon = '<i class="fas fa-ban"></i>'; dicetext = `${i18n("MonksTokenBar.RollCritFailed")}${separator}${msgtoken.degreeReasons.join(',\n')}`; break;
                     }
                     if (game.user.isGM || rollmode == 'roll')
                         $('.dice-total', item).attr("title", dicetext);
