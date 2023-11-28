@@ -759,7 +759,7 @@ export class SavingThrow {
                 if (token.roll) {
                     total += token.roll.total;
                     token.roll.actor = game.actors.get(token.actorid);
-                    token.roll.requestKey = msgtoken?.request?.key;
+                    token.roll.requestKey = token?.request?.key;
                     const result = MonksTokenBar.system.rollSuccess(token.roll, dc);
                     pass = (isNaN(dc) || result.passed);
                     degreeReasons = result.degreeReasons;
