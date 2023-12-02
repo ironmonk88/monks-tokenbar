@@ -51,7 +51,7 @@ export class BaseRolls {
     }
 
     rollSuccess(roll, dc) {
-        return roll.total >= dc;
+        return { passed: roll.total >= dc };
     }
 
     get showXP() {

@@ -121,9 +121,68 @@ export class PF2eRolls extends BaseRolls {
         return true;
     }
 
+    dealWithEdgeCases(adjustment) {
+        switch (adjustment) {
+            case "to-critical-failure":
+                return -1;
+            case "to-failure":
+                return 0
+            case "to-success":
+                return 1
+            case "to-critical-success":
+                return 2;
+        }
+    }
+
+    isEdgeCase(adjustment) {
+        return adjustment === "to-critical-failure" ||
+            adjustment === "to-failure" ||
+            adjustment === "to-success" ||
+            adjustment === "to-critical-success";
+    }
+
+    adjustDegree(adjustment, degree) {
+        switch (adjustment) {
+            case "one-degree-better":
+                degree++;
+                break;
+            case "two-degrees-better":
+                degree += 2;
+                break;
+            case "one-degree-worse":
+                degree--;
+                break;
+            case "two-degrees-worse":
+                degree -= 2;
+                break;
+        }
+        return degree;
+    }
+
+    handleDegreeAdjusting(relevantTypeREs, success, type) {
+        const degreeReasons = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.label);
+        const relevantDegreeRes = relevantTypeREs.filter(re => re.adjustment[type]).map(re => re.adjustment[type]);
+        for (let adjustment of relevantDegreeRes) {
+            if (this.isEdgeCase(adjustment)) {
+                return { success: this.dealWithEdgeCases(adjustment), degreeReasons };
+            }
+            success = this.adjustDegree(adjustment, success);
+        }
+        return { success, degreeReasons };
+    }
+
+    getResultDegreeType(rollResult) {
+        if (rollResult > 1) return "criticalSuccess";
+        else if (rollResult < 0) return "criticalFailure";
+        else if (rollResult) return "success";
+        else return "failure";
+    }
+
+
     rollSuccess(roll, dc) {
         let total = roll.total;
         let success = (total >= dc) ? 1 : 0;
+        let degreeReasons = [];
         if (total >= dc + 10) success++;
         if (total <= dc - 10) success--;
 
@@ -131,10 +190,19 @@ export class PF2eRolls extends BaseRolls {
         if (diceResult === 1) success--;
         if (diceResult === 20) success++;
 
-        if (success > 0)
-            return (success > 1 ? "success" : true);
+        const type = this.getResultDegreeType(success);
+
+        if (roll.actor) {
+            const relevantREs = roll.actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === roll.requestKey);
+            const result = this.handleDegreeAdjusting(relevantREs, success, type);
+            degreeReasons = result.degreeReasons;
+            success = result.success;
+        }
+
+        if (success)
+            return ({ passed: success > 1 ? "success" : true, degreeReasons });
         else
-            return (success < 0 ? "failed" : false);
+            return ({ passed: success < 0 ? "failed" : false, degreeReasons });
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {
