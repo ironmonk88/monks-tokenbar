@@ -78,12 +78,22 @@ export class MonksTokenBar {
         // Make the string lowercase
         str = str.toLowerCase();
 
-        // Remove accents, swap ñ for n, etc
-        var from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-        var to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
-        for (var i = 0, l = from.length; i < l; i++) {
-            str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
-        }
+        const characterMap = {
+            'Á': 'A', 'Ä': 'A', 'Â': 'A', 'À': 'A', 'Ã': 'A', 'Å': 'A', 'Č': 'C', 'Ç': 'C',
+            'Ć': 'C', 'Ď': 'D', 'É': 'E', 'Ě': 'E', 'Ë': 'E', 'È': 'E', 'Ê': 'E', 'Ẽ': 'E',
+            'Ĕ': 'E', 'Ȇ': 'E', 'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I', 'Ň': 'N', 'Ñ': 'N',
+            'Ó': 'O', 'Ö': 'O', 'Ò': 'O', 'Ô': 'O', 'Õ': 'O', 'Ø': 'O', 'Ř': 'R', 'Ŕ': 'R',
+            'Š': 'S', 'Ť': 'T', 'Ú': 'U', 'Ů': 'U', 'Ü': 'U', 'Ù': 'U', 'Û': 'U', 'Ý': 'Y',
+            'Ÿ': 'Y', 'Ž': 'Z', 'á': 'a', 'ä': 'a', 'â': 'a', 'à': 'a', 'ã': 'a', 'å': 'a',
+            'č': 'c', 'ç': 'c', 'ć': 'c', 'ď': 'd', 'é': 'e', 'ě': 'e', 'ë': 'e', 'è': 'e',
+            'ê': 'e', 'ẽ': 'e', 'ĕ': 'e', 'ȇ': 'e', 'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+            'ň': 'n', 'ñ': 'n', 'ó': 'o', 'ö': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ø': 'o',
+            'ð': 'o', 'ř': 'r', 'ŕ': 'r', 'š': 's', 'ť': 't', 'ú': 'u', 'ů': 'u', 'ü': 'u',
+            'ù': 'u', 'û': 'u', 'ý': 'y', 'ÿ': 'y', 'ž': 'z', 'þ': 'b', 'Þ': 'B', 'Đ': 'D',
+            'đ': 'd', 'ß': 'B', 'Æ': 'A', 'a': 'a', '·': '-', '/': '-', '_': '-', ',': '-'
+        };
+        const pattern = new RegExp(`[${Object.keys(characterMap).join('')}]`, 'g');
+        str = str.replace(pattern, match => characterMap[match]);
 
         // Remove invalid chars
         str = str.replace(/[^a-z0-9 -]/g, '')
