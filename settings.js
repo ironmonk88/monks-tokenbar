@@ -101,6 +101,15 @@ export const registerSettings = function () {
 		type: Boolean,
 		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
 	});
+	game.settings.register(modulename, "filter-duplicates", {
+		name: game.i18n.localize("MonksTokenBar.filter-duplicates.name"),
+		hint: game.i18n.localize("MonksTokenBar.filter-duplicates.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
+	});
 	game.settings.register(modulename, "use-party", {
 		name: game.i18n.localize("MonksTokenBar.use-party.name"),
 		hint: game.i18n.localize("MonksTokenBar.use-party.hint"),
@@ -308,6 +317,15 @@ export const registerSettings = function () {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "npc-xp-sharing", {
+		name: game.i18n.localize("MonksTokenBar.npc-xp-sharing.name"),
+		hint: game.i18n.localize("MonksTokenBar.npc-xp-sharing.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "divide-xp", {
 		name: game.i18n.localize("MonksTokenBar.divide-xp.name"),
 		hint: game.i18n.localize("MonksTokenBar.divide-xp.hint"),
@@ -354,6 +372,15 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
+	});
+
+	game.settings.register(modulename, "loot-image", {
+		name: game.i18n.localize("MonksTokenBar.loot-image.name"),
+		hint: game.i18n.localize("MonksTokenBar.loot-image.hint"),
+		scope: "world",
+		config: true,
+		default: "icons/svg/chest.svg",
+		type: String,
 	});
 
 	game.settings.register(modulename, "loot-sheet", {

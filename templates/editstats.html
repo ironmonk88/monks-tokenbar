@@ -6,6 +6,7 @@
                 <li class="items-header flexrow" style="position: relative;">
                     <div class="item-controls"></div>
                     <div class="item-name" style="text-align: left;">Name</div>
+                    <div class="item-controls flexrow" style="text-align: center;"></div>
                     <div class="item-controls flexrow" style="text-align: center;">
                         <a class="item-control item-add"><i class="fas fa-plus"></i> Add</a>
                     </div>
@@ -20,6 +21,10 @@
 
                         <div class="item-name stat-name" style="overflow:visible">
                             <input type="text" class="stat-text typeahead" autocomplete="off" value="{{this.stat}}" />
+                        </div>
+
+                        <div class="item-controls" style="text-align: center;">
+                            <input type="color" class="stat-color" value="{{this.color}}">
                         </div>
 
                         <div class="item-controls flexrow">

@@ -26,10 +26,7 @@ export class LootablesApp extends Application {
                 tokens = [tokens];
         }
 
-        this.currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {}).reduce((a, v) => ({ ...a, [v]: 0 }), {});
-        if (lootsheet == "monks-enhanced-journal" && game.modules.get("monks-enhanced-journal")?.active) {
-            this.currency = game.MonksEnhancedJournal.currencies.filter(c => c.convert != null).reduce((a, v) => ({ ...a, [v.id]: 0 }), {});
-        }
+        this.currency = MonksTokenBar.system.getCurrency().reduce((a, v) => ({ ...a, [v]: 0 }), {});
 
         this.entries = [];
         this.noitems = [];
@@ -623,7 +620,7 @@ export class LootablesApp extends Application {
                     }*/
 
                     /*
-                    for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                    for (let curr of MonksTokenbar.getCurrency()) {
                         if (entry.currency[curr] != undefined)
                             newActorData[`system.currency.${curr}`] = (entry.actor.system.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
                     }
@@ -662,7 +659,7 @@ export class LootablesApp extends Application {
                     for(let token of entry.tokens) {
                         let oldAlpha = token.alpha;
                         await token.document.update({
-                            "overlayEffect": 'icons/svg/chest.svg',
+                            "overlayEffect": setting("loot-image"),
                             "alpha": 0.6,
                             "flags.monks-tokenbar.alpha": oldAlpha,
                         });
@@ -700,7 +697,7 @@ export class LootablesApp extends Application {
                 if (this.isLootActor(lootSheet)) {
                     if (lootSheet !== "item-piles") {
                         const cls = collection.documentClass;
-                        entity = await cls.create({ folder: entity, name: name, img: 'icons/svg/chest.svg', type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
+                        entity = await cls.create({ folder: entity, name: name, img: setting("loot-image"), type: 'npc', flags: { core: { 'sheetClass': (lootSheet == "lootsheetnpc5e" ? 'dnd5e.LootSheetNPC5e' : 'core.a') } }, ownership: { 'default': CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } });
                         ui.actors.render();
                         MonksTokenBar.emit("refreshDirectory", { name: "actors" });
                     }
@@ -815,7 +812,7 @@ export class LootablesApp extends Application {
                 }
 
                 let entityCurr = entity.system.currency || {};
-                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                for (let curr of MonksTokenbar.getCurrency()) {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
@@ -841,7 +838,7 @@ export class LootablesApp extends Application {
                 await entity.setFlag('monks-enhanced-journal', 'items', entityItems);
 
                 let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
-                for (let curr of Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {})) {
+                for (let curr of MonksTokenbar.getCurrency()) {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
@@ -878,7 +875,7 @@ export class LootablesApp extends Application {
                 // Validate the final position
                 if (canvas.dimensions.rect.contains(pt.x, pt.y)) {
                     if (this.isLootActor(lootSheet)) {
-                        const td = await entity.getTokenDocument(mergeObject(pt, { texture: { src: "icons/svg/chest.svg" } }));
+                        const td = await entity.getTokenDocument(mergeObject(pt, { texture: { src: setting("loot-image") } }));
 
                         const cls = getDocumentClass("Token");
                         await cls.create(td, { parent: canvas.scene });
@@ -888,7 +885,7 @@ export class LootablesApp extends Application {
                             y: parseInt(pt.y + (canvas.scene.dimensions.size / 2)),
                             entryId: entity.parent.id,
                             pageId: entity.id,
-                            icon: "icons/svg/chest.svg"
+                            icon: setting("loot-image")
                         };
 
                         const cls = getDocumentClass("Note");

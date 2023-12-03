@@ -178,6 +178,12 @@
 	"MonksTokenBar.hide-combatants.hint": "Hide combatants after an encounter",
 	"MonksTokenBar.use-party.name": "Use Party",
 	"MonksTokenBar.use-party.hint": "Use the party to determine actors to display on the tokenbar",
+	"MonksTokenBar.loot-image.name": "Loot Image",
+	"MonksTokenBar.loot-image.hint": "Image to use for the lootable",
+	"MonksTokenBar.filter-duplicates.name": "Filter Duplicates",
+	"MonksTokenBar.filter-duplicates.hint": "Filter out duplicate tokens from the tokenbar",
+	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
+	"MonksTokenBar.npc-xp-sharing.hint": "Allow Friendly NPCs to share XP",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -250,6 +256,9 @@
 	"MonksTokenBar.AddTokenbar": "Add Tokenbar",
 	"MonksTokenBar.AddHeroPoint": "Add Hero Point",
 	"MonksTokenBar.AddInspiration": "Add Inspiration",
+	"MonksTokenBar.InitialEntities": "Initial Entities",
+	"MonksTokenBar.Initial": "Initial",
+
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

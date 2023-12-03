@@ -706,6 +706,8 @@ export class ContestedRoll {
         let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
         if (!msgToken) return;
 
+        let requests = message.getFlag('monks-tokenbar', 'requests');
+
         const oldRoll = msgToken.roll;
         let keptRoll = roll;
         if (keep === "best" && oldRoll.total > roll.total || keep === "worst" && oldRoll.total < roll.total) {
@@ -715,9 +717,11 @@ export class ContestedRoll {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         if ($.isNumeric(dc)) {
             dc = parseInt(dc);
-            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            Object.assign(msgToken, MonksTokenBar.system.rollSuccess(keptRoll, dc, msgToken.actorid, msgToken.request || requests[0]));
         }
 
+        msgToken.roll = keptRoll;
+        msgToken.oldroll = oldRoll;
         msgToken.reroll = roll.toJSON();;
         msgToken.total = keptRoll.total;
         msgToken.rerollIcon = heroPoint ? "hospital-symbol" : "dice";
@@ -809,6 +813,15 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     $('.dice-result', item).toggleClass('reveal', showroll && msgtoken.reveal).toggle(showroll || (rollmode == 'blindroll' && actor.isOwner));
                     if (!msgtoken.reveal || (rollmode == 'blindroll' && !game.user.isGM))
                         $('.dice-result .total', item).html(!msgtoken.reveal ? '...' : '-');
+
+                    let crit = MonksTokenBar.system.isCritical(msgtoken.roll);
+
+                    if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll') {
+                        $('.dice-result', item)
+                            .toggleClass('success', crit == "critical")
+                            .toggleClass('fail', crit == "fumble");
+                    }
+
                     if (!msgtoken.reveal && game.user.isGM)
                         $('.dice-result', item).on('click', $.proxy(ContestedRoll.finishRolling, ContestedRoll, [{ id: msgtoken.id, reveal: true }], message));
                     if (!actor.isOwner)

@@ -823,7 +823,7 @@ export class MonksTokenBar {
                 }
             }
         }
-        let req = (rt?.groups && rt?.groups[request.key]);
+        let req = (rt?.groups && rt?.groups[request.key]) || (request.type == "dice" && request.name);
         let flavor = i18n(req?.label || req || rt?.text || "MonksTokenBar.Unknown");
         switch (game.i18n.lang) {
             case "pt-BR":
@@ -1245,6 +1245,7 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         });
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
+    btn.clone(true).insertAfter($('input[name="monks-tokenbar.loot-image"]', html));
 
     $('[name="monks-tokenbar.loot-sheet"]', html).on('change', async () => {
         let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val();
@@ -1744,7 +1745,7 @@ Hooks.on("setupTileActions", (app) => {
 
             return { goto: goto };
         },
-        content: async (trigger, action) => {
+        content: async (trigger, action, actions) => {
             return `<span class="logic-style">${trigger.name}</span>${(action.data.passed ? ', Passed goto <span class="tag-style">' + action.data.passed + '</span>' : '')}${(action.data.failed ? ', Failed goto <span class="tag-style">' + action.data.failed + '</span>' : '')}${(action.data.resume ? ', Resume at <span class="tag-style">' + action.data.resume + '</span>' : '')}`;
         }
     });

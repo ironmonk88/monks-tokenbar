@@ -7,7 +7,7 @@ export class EditStats extends FormApplication {
         options.height = 62 + (Math.max(stats.length, 4) * 27);
 
         super(object, options);
-        this.stats = (stats || []).map(s => {
+        this.stats = (Array.isArray(stats) ? stats : []).map(s => {
             s.id = s.id || randomID();
             return s;
         });
@@ -34,9 +34,19 @@ export class EditStats extends FormApplication {
     }
 
     getData(options) {
+        let rgb2hex = (s) => s.match(/[0-9]+/g).reduce((a, b) => a + (b | 256).toString(16).slice(1), '#');
+        let defaultColor = $('#tokenbar .token .token-stat').css('color') || '#f0f0f0';
+        if (defaultColor.startsWith('rgb'))
+            defaultColor = rgb2hex(defaultColor);
+
+        let stats = this.stats.map(s => {
+            s.color = s.color || defaultColor;
+            return s;
+        
+        })
         return {
             hasObject: this.object instanceof Actor,
-            stats: this.stats
+            stats
         };
     }
 
@@ -87,6 +97,14 @@ export class EditStats extends FormApplication {
             this.render(true);
     }
 
+    changeColor(event) {
+        let statid = event.currentTarget.closest('.item').dataset.id;
+        let stat = this.stats.find(s => s.id == statid);
+        stat.color = $(event.currentTarget).val();
+        if (!this.submitting)
+            this.render(true);
+    }
+
     activateListeners(html) {
         super.activateListeners(html);
 
@@ -95,6 +113,7 @@ export class EditStats extends FormApplication {
 
         $('div.icon', html).click(this.changeIcon.bind(this));
         $('.stat-text', html).blur(this.changeText.bind(this));
+        $('.stat-color', html).change(this.changeColor.bind(this));
         $('.remove', html).click(this.removeStat.bind(this));
         $('.item-add', html).click(this.addStat.bind(this));
 

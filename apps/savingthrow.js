@@ -203,10 +203,23 @@ export class SavingThrowApp extends Application {
             }
 
             this.request = this.request instanceof Array ? this.request : [this.request];
-            let requests = this.request.map(r => {
+            let diceRequests = this.request.filter(r => r.type == 'dice');
+            let requests = this.request
+                .filter(r => r.type != 'dice')
+                .map(r => {
                 r.name = MonksTokenBar.getRequestName(this.requestoptions, r, actors);
                 return r;
-            });
+                });
+
+            if (diceRequests.length > 0) {
+                let diceResult = "";
+                for (let dice of diceRequests) {
+                    let parts = dice.key.split("d");
+                    let diceStr = `${dice.count || 1}d${parts[1]}`;
+                    diceResult += (diceResult.length > 0 ? "+" : "") + diceStr;
+                }
+                requests.push({ type: 'dice', key: diceResult, name: diceResult });
+            }
 
             let hasNone = this.entries.filter(e => {
                 return requests.filter(r => {
@@ -370,23 +383,50 @@ export class SavingThrowApp extends Application {
             let key = e.currentTarget.dataset.key;
             if (e.ctrlKey || e.metaKey) {
                 if (this.request instanceof Array) {
-                    if (this.request.length > 1 && this.request.some(r => r.type == type && r.key == key)) {
-                        this.request.findSplice(r => r.type == type && r.key == key);
-                        target.removeClass('selected');
+                    if ((this.request.length > 1 || type == "dice") && this.request.some(r => r.type == type && r.key == key)) {
+                        if (type == 'dice') {
+                            let request = this.request.find(r => r.type == type && r.key == key);
+                            if (request) {
+                                request.count = request.count + 1;
+                                let parts = key.split("d");
+                                $(target).html(`${request.count}d${parts[1]}`);
+                            }
+                        } else {
+                            this.request.findSplice(r => r.type == type && r.key == key);
+                            target.removeClass('selected');
+                        }
                     } else if (!this.request.some(r => r.type == type && r.key == key)){
                         this.request.push({ type, key });
                         target.addClass('selected');
                     }
                 } else {
                     if (this.request.type != type && this.request.key != key) {
-                        this.request = [this.request, { type, key }];
+                        this.request = [this.request, { type, key, count: 1 }];
                         target.addClass('selected');
                     }
                 }
             } else {
-                this.request = [{ type, key }];
+                this.request = [{ type, key, count: 1 }];
+                // Clear any dice counts
+                $('.request-roll .request-option[data-type="dice"]', html).each(function () {
+                    $(this).html(this.dataset.key);
+                });
                 $('.request-roll .request-option.selected', html).removeClass('selected');
                 target.addClass('selected');
+            }
+        }, this));
+        $('.request-roll .request-option', html).contextmenu($.proxy(function (e) {
+            let target = $(e.currentTarget);
+            let type = e.currentTarget.dataset.type;
+            if (type == "dice") {
+                let key = e.currentTarget.dataset.key;
+
+                let request = this.request.find(r => r.type == type && r.key == key);
+                if (request && request.count > 1) {
+                    request.count = request.count - 1;
+                    let parts = key.split("d");
+                    $(target).html(`${request.count}d${parts[1]}`);
+                }
             }
         }, this));
         $('#savingthrow-rollmode', html).change($.proxy(function (e) {
@@ -539,7 +579,11 @@ export class SavingThrow {
             if (!request && requests.length > 1) {
                 // Select which of the requests to use
                 if (ffwd) {
-                    request = requests[0];
+                    // Find the first available request for this token
+                    let validRequests = requests.filter(r => {
+                        return MonksTokenBar.system.requestoptions.find(o => o.id == r.type) && !actor.items.find(i => i.type == r.type && (MonksTokenBar.slugify(i.name) == r.key || i.getFlag("core", "sourceId") == r.key));
+                    });
+                    request = validRequests[0];
                 } else {
                     let buttons = requests.map(r => {
                         let disabled = !MonksTokenBar.system.requestoptions.find(o => o.id == r.type) && !actor.items.find(i => i.type == r.type && (MonksTokenBar.slugify(i.name) == r.key || i.getFlag("core", "sourceId") == r.key));
@@ -658,6 +702,8 @@ export class SavingThrow {
         if ($.isNumeric(dc))
             dc = parseInt(dc);
 
+        let requests = message.getFlag('monks-tokenbar', 'requests');
+
         let content = $(message.content);
 
         let flags = {};
@@ -688,7 +734,7 @@ export class SavingThrow {
                     }
 
                     if ($.isNumeric(dc))
-                        msgtoken.passed = MonksTokenBar.system.rollSuccess(msgtoken.roll, dc);
+                        Object.assign(msgtoken, MonksTokenBar.system.rollSuccess(msgtoken.roll, dc, msgtoken.actorid, msgtoken.request || requests[0]));
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
                     let tooltipElem = $(tooltip);
@@ -712,10 +758,6 @@ export class SavingThrow {
                     flags["token" + update.id] = msgtoken;
                     //await message.setFlag('monks-tokenbar', 'token' + update.id, msgtoken);
                 } else if (update.error === true) {
-                    //let actor = game.actors.get(msgtoken.actorid);
-                    let tokenOrActor = await fromUuid(msgtoken.uuid);
-                    let actor = tokenOrActor?.actor ? tokenOrActor.actor : tokenOrActor;
-
                     ui.notifications.warn(msgtoken.name + ': ' + update.msg);
 
                     $('.item[data-item-id="' + update.id + '"] .item-row .item-roll', content).remove();
@@ -750,14 +792,15 @@ export class SavingThrow {
                 return k.startsWith('token')
             })
             .map(([k, token]) => {
-                let pass = null;
                 if (token.roll) {
                     total += token.roll.total;
-                    pass = (isNaN(dc) || MonksTokenBar.system.rollSuccess(token.roll, dc));
-                    if (pass === true || pass === "success")
+                    if ($.isNumeric(dc)) {
+                        if (token.passed === true || token.passed === "success")
+                            passed++;
+                        else if (token.passed === false || token.passed === "failed")
+                            failed++;
+                    } else
                         passed++;
-                    else if (pass === false || pass === "failed")
-                        failed++;
                 }
 
                 let result = {
@@ -765,11 +808,11 @@ export class SavingThrow {
                     uuid: token.uuid,
                     roll: token.roll,
                     name: token.name,
-                    passed: (pass === true || pass === "success"),
+                    passed: (token.passed !== false && token.passed === "failed"),
                     actor: game.actors.get(token.actorid)
                 };
                 if (MonksTokenBar.system.useDegrees)
-                    result.degree = (pass == "success" || pass == "failed" ? pass : null);
+                    result.degree = (token.passed == "success" || token.passed == "failed" ? token.passed : null);
                 return result;
             });
 
@@ -884,7 +927,7 @@ export class SavingThrow {
                 let actor = game.actors.get(msgtoken.actorid);
                 let attr = 'system.attributes.death.' + (msgtoken.passed === true || msgtoken.passed === "success" ? 'success' : 'failure');
                 let roll = Roll.fromData(msgtoken.roll);
-                let val = (getProperty(actor, attr) || 0) + (roll.dice[0].total == roll.dice[0].options.critical || roll.dice[0].total == roll.dice[0].options.fumble ? 2 : 1);
+                let val = (getProperty(actor, attr) || 0) + (!!MonksTokenBar.system.isCritical(roll) ? 2 : 1);
                 let update = {};
                 update[attr] = val;
                 await actor.update(update);
@@ -980,6 +1023,8 @@ export class SavingThrow {
         let msgToken = message.getFlag("monks-tokenbar", `token${tokenid}`);
         if (!msgToken) return;
 
+        let requests = message.getFlag('monks-tokenbar', 'requests');
+
         const oldRoll = msgToken.roll;
         let keptRoll = roll;
         if (keep === "best" && oldRoll.total > roll.total || keep === "worst" && oldRoll.total < roll.total) {
@@ -989,9 +1034,11 @@ export class SavingThrow {
         let dc = message.getFlag('monks-tokenbar', 'dc');
         if ($.isNumeric(dc)) {
             dc = parseInt(dc);
-            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc);
+            msgToken.passed = MonksTokenBar.system.rollSuccess(keptRoll, dc, msgToken.actorid, msgToken.request || requests[0]);
         }
 
+        msgToken.roll = keptRoll;
+        msgToken.oldroll = oldRoll;
         msgToken.reroll = roll.toJSON();
         msgToken.total = keptRoll.total;
         msgToken.rerollIcon = heroPoint ? "hospital-symbol" : "dice";
@@ -1107,18 +1154,17 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     if (msgtoken.reveal && rollmode == 'blindroll' && !game.user.isGM) 
                         $('.dice-result .smoke-screen', item).html(msgtoken.reveal ? '-' : '...');
 
-                    let critpass = (roll.dice.length ? msgtoken.total >= roll.dice[0].options.critical : false);
-                    let critfail = (roll.dice.length ? msgtoken.total <= roll.dice[0].options.fumble : false);
+                    let crit = MonksTokenBar.system.isCritical(roll);
 
                     if (game.user.isGM || rollmode == 'roll' || rollmode == 'gmroll'){
                         $('.dice-result', item)
-                            .toggleClass('success', critpass)
-                            .toggleClass('fail', critfail);
+                            .toggleClass('success', crit == "critical")
+                            .toggleClass('fail', crit == "fumble");
                     }
 
                     if (!msgtoken.reveal && game.user.isGM)
                         $('.dice-result', item).on('click', $.proxy(SavingThrow.finishRolling, SavingThrow, [msgtoken], message));
-                    if (!actor.isOwner)
+                    if (!actor?.isOwner)
                         $('.dice-tooltip', item).remove();
                     else
                         $('.dice-tooltip', item).toggleClass('noshow', !showroll);
@@ -1157,8 +1203,14 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                         //.on('click', $.proxy(SavingThrow.onAssignDeathST, this, tokenId, message))
                         .html(diceicon);
 
+                    $('.token-properties', item).html("");
                     if (requests.length > 1) {
-                        $('.token-properties', item).html(`<span class="property-tag">Rolled: ${request.name}</span>`);
+                        $('.token-properties', item).append(`<span class="property-tag request-rolled">Rolled: ${request.name}</span>`);
+                    }
+                    if (msgtoken.properties instanceof Array) {
+                        for (let prop of msgtoken.properties) {
+                            $('.token-properties', item).append(`<span class="property-tag">${prop}</span>`);
+                        }
                     }
                     if (showroll) {
                         let props = MonksTokenBar.system.rollProperties({ request, roll }) || [];

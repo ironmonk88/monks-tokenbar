@@ -1,5 +1,5 @@
 import { BaseRolls } from "./base-rolls.js"
-import { i18n, log, setting } from "../monks-tokenbar.js"
+import { i18n, log, setting, MonksTokenBar } from "../monks-tokenbar.js"
 
 export class PF1Rolls extends BaseRolls {
     constructor() {
@@ -58,6 +58,19 @@ export class PF1Rolls extends BaseRolls {
 
     getXP(actor) {
         return actor?.system.details.xp;
+    }
+
+    calcXP(actors, monsters) {
+        //get the monster xp
+        let combatxp = 0;
+        for (let monster of monsters) {
+            monster.xp = (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
+            combatxp += monster.xp;
+        };
+
+        let partySize = actors.length < 4 ? 3 : actors.length > 5 ? 6 : 4;
+
+        return (combatxp / partySize) * actors.length;
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {

@@ -114,14 +114,36 @@ export class PF2eRolls extends BaseRolls {
             proficiencyWithoutLevel: game.settings.get('pf2e', 'proficiencyVariant') === 'ProficiencyWithoutLevel',
         });
 
-        return xp.totalXP;
+        return xp.xpPerPlayer;
     }
 
     get useDegrees() {
         return true;
     }
 
-    rollSuccess(roll, dc) {
+    rollSuccess(roll, dc, actorId, request) {
+        let handleDegreeAdjusting = (relevantREs) => {
+            let type = success > 0 ? success > 1 ? "criticalSuccess" : "success" : success < 0 ? "criticalFailure" : "failure";
+
+            let edgeCases = { "to-critical-failure": -1, "to-failure": 0, "to-success": 1, "to-critical-success": 2 };
+            let edgeCaseREs = relevantREs.filter(re => !!re.adjustment[type] && !!edgeCases[re.adjustment[type]]);
+
+            if (edgeCaseREs.length) {
+                // if there are any edge cases, we need to deal with them first
+                success = edgeCases[edgeCaseREs[0].adjustment[type]];
+                return [edgeCaseREs[0].label];
+            } else {
+                let degreeReasons = [];
+                let adjustments = { "one-degree-better": 1, "two-degrees-better": 2, "one-degree-worse": -1, "two-degrees-worse": -2 };
+                for (let re of relevantREs.filter(re => !!re.adjustment[type])) {
+                    degreeReasons.push(re.label);
+                    let adjustment = re.adjustment[type];
+                    success = success + (adjustments[adjustment] ?? 0);
+                }
+                return degreeReasons;
+            }
+        }
+
         let total = roll.total;
         let success = (total >= dc) ? 1 : 0;
         if (total >= dc + 10) success++;
@@ -131,10 +153,18 @@ export class PF2eRolls extends BaseRolls {
         if (diceResult === 1) success--;
         if (diceResult === 20) success++;
 
-        if (success > 0)
-            return (success > 1 ? "success" : true);
-        else
-            return (success < 0 ? "failed" : false);
+        let properties = [];
+
+        if (actorId && request) {
+            let actor = game.actors.get(actorId);
+            if (actor) {
+                const relevantREs = actor.rules.filter(re => re.key === "AdjustDegreeOfSuccess" && re.selector === request.key);
+                properties = handleDegreeAdjusting(relevantREs);
+            }
+        }
+
+        let passed = success > 0 ? success > 1 ? "success" : true : success < 0 ? "failed" : false;
+        return { passed, properties };
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {

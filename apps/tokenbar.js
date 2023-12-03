@@ -294,6 +294,23 @@ export class TokenBar extends Application {
                     }
                 }
             }
+
+            if (setting("filter-duplicates")) {
+                this.entries = this.entries.filter((t, i, a) => {
+                    let isGood = a.findIndex(e => e.actor?.id === t.actor?.id) === i;
+                    if (!isGood && t.token) {
+                        let original = this.entries.find(e => e.actor?.id === t.actor?.id);
+                        if (original) {
+                            if (original.tokens == undefined) {
+                                original.tokens = [original.token, t.token];
+                                original.tokenIdx = 0;
+                            }  else
+                                original.tokens.push(t.token);
+                        }
+                    }
+                    return isGood;
+                });
+            }
         }
 
         this.entries = this.entries.sort(function (a, b) {
@@ -359,11 +376,13 @@ export class TokenBar extends Application {
 
         let viewstats = entry.actor?.getFlag('monks-tokenbar', 'stats') || MonksTokenBar.stats;
         let diffstats = {};
+        let defaultColor = $('#tokenbar .token .token-stat').css('color') || '#f0f0f0';
+
         for (let stat of viewstats) {
             let value = TokenBar.processStat(stat.stat, entry.actor.system) || TokenBar.processStat(stat.stat, entry.token);
 
             if (entry.stats[stat.stat] == undefined) {
-                entry.stats[stat.stat] = { icon: stat.icon, value: value, hidden: (!setting("show-undefined") && value == undefined) };
+                entry.stats[stat.stat] = { icon: stat.icon, color: stat.color || defaultColor, value: value, hidden: (!setting("show-undefined") && value == undefined) };
                 diffstats[stat.stat] = entry.stats[stat.stat];
             }
             else {
@@ -897,11 +916,19 @@ export class TokenBar extends Application {
                         }
                     } else {
                         if (game.user.isGM || entry.actor?.testUserPermission(game.user, "OBSERVER")) {
-                            let animate = MonksTokenBar.manageTokenControl(entry?.token._object, { shiftKey: event?.originalEvent?.shiftKey });
-
-                            if (entry?.token.getFlag("monks-tokenbar", "nopanning"))
-                                animate = false;
-                            (animate ? canvas.animatePan({ x: entry?.token?._object?.x, y: entry?.token?._object?.y }) : true);
+                            let token = entry?.token;
+                            if (entry?.tokens) {
+                                token = entry.tokens[entry.tokenIdx];
+                                entry.tokenIdx = (entry.tokenIdx + 1) % entry.tokens.length;
+                            }
+                            if (token) {
+                                let animate = false;
+                                if (token._object)
+                                    animate = MonksTokenBar.manageTokenControl(token._object, { shiftKey: event?.originalEvent?.shiftKey });
+                                if (token.getFlag("monks-tokenbar", "nopanning"))
+                                    animate = false;
+                                (animate ? canvas.animatePan({ x: token?._object?.x, y: token?._object?.y }) : true);
+                            }
                         }
                     }
                 }
@@ -914,7 +941,8 @@ export class TokenBar extends Application {
     async _onDblClickToken(event) {
         event.preventDefault();
         const li = event.currentTarget;
-        const entry = this.entries.find(t => t.id == li.dataset.actorId || t.token?.id === li.dataset.tokenId);
+        let id = li.dataset.tokenId || li.dataset.actorId;
+        const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
 
         if (setting("dblclick-action") == "request" && (game.user.isGM || setting("allow-roll"))) {
             let entries = MonksTokenBar.getTokenEntries([entry.token._object]);

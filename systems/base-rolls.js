@@ -23,6 +23,13 @@ export class BaseRolls {
         return [];
     }
 
+    isCritical(roll) {
+        if (!(roll.terms[0] instanceof Die) && (roll.terms[0].faces === 20) || !roll._evaluated) return undefined;
+        if (Number.isNumeric(roll.options.critical) && roll.dice[0].total >= roll.options.critical) return 'critical';
+        if (Number.isNumeric(roll.options.fumble) && roll.dice[0].total <= roll.options.fumble) return 'fumble';
+        return false;
+    }
+
     static activateHooks() {
     }
 
@@ -50,8 +57,10 @@ export class BaseRolls {
         return false;
     }
 
-    rollSuccess(roll, dc) {
-        return roll.total >= dc;
+    rollSuccess(roll, dc, actorId, request) {
+        let passed = roll.total >= dc;
+        return { passed };
+;
     }
 
     get showXP() {
@@ -182,5 +191,15 @@ export class BaseRolls {
 
     parseKeys(e, keys) {
 
+    }
+
+    getCurrency() {
+        let lootsheet = setting('loot-sheet');
+        let currency = Object.keys(CONFIG[game.system.id.toUpperCase()]?.currencies || {});
+        if (lootsheet == "monks-enhanced-journal" && game.modules.get("monks-enhanced-journal")?.active) {
+            currency = game.MonksEnhancedJournal.currencies.filter(c => c.convert != null);
+        }
+
+        return currency;
     }
 }

@@ -10,6 +10,7 @@ export class AssignXPApp extends Application {
         this.divideXpOptions = divideXpOptions
 
         this.monsters = [];
+        let collectMonsters = true;
         if (entities != undefined) {
             if (entities instanceof Combat) {
                 entities = entities.combatants.map(c => c.token);
@@ -17,11 +18,18 @@ export class AssignXPApp extends Application {
                 entities = [entities];
             }
         } else {
-            entities = (canvas.tokens.controlled.length > 0 ? canvas.tokens.controlled : canvas.tokens.placeables);
+            if (canvas.tokens.controlled.length > 0) {
+                entities = canvas.tokens.controlled;
+            } else {
+                entities = canvas.tokens.placeables;
+                collectMonsters = false;
+            }
         }
 
         this.actors = [];
         this.monsters = [];
+
+        let npcShareXp = setting("npc-xp-sharing");
 
         for (let entity of entities) {
             if (entity) {
@@ -29,10 +37,9 @@ export class AssignXPApp extends Application {
                     return;
                 let actor = entity.actor.isPolymorphed ? game.actors.find(a => a.id == entity.actor.getFlag(game.system.id, 'originalActor')) : entity.actor;
                 let token = entity.document ? entity.document : entity;
-                if (token.disposition == 1 && token.actorLink && actor.hasPlayerOwner && (actor.type == 'character' || actor?.type == 'Player Character')) {
+                if (token.disposition == 1 && token.actorLink && ((actor.hasPlayerOwner && (actor.type == 'character' || actor?.type == 'Player Character')) || (npcShareXp && actor.type == 'npc'))) {
                     this.actors.push({ actor: actor, xp: 0 });
-                } else if (token.disposition != 1 && !actor.hasPlayerOwner) {
-
+                } else if (token.disposition != 1 && !actor.hasPlayerOwner && collectMonsters) {
                     this.monsters.push({ actor: actor, defeated: AssignXPApp.isDefeated(actor) });
                 }
             }
@@ -41,6 +48,8 @@ export class AssignXPApp extends Application {
             if (!a) return false;
             return self.findIndex((i) => { return i?.actor.id == a.actor.id }) === index;
         });
+
+        this.initialActors = duplicate(this.actors);
 
         this.changeXP(options?.xp);
     }
@@ -243,6 +252,11 @@ export class AssignXPApp extends Application {
                         xp: 0
                     }
                 }));
+                this.changeXP();
+                this.render(true);
+                break;
+            case 'initial':
+                this.actors = duplicate(this.initialActors);
                 this.changeXP();
                 this.render(true);
                 break;
