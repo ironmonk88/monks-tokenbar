@@ -1,3 +1,7 @@
+## Version 11.07
+
+Fixed an issue when requesting a roll
+
 ## Version 11.06
 
 Fixed issue when assigning xp with no tokens selected, selecting all the monsters on the scene.

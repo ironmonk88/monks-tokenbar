@@ -185,7 +185,7 @@ export class SavingThrowApp extends Application {
                     id: t.token.id,
                     uuid: t.token.document?.uuid || t.token.uuid,
                     actorid: actor.id,
-                    icon: (t.token?.document?.texture.src.endsWith('webm') || !t.token?.document?.texture ? actor.img : t.token.document.texture.src),
+                    icon: (t.token?.document?.texture?.src?.endsWith('webm') || !t.token?.document?.texture ? actor.img : t.token.document.texture.src),
                     name: name,
                     realname: t.token.name,
                     showname: actor.hasPlayerOwner || this.hidenpcname !== true,
