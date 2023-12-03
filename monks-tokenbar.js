@@ -793,9 +793,10 @@ export class MonksTokenBar {
     static getNameList(list) {
         list = list.filter(g => g.groups);
         for (let attr of list) {
+            attr.label = attr.label ?? attr.text;
             attr.groups = duplicate(attr.groups);
             for (let [k, v] of Object.entries(attr.groups)) {
-                attr.groups[k] = v?.label || v;
+                attr.groups[k] = v?.label || v?.text || v;
             }
         }
 
@@ -1419,7 +1420,8 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 options: { show: ['token', 'within', 'players', 'previous', 'tagger'] },
-                restrict: (entity) => { return (entity instanceof Token); }
+                restrict: (entity) => { return (entity instanceof Token); },
+                defaultType: "tokens"
             },
             {
                 id: "request",
@@ -1543,7 +1545,8 @@ Hooks.on("setupTileActions", (app) => {
             let type = (parts.length > 1 ? parts[0] : '');
             let key = (parts.length > 1 ? parts[1] : parts[0]);
             let name = MonksTokenBar.getRequestName(MonksTokenBar.system.requestoptions, { type, key });
-            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+            let ctrl = trigger.ctrls.find(c => c.id == "entity");
+            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity || ctrl?.defvalue || "previous");
             return `<span class="action-style">${name}</span>${(action.data?.dc ? ', <span class="details-style">"DC' + action.data?.dc + '"</span>' : '')} for <span class="entity-style">${entityName}</span> ${(action.data?.usetokens != 'all' || action.data?.continue != 'always' ? ", Continue " + (action.data?.continue != 'always' ? ' if ' + trigger.values.continue[action.data?.continue] : '') + (action.data?.usetokens != 'all' ? ' with ' + trigger.values.usetokens[action.data?.usetokens] : '') : '')}`;
         }
     });
@@ -1759,7 +1762,8 @@ Hooks.on("setupTileActions", (app) => {
                 type: "select",
                 subtype: "entity",
                 options: { show: ['token', 'within', 'players', 'previous'] },
-                restrict: (entity) => { return (entity instanceof Token); }
+                restrict: (entity) => { return (entity instanceof Token); },
+                defaultType: "tokens"
             },
             {
                 id: "xp",
@@ -1813,7 +1817,8 @@ Hooks.on("setupTileActions", (app) => {
 
         },
         content: async (trigger, action) => {
-            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity);
+            let ctrl = trigger.ctrls.find(c => c.id == "entity");
+            let entityName = await game.MonksActiveTiles.entityName(action.data?.entity || ctrl?.defvalue || "previous");
             return `<span class="action-style">${trigger.name}</span> <span class="details-style">"${action.data?.xp}XP"</span> to <span class="entity-style">${entityName}</span>`;
         }
     });

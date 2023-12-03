@@ -1,3 +1,45 @@
+## Version 11.06
+
+Fixed issue when assigning xp with no tokens selected, selecting all the monsters on the scene.
+
+Added the option to assign xp to friendly npcs.  Thank you Crabgor
+
+Added the option to use the initial actors selected when the assign xp dialog opened.  So if you accidentally cleared the tokens, you can revert back to the original tokens.
+
+Fixed issue where requesting a new roll wasn't overwriting the focussed roll properly.
+
+Fixed issue detecting when a critical or fumble was actually rolled.
+
+Added the option to select a colour for the stats that are displayed.
+
+Fixed issue if stats data is corrupted.  Thank you kagangtuya-star
+
+Fixed issue with the lootsheet currency.
+
+Added the option to change the image for the loot token.
+
+Added the option to increase the number of dice being requested for a roll
+
+Fixed an issue finding the correct request when fast forwarding a request that has multiple available rolls.
+
+Added code to handle degrees of succes when an actor has rules to change degrees of success.  Thank you roi007leaf
+
+Added the option to filter out duplicate actors on the Tokenbar.  Just in case a player decides to use something like Mirror Image.  Clicking on the actor image on the tokenbar will cycle through multiple tokens.
+
+Fixed issue when trying to pan to a token when the actor has no token on the canvas.
+
+Fixed issue when double clicking on a token on the tokenbar.
+
+Fixed issue with the dice tooltip not formatting correctly in PF1.
+
+Added XP calculations for PF1
+
+Fixed issue with SWADE rolls. Thank you jseeley150
+
+Fixing issues with lootables currency in PF1
+
+Fixed issues with MATT integration.  Request list labels and actions label have been fixed.
+
 ## Version 11.05
 
 Fixed some ineffecient code

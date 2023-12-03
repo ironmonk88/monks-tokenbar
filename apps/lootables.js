@@ -26,7 +26,7 @@ export class LootablesApp extends Application {
                 tokens = [tokens];
         }
 
-        this.currency = MonksTokenBar.system.getCurrency().reduce((a, v) => ({ ...a, [v]: 0 }), {});
+        this.currency = MonksTokenBar.system.getCurrency().reduce((a, v) => ({ ...a, [v.id || v]: 0 }), {});
 
         this.entries = [];
         this.noitems = [];
