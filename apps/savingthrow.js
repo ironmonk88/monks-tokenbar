@@ -135,7 +135,18 @@ export class SavingThrowApp extends Application {
                 break;
             case 'last':
                 if (SavingThrow.lastTokens) {
-                    this.entries = duplicate(SavingThrow.lastTokens);
+                    this.entries = SavingThrow.lastTokens.map(e => {
+                        let token = canvas.tokens.get(e.tokenId);
+                        if (token != undefined) {
+                            return {
+                                request: e.request,
+                                keys: e.keys,
+                                fastForward: e.fastForward,
+                                token: token
+                            }
+                        }
+                        return null;
+                    }).filter(e => !!e);
                     this.request = duplicate(SavingThrow.lastRequest);
                     this.render(true);
                 }
@@ -167,7 +178,14 @@ export class SavingThrowApp extends Application {
     async requestRoll(roll) {
         let msg = null;
         if (this.entries.length > 0) {
-            SavingThrow.lastTokens = this.entries;
+            SavingThrow.lastTokens = this.entries.map(e => {
+                return {
+                    request: e.request,
+                    keys: e.keys,
+                    fastForward: e.fastForward,
+                    tokenId: e.token.id
+                }
+            });
             let actors = [];
             let msgEntries = this.entries.map(t => {
                 let name = t.token.name;
@@ -387,7 +405,8 @@ export class SavingThrowApp extends Application {
                         if (type == 'dice') {
                             let request = this.request.find(r => r.type == type && r.key == key);
                             if (request) {
-                                request.count = request.count + 1;
+                                request.count = (request.count ?? 1) + 1;
+                                if (isNaN(request.count)) request.count = 1;
                                 let parts = key.split("d");
                                 $(target).html(`${request.count}d${parts[1]}`);
                             }

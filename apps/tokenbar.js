@@ -253,7 +253,7 @@ export class TokenBar extends Application {
 
                     let hasActor = (t.actor != undefined);
                     let canView = (game.user.isGM || t.actor?.isOwner || t.actor?.testUserPermission(game.user, setting("minimum-ownership") || "LIMITED"));
-                    let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id)
+                    let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id);
                     let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
                     let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
@@ -279,7 +279,7 @@ export class TokenBar extends Application {
 
             if (setting("include-actor")) {
                 for (let user of game.users) {
-                    if ((user.active || setting("show-offline")) && user.character && !this.entries.find(t => t.actor?.id === user.character?.id)) {
+                    if ((user.active || setting("show-offline")) && !user.isGM && user.character && !this.entries.find(t => t.actor?.id === user.character?.id)) {
                         this.entries.push({
                             id: user.character.id,
                             token: null,

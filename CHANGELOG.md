@@ -1,3 +1,11 @@
+## Version 11.08
+
+Fixed issue with last token option when requesting a saving throw
+
+Fixed issue with increasing the coutn of dice rolls
+
+Fixed issue where GM controlled characters were showing for Players
+
 ## Version 11.07
 
 Fixed an issue when requesting a roll
