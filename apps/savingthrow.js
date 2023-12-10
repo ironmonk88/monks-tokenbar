@@ -827,7 +827,7 @@ export class SavingThrow {
                     uuid: token.uuid,
                     roll: token.roll,
                     name: token.name,
-                    passed: (token.passed !== false && token.passed === "failed"),
+                    passed: (token.passed !== false && token.passed !== "failed"),
                     actor: game.actors.get(token.actorid)
                 };
                 if (MonksTokenBar.system.useDegrees)
