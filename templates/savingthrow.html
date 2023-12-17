@@ -2,8 +2,8 @@
     <div class="dialog-content" style="height: calc(100% - 30px);">
         <form style="height: 100%;">
             <div class="flexrow" style="height: 100%;">
-                <div style="padding-right:10px;">
-                    <div class="form-group">
+                <div class="flexcol" style="padding-right:10px;">
+                    <div class="form-group" style="flex-grow: 0;">
                         <label>{{localize dclabel}}</label>
                         <div class="flexrow" style="padding-right:8px;">
                             <input type="number" step="any" id="monks-tokenbar-savingdc" value="{{dc}}" style="flex: 0 0 50px;text-align:right;" />
@@ -11,7 +11,7 @@
                             <input type="checkbox" id="monks-tokenbar-showdc" {{checked showdc}} />
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex-grow: 0;">
                         <label>{{localize 'MonksTokenBar.RollMode'}}</label>
                         <select id="savingthrow-rollmode">
                             <option value="roll" selected="">{{localize 'MonksTokenBar.PublicRoll'}}</option>
@@ -20,17 +20,17 @@
                             <option value="selfroll">{{localize 'MonksTokenBar.SelfRoll'}}</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex-grow: 0;">
                         <label>{{localize 'MonksTokenBar.HideNPCName'}}</label>
                         <input id="monks-tokenbar-hidenpc" type="checkbox" {{#if hidenpcname}} checked{{/if}} />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex-grow: 0;">
                         <label>{{localize 'MonksTokenBar.Flavor'}}</label>
                         <input type="text" id="monks-tokenbar-flavor" value="{{flavor}}" />
                     </div>
-                    <div class="form-group sheet">
-                        <ol class="items-list inventory-list">
-                            <li class="items-header flexrow">
+                    <div class="form-group sheet" style="overflow: hidden; min-height: 200px; max-height: 300px;flex-grow: 1;">
+                        <div class="items-list inventory-list" style="padding-bottom: 5px;">
+                            <div class="items-header flexrow">
                                 <h3 class="item-name noborder flexrow">{{localize 'MonksTokenBar.Actors'}}</h3>
 
                                 <div class="item-controls flexrow">
@@ -50,9 +50,9 @@
                                         <i class="fas fa-trash-alt"></i>{{localize 'MonksTokenBar.Clear'}}
                                     </a>
                                 </div>
-                            </li>
+                            </div>
 
-                            <ol class="item-list" style="min-height:150px;">
+                            <ol class="item-list" style="overflow-y: auto; height: calc(100% - 35px);">
                                 {{#each entries}}
                                 <li class="item flexrow " data-item-id="{{this.token.id}}" draggable="true">
                                     <div class="item-name flexrow rollable">
@@ -70,7 +70,7 @@
                                 </li>
                                 {{/each}}
                             </ol>
-                        </ol>
+                        </div>
                     </div>
                 </div>
                 <div class="request-roll" style="height: 100%; overflow-y: auto; overflow-x: hidden;line-height: 17px;">
@@ -90,6 +90,7 @@
     </div>
     <div class="dialog-buttons flexrow">
         <button class="dialog-button save-macro" data-button="save-macro" title="{{localize 'MonksTokenBar.SaveToMacro'}}" style="width: 30px; flex: 0 0 30px; padding-top: 2px; padding-bottom: 0px; padding-left: 8px;"><i class="fas fa-save"></i></button>
+        <button class="dialog-button copy-macro" data-button="copy-macro" title="{{localize 'MonksTokenBar.CopyMacro'}}" style="width: 30px; flex: 0 0 30px; padding-top: 2px; padding-bottom: 0px; padding-left: 8px;"><i class="fas fa-copy"></i></button>
         <button class="dialog-button request-roll" data-button="request-roll"><i class="fas fa-dice"></i> {{localize 'MonksTokenBar.RequestWithRoll'}}</button>
         <button class="dialog-button request" data-button="request"><i class="fas fa-receipt"></i> {{localize 'MonksTokenBar.Request'}}</button>
     </div>

@@ -120,12 +120,9 @@ export class SavingThrowApp extends Application {
         let type = e.target.dataset.type;
         switch (type) {
             case 'tokenbar':
-                this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
-                    let include = t.document.getFlag('monks-tokenbar', 'include');
-                    include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
-                    return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
+                this.addToken(game.MonksTokenBar.TokenBar().entries.map(e => {
+                    return e.token._object;
                 }));
-                this.render(true);
                 break;
             case 'player':
                 this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
@@ -296,10 +293,14 @@ export class SavingThrowApp extends Application {
                 modename: modename,
                 tokens: msgEntries,
                 canGrab: MonksTokenBar.system.canGrab,//['dnd5e', 'sw5e'].includes(game.system.id),
+                hasCritical: MonksTokenBar.system.hasCritical,
                 showAdvantage: MonksTokenBar.system.showAdvantage,
                 options: this.opts,
                 what: 'savingthrow',
             };
+
+            Hooks.callAll('monks-tokenbar.requestRoll', requestdata);
+
             const html = await renderTemplate("./modules/monks-tokenbar/templates/svgthrowchatmsg.html", requestdata);
 
             delete requestdata.tokens;
@@ -370,6 +371,7 @@ export class SavingThrowApp extends Application {
         $('.dialog-button.request', html).click($.proxy(this.requestRoll, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.requestRoll, this, true));
         $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
+        $('.dialog-button.copy-macro', html).click(this.copyMacro.bind(this));
 
         $('#monks-tokenbar-savingdc', html).blur($.proxy(function (e) {
             this.dc = $(e.currentTarget).val();
@@ -452,6 +454,15 @@ export class SavingThrowApp extends Application {
             this.rollmode = $(e.currentTarget).val();
         }, this));
     };
+
+    async copyMacro() {
+        //copy the request to the clipboard
+        let tokens = this.entries.map(t => { return { token: t.token.name } });
+        let requests = this.request instanceof Array ? this.request : [this.request];
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        await game.clipboard.copyPlainText(macroCmd);
+        ui.notifications.info(i18n("MonksTokenBar.MacroCopied"));
+    }
 
     async saveToMacro() {
         let tokens = this.entries.map(t => { return { token: t.token.name } });
@@ -645,7 +656,8 @@ export class SavingThrow {
         }
     }
 
-    static async onRollAbility(ids, message, fastForward = false, evt) {
+    static async onRollAbility(ids, message, fastForward, evt) {
+        if (fastForward == undefined) fastForward = setting("bypass-roll-dialog");
         if (ids == undefined) return;
         if (!$.isArray(ids))
             ids = [ids];
@@ -688,7 +700,7 @@ export class SavingThrow {
         return Promise.all(promises).then(async (response) => {
             log('roll all finished', response);
             if (!game.user.isGM) {
-                let responses = response.map(r => { return { id: r.id, roll: r.roll, request: r.request }; });
+                let responses = response.filter(r => !!r).map(r => { return { id: r.id, roll: r.roll, request: r.request }; });
                 MonksTokenBar.emit('rollability',
                     {
                         type: 'savingthrow',
@@ -827,7 +839,7 @@ export class SavingThrow {
                     uuid: token.uuid,
                     roll: token.roll,
                     name: token.name,
-                    passed: (token.passed !== false && token.passed === "failed"),
+                    passed: (token.passed !== false && token.passed !== "failed"),
                     actor: game.actors.get(token.actorid)
                 };
                 if (MonksTokenBar.system.useDegrees)
@@ -838,6 +850,7 @@ export class SavingThrow {
         if (passed + failed == tokenresults.length) {
             let grouproll = (total / tokenresults.length);
             let result = { dc: dc, grouproll: grouproll, percent: Math.max(Math.min((grouproll / dc), 1), 0), passed: passed, failed: failed, tokenresults: tokenresults };
+            Hooks.callAll('monks-tokenbar.updateRoll', result, message);
             if (message.getFlag('monks-tokenbar', 'active-tiles')) {
                 let restart = message.getFlag('monks-tokenbar', 'active-tiles');
                 let tile = await fromUuid(restart.tile);
@@ -1162,7 +1175,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     var r = document.querySelector(':root');
                     r.style.setProperty('--monks-tokenbar-context-top', `${elem.position().top + elem.height()}px`);
                 });
-                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, false));
+                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(SavingThrow.onRollAbility, this, msgtoken.id, message, null));
                 $('.dice-total', item).toggle((msgtoken.error === true || msgtoken.roll != undefined) && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll')));
                 if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {
                     //log('Chat roll:', msgtoken.roll);
@@ -1267,6 +1280,8 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         $('.select-all', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, (ti) => ti));
         $('.select-saved', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === true || ti?.passed === "success"));
         $('.select-failed', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === false || ti?.passed === "failed"));
+        $('.select-success', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === "success"));
+        $('.select-critical', html).on('click', $.proxy(MonksTokenBar.selectActors, MonksTokenBar, message, ti => ti?.passed === "failed"));
     }
 });
 

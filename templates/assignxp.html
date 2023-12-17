@@ -4,6 +4,7 @@
             <div class="form-group">
                 <label>{{localize 'MonksTokenBar.Experience'}}</label>
                 <input type="text" id="assign-xp-value" style="text-align:right;flex:0 0 100px" value="{{xp}}" />
+                <button type="button" class="recalculate" data-button="recalculate" title="{{localize 'MonksTokenBar.RecalculateXP'}}" style="flex: 0 0 30px; height: 30px;"><i class="fas fa-calculator"></i></button>
             </div>
             <div class="form-group">
               <label for="dividexp">{{localize 'MonksTokenBar.DivideExperience'}}</label>
@@ -17,8 +18,8 @@
             </div>
             <div class="sheet">
                 <nav class="sheet-navigation tabs" data-group="primary">
-                    <a class="item" data-tab="monsters">{{localize 'MonksTokenBar.Creatures'}}</a>
-                    <a class="item active" data-tab="players">{{localize 'MonksTokenBar.Players'}}</a>
+                    <a class="item" data-tab="monsters">{{localize 'MonksTokenBar.Creatures'}}{{#if (gt monsters.length 0)}}<sup class="creature-count">{{ monsters.length}}</sup>{{/if}}</a>
+                    <a class="item active" data-tab="players">{{localize 'MonksTokenBar.Players'}}{{#if (gt actors.length 0)}}<sup class="creature-count">{{ actors.length}}</sup>{{/if}}</a>
                 </nav>
                 <section class="sheet-body">
                     <div class="tab monsters" data-group="primary" data-tab="monsters">

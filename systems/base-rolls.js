@@ -57,6 +57,10 @@ export class BaseRolls {
         return false;
     }
 
+    get hasCritical() {
+        return false;
+    }
+
     rollSuccess(roll, dc, actorId, request) {
         let passed = roll.total >= dc;
         return { passed };
@@ -88,17 +92,17 @@ export class BaseRolls {
     }
 
     getButtons() {
-        var buttons =
-        [
-            [
+        var buttons = [];
+        if (setting("show-movement")) {
+            buttons.push([
                 {
                     id: 'movement-free',
                     title: 'MonksTokenBar.FreeMovement',
                     icon: 'fa-running',
                     click: (game.user.isGM ?
                         (event) => {
-                        event.preventDefault();
-                        MonksTokenBar.changeGlobalMovement('free');
+                            event.preventDefault();
+                            MonksTokenBar.changeGlobalMovement('free');
                         } : null)
                 },
                 {
@@ -107,8 +111,8 @@ export class BaseRolls {
                     icon: 'fa-street-view',
                     click: (game.user.isGM ?
                         (event) => {
-                        event.preventDefault();
-                        MonksTokenBar.changeGlobalMovement('none');
+                            event.preventDefault();
+                            MonksTokenBar.changeGlobalMovement('none');
                         } : null)
                 },
                 {
@@ -118,10 +122,10 @@ export class BaseRolls {
                     click: (game.user.isGM ? (event) => {
                         event.preventDefault();
                         MonksTokenBar.changeGlobalMovement('combat');
-                        } : null)
+                    } : null)
                 }
-            ]
-        ];
+            ]);
+        }
         if (game.user.isGM && MonksTokenBar.system._supportedSystem) {
             buttons.push([
                 {

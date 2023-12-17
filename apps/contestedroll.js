@@ -118,6 +118,9 @@ export class ContestedRollApp extends Application {
                 options: this.opts,
                 what: 'contestedroll',
             };
+
+            Hooks.callAll('monks-tokenbar.requestContested', requestdata);
+
             const html = await renderTemplate("./modules/monks-tokenbar/templates/contestedrollchatmsg.html", requestdata);
 
             delete requestdata.tokens;
@@ -183,6 +186,7 @@ export class ContestedRollApp extends Application {
         $('.dialog-button.request', html).click($.proxy(this.requestRoll, this));
         $('.dialog-button.request-roll', html).click($.proxy(this.requestRoll, this, true));
         $('.dialog-button.save-macro', html).click(this.saveToMacro.bind(this));
+        $('.dialog-button.copy-macro', html).click(this.copyMacro.bind(this));
 
         $('#monks-tokenbar-flavor', html).blur($.proxy(function (e) {
             this.flavor = $(e.currentTarget).val();
@@ -209,6 +213,13 @@ export class ContestedRollApp extends Application {
             $('.request-roll[data-index="1"]', html).val(this.entries[1].request[0].slug);
         }, 100);
     };
+
+    async copyMacro() {
+        //copy the request to the clipboard
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        await game.clipboard.copyPlainText(macroCmd);
+        ui.notifications.info(i18n("MonksTokenBar.MacroCopied"));
+    }
 
     async saveToMacro() {
         let name = "Contested Roll";
@@ -329,7 +340,8 @@ export class ContestedRoll {
         }
     }
 
-    static async onRollAbility(ids, message, fastForward = false, evt) {
+    static async onRollAbility(ids, message, fastForward, evt) {
+        if (fastForward == undefined) fastForward = setting("bypass-roll-dialog");
         if (ids == undefined) return;
         if (!$.isArray(ids))
             ids = [ids];
@@ -498,6 +510,9 @@ export class ContestedRoll {
             tkn.passed = true;
 
             let result = { tokenresults: tokenresults, passed: winner };
+
+            Hooks.callAll('monks-tokenbar.updateContested', result, message);
+
             if (message.getFlag('monks-tokenbar', 'active-tiles')) {
                 let restart = message.getFlag('monks-tokenbar', 'active-tiles');
                 let tile = await fromUuid(restart.tile);
@@ -804,7 +819,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                     var r = document.querySelector(':root');
                     r.style.setProperty('--monks-tokenbar-context-top', `${elem.position().top + elem.height()}px`);
                 });
-                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, false));
+                $('.item-roll', item).toggle(msgtoken.roll == undefined && (game.user.isGM || (actor.isOwner && rollmode != 'selfroll'))).click($.proxy(ContestedRoll.onRollAbility, this, msgtoken.id, message, null));
                 $('.dice-total', item).toggle(msgtoken.error === true || (msgtoken.roll != undefined && (game.user.isGM || rollmode == 'roll' || (actor.isOwner && rollmode != 'selfroll'))));
 
                 if (msgtoken.roll != undefined && msgtoken.roll.class.includes("Roll")) {

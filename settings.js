@@ -18,6 +18,11 @@ export const registerSettings = function () {
 		'actor': game.i18n.localize("MonksTokenBar.token-pictures.actor"),
 	};
 
+	let orientation = {
+		'true': game.i18n.localize("MonksTokenBar.orientation.vertical"),
+		'false': game.i18n.localize("MonksTokenBar.orientation.horizontal"),
+	};
+
 	let movementoptions = {
 		'free': game.i18n.localize("MonksTokenBar.FreeMovement"),
 		'none': game.i18n.localize("MonksTokenBar.NoMovement"),
@@ -83,6 +88,18 @@ export const registerSettings = function () {
 		config: true,
 		default: false,
 		type: Boolean,
+	});
+	game.settings.register(modulename, "show-movement", {
+		name: game.i18n.localize("MonksTokenBar.show-movement.name"),
+		hint: game.i18n.localize("MonksTokenBar.show-movement.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		onChange: () => {
+			MonksTokenBar.tokenbar.buttons = MonksTokenBar.system.getButtons();
+			MonksTokenBar.tokenbar.refresh();
+		}
 	});
 	game.settings.register(modulename, "show-undefined", {
 		name: game.i18n.localize("MonksTokenBar.show-undefined.name"),
@@ -151,9 +168,12 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.show-vertical.hint"),
 		scope: "client",
 		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
+		default: "false",
+		type: String,
+		onChange: (val) => {
+			MonksTokenBar.tokenbar.element.toggleClass("vertical", val == "true");
+		},
+		choices: orientation,
 	});
 
 	game.settings.register(modulename, "dblclick-action", {
@@ -172,7 +192,7 @@ export const registerSettings = function () {
 	game.settings.register(modulename, "token-size", {
 		name: game.i18n.localize("MonksTokenBar.token-size.name"),
 		hint: game.i18n.localize("MonksTokenBar.token-size.hint"),
-		scope: "world",
+		scope: "client",
 		config: true,
 		range: {
 			min: 50,
@@ -181,13 +201,13 @@ export const registerSettings = function () {
 		},
 		default: 50,
 		type: Number,
-		requiresReload: true
+		onChange: (val) => { MonksTokenBar.setTokenSize(val); }
 	});
 
 	game.settings.register(modulename, "resolution-size", {
 		name: game.i18n.localize("MonksTokenBar.resolution-size.name"),
 		hint: game.i18n.localize("MonksTokenBar.resolution-size.hint"),
-		scope: "world",
+		scope: "client",
 		config: true,
 		range: {
 			min: 30,
@@ -459,11 +479,19 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "bypass-roll-dialog", {
+		name: game.i18n.localize("MonksTokenBar.bypass-roll-dialog.name"),
+		hint: game.i18n.localize("MonksTokenBar.bypass-roll-dialog.hint"),
+		scope: "client",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "add-advantage-buttons", {
 		name: game.i18n.localize("MonksTokenBar.add-advantage-buttons.name"),
 		hint: game.i18n.localize("MonksTokenBar.add-advantage-buttons.hint"),
 		scope: "world",
-		config: true,
+		config: game.system.id == "dnd5e",
 		default: true,
 		type: Boolean,
 	});

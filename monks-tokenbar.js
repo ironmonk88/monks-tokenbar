@@ -285,21 +285,6 @@ export class MonksTokenBar {
             }
         }
         */
-
-        if (setting('token-size') != 50) {
-            let innerHTML = `
-#tokenbar .token {
-    flex: 0 0 ${setting('token-size')}px;
-    width: ${setting('token-size')}px;
-}
-`;
-            let style = document.createElement("style");
-            style.id = "monkstokenbar-css-changes";
-
-            style.innerHTML = innerHTML;
-            if (innerHTML != '')
-                document.querySelector("head").appendChild(style);
-        }
     }
 
     static selectGroups(choices, options) {
@@ -435,12 +420,20 @@ export class MonksTokenBar {
         return (stats.default ? MonksTokenBar.system.defaultStats : stats) || [];
     }
 
+    static setTokenSize(size) {
+        size = size || setting("token-size");
+        var r = document.querySelector(':root');
+        r.style.setProperty('--tokenbar-token-size', size + "px");
+    }
+
     static ready() {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
         game.settings.settings.get("monks-tokenbar.stats").default = MonksTokenBar.system.defaultStats;
 
         tinyMCE.PluginManager.add('dcconfig', dcconfiginit);
+
+        MonksTokenBar.setTokenSize();
 
         if ((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar")) {
             MonksTokenBar.tokenbar = new TokenBar();

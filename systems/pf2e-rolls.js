@@ -24,6 +24,10 @@ export class PF2eRolls extends BaseRolls {
         return true;
     }
 
+    get hasCritical() {
+        return true;
+    }
+
     rollProperties(request) {
         return [];
     }
@@ -90,6 +94,9 @@ export class PF2eRolls extends BaseRolls {
         var xp = 0;
         let npcLevels = [];
         let hazardLevels = [];
+
+        if (actors.length == 0 || monsters.length == 0)
+            return 0;
 
         //get the actors
         for (let actor of actors) {

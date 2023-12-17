@@ -98,6 +98,7 @@ export class SwadeRolls extends BaseRolls {
         let opts = { rollMode: rollMode, event: e, chatMessage: false };
         let sysRequest = request.key;
         if (request.type == 'ability') {
+            sysRequest = request.key;
             rollfn = actor.rollAttribute;
         }
         else if (request.type == 'skill') {
@@ -116,16 +117,14 @@ export class SwadeRolls extends BaseRolls {
 
         if (rollfn != undefined) {
             try {
-                if (fastForward) {
+                if (fastForward)
                     opts.suppressChat = true;
-                    return new Promise(function (resolve, reject) {
-                        resolve(rollfn.call(actor, { event: e, options: opts }));
-                    }).catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-                } else {
-                    return rollfn.call(actor, sysRequest, opts)
-                        .then((roll) => { return callback(roll); })
-                        .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
-                }
+
+                return rollfn.call(actor, sysRequest, opts)
+                    .then((roll) => {
+                        return callback(roll);
+                    })
+                    .catch(() => { return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") } });
             } catch (err) {
                 log('Error:', err);
                 return { id: id, error: true, msg: i18n("MonksTokenBar.UnknownError") };

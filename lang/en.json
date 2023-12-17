@@ -52,6 +52,7 @@
 	"MonksTokenBar.RequestSavingThrow": "Request Saving Throw",
 	"MonksTokenBar.Unknown": "Unknown",
 	"MonksTokenBar.Level": "Level",
+	"MonksTokenBar.RecalculateXP": "Recalculate XP",
 
 	"MonksTokenBar.UnknownError": "An unknown error occured",
 	"MonksTokenBar.CombatTurnMovementLimited": "Movement is set to combat turn, it's currently not your turn",
@@ -140,8 +141,8 @@
 	"MonksTokenBar.show-on-tracker.hint": "Show movement button on the Combat Tracker",
 	"MonksTokenBar.gold-formula.name": "Gold Formula",
 	"MonksTokenBar.gold-formula.hint": "Formula to calculate gold from slain enemies",
-	"MonksTokenBar.show-vertical.name": "Show Vertical",
-	"MonksTokenBar.show-vertical.hint": "Show the Tokenbar vertically",
+	"MonksTokenBar.show-vertical.name": "Tokenbar orientation",
+	"MonksTokenBar.show-vertical.hint": "Show the Tokenbar either horizontally or vertically",
 	"MonksTokenBar.capture-savingthrows.name": "Capture Saving Throw",
 	"MonksTokenBar.capture-savingthrows.hint": "Create Saving Throw Chat Card when requesting item saving throw roll",
 	"MonksTokenBar.token-size.name": "Size of tokens",
@@ -184,6 +185,13 @@
 	"MonksTokenBar.filter-duplicates.hint": "Filter out duplicate tokens from the tokenbar",
 	"MonksTokenBar.npc-xp-sharing.name": "NPC XP Sharing",
 	"MonksTokenBar.npc-xp-sharing.hint": "Allow Friendly NPCs to share XP",
+	"MonksTokenBar.bypass-roll-dialog.name": "Bypass Roll Dialog",
+	"MonksTokenBar.bypass-roll-dialog.hint": "Bypass the roll dialog and roll directly from the chatcard",
+	"MonksTokenBar.show-movement.name": "Show Movement",
+	"MonksTokenBar.show-movement.hint": "Show the movement buttons on the tokenbar",
+
+	"MonksTokenBar.orientation.vertical": "Vertical",
+	"MonksTokenBar.orientation.horizontal": "Horizontal",
 
 	"MonksTokenBar.XP": "XP",
 	"MonksTokenBar.Actors": "Actors",
@@ -235,6 +243,7 @@
 	"MonksTokenBar.CreateEntityName": "New Entity Name",
 	"MonksTokenBar.ClearCurrentItems": "Clear Current Items",
 	"MonksTokenBar.SaveToMacro": "Save to Macro",
+	"MonksTokenBar.CopyMacro": "Copy Macro",
 	"MonksTokenBar.LootEntry": "Loot {{#}}",
 	"MonksTokenBar.FromCombat": "Actors from combat",
 	"MonksTokenBar.Combat": "Combat",
@@ -258,7 +267,9 @@
 	"MonksTokenBar.AddInspiration": "Add Inspiration",
 	"MonksTokenBar.InitialEntities": "Initial Entities",
 	"MonksTokenBar.Initial": "Initial",
-
+	"MonksTokenBar.MacroCopied": "Macro Copied",
+	"MonksTokenBar.SelectCriticalSaved": "Select Critical Saved",
+	"MonksTokenBar.SelectCriticalFailed": "Select Critical Failed",
 
 	"MonksTokenBar.None": "No one",
 	"MonksTokenBar.GMOnly": "GM Only",

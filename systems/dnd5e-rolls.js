@@ -22,6 +22,10 @@ export class DnD5eRolls extends BaseRolls {
         return true;
     }
 
+    get hasCritical() {
+        return true;
+    }
+
     static activateHooks() {
         Hooks.on("preCreateChatMessage", (message, option, userid) => {
             if (message.getFlag('monks-tokenbar', 'ignore') === true) {

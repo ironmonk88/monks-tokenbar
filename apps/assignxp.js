@@ -5,6 +5,8 @@ export class AssignXPApp extends Application {
     constructor(entities, options = {}) {
         super(options);
 
+        this.customXP = false;
+
         this.reason = options?.reason || (entities != undefined && entities instanceof Combat ? i18n("MonksTokenBar.CombatExperience") : "");
         this.dividexp = options?.dividexp ? options?.dividexp : setting("divide-xp");
         this.divideXpOptions = divideXpOptions
@@ -83,10 +85,16 @@ export class AssignXPApp extends Application {
         };
     }
 
+    recalculateXP() {
+        this.customXP = false;
+        this.changeXP();
+        this.render(true);
+    }
+
     changeXP(xp) {
         if (xp !== undefined)
             this.xp = xp;
-        else {
+        else if (!this.customXP) {
             this.xp = MonksTokenBar.system.calcXP(this.actors, this.monsters);
         }
 
@@ -198,6 +206,8 @@ export class AssignXPApp extends Application {
         $('.dialog-button.assign', html).on("click", this.assign.bind(this));
         $('.dialog-button.auto-assign', html).on("click", this.autoassign.bind(this));
 
+        $('.recalculate', html).on("click", this.recalculateXP.bind(this));
+
         $('#dividexp', html).change(function () {
             that.dividexp = $(this).find('option:selected').val();
             that.changeXP.call(that);
@@ -208,6 +218,7 @@ export class AssignXPApp extends Application {
             that.xp = parseInt($(this).val() || '0');
             if (isNaN(that.xp))
                 that.xp = 0;
+            that.customXP = true;
             that.changeXP.call(that, that.xp);
             that.render(true);
         });

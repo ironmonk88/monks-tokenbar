@@ -1,3 +1,35 @@
+## Version 11.09
+
+Fixed issue with xp resetting after setting acustom value.  And added button to automatically recalculate.
+
+Added hooks when a roll is requested or a roll is updated
+
+Added button to copy request roll code to clipboard instead of creating a new Macro
+
+Added setting to automatically bypass the roll dialog when clicking on the dice roll.
+
+Fixed issue when adding tokenbar tokens to requested roll
+
+Added additional selection buttons to the saving throw chat message to select critical success and critical failure rolls.
+
+Fixed issue with determining which tokens have passed the saving throw.
+
+Fixed issue in PF2e where effects weren't updating the tokenbar properly
+
+Fixed issue with the vertical display of the tokenbar.
+
+Changed the setting so it's clearer that you can select the orientation of the tokenbar.
+
+Fixed issues with changing the size of tokens.
+
+Set tokensize setting to be client based rather than world based.
+
+Added token counts to the assign xp dialog so you can see how many monsters are involved and how many players.
+
+Added the option to hide the movement buttons on the tokenbar.
+
+Fixed issue with SWADE rolls.
+
 ## Version 11.08
 
 Fixed issue with last token option when requesting a saving throw

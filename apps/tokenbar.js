@@ -68,6 +68,28 @@ export class TokenBar extends Application {
             }
         });
 
+        Hooks.on("createItem", (item) => {
+            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+                if (item.type == 'effect') {
+                    let entry = this.entries.find(t => t.actor?.id == item.actor.id);
+                    if (entry != undefined) {
+                        this.updateEntry(entry)
+                    }
+                }
+            }
+        });
+
+        Hooks.on("deleteItem", (item) => {
+            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+                if (item.type == 'effect') {
+                    let entry = this.entries.find(t => t.actor?.id == item.actor.id);
+                    if (entry != undefined) {
+                        this.updateEntry(entry)
+                    }
+                }
+            }
+        });
+
         //updateActiveEffect 
 
         this.buttons = MonksTokenBar.system.getButtons();
@@ -77,12 +99,12 @@ export class TokenBar extends Application {
 
     /** @override */
 	static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
-        id: "tokenbar-window",
-        template: "./modules/monks-tokenbar/templates/tokenbar.html",
-        popOut: false,
-        dragDrop: [{ dragSelector: ".token" }],
-    });
+        return mergeObject(super.defaultOptions, {
+            id: "tokenbar-window",
+            template: "./modules/monks-tokenbar/templates/tokenbar.html",
+            popOut: false,
+            dragDrop: [{ dragSelector: ".token" }],
+        });
     }
 
 	/* -------------------------------------------- */
@@ -91,12 +113,12 @@ export class TokenBar extends Application {
     getData(options) {
         let css = [
             !game.user.isGM ? "hidectrl" : null,
-            setting('show-vertical') ? "vertical" : null,
+            setting('show-vertical') == "true" ? "vertical" : null,
         ].filter(c => !!c).join(" ");
         let pos = this.getPos();
 
         let collapseIcon;
-        if (setting('show-vertical'))
+        if (setting('show-vertical') == "true")
             collapseIcon = this._collapsed ? "fa-caret-down": "fa-caret-up";
         else
             collapseIcon = this._collapsed ? "fa-caret-right" : "fa-caret-left";
@@ -847,7 +869,7 @@ export class TokenBar extends Application {
         return new Promise(resolve => {
             bar.slideUp(200, () => {
                 bar.addClass("collapsed");
-                if (setting('show-vertical'))
+                if (setting('show-vertical') == "true")
                     icon.removeClass("fa-caret-up").addClass("fa-caret-down");
                 else
                     icon.removeClass("fa-caret-left").addClass("fa-caret-right");
@@ -866,7 +888,7 @@ export class TokenBar extends Application {
             bar.slideDown(200, () => {
                 bar.css("display", "");
                 bar.removeClass("collapsed");
-                if (setting('show-vertical'))
+                if (setting('show-vertical') == "true")
                     icon.removeClass("fa-caret-down").addClass("fa-caret-up");
                 else
                     icon.removeClass("fa-caret-right").addClass("fa-caret-left");
