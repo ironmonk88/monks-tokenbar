@@ -4,7 +4,7 @@
 	"MonksTokenBar.TargetToken": "目標に選択",
 	"MonksTokenBar.PrivateMessage": "秘話",
 	"MonksTokenBar.DisablePanning": "パンの無効化",
-	
+
 	"MonksTokenBar.easy": "簡単",
 	"MonksTokenBar.average": "通常",
 	"MonksTokenBar.challenging": "困難",
@@ -63,12 +63,12 @@
 	"MonksTokenBar.UnknownSystem": "Monk's Tokenbarはこのゲームシステムに対応していません。",
 	"MonksTokenBar.ActorNotCombatant": "イニシアチブをロールするためには、戦闘に参加している必要があります。",
 
-	"MonksTokenbar.TokenbarSettings": "トークンバー設定",
-	"MonksTokenbar.IconSettings": "アイコン設定",
-	"MonksTokenbar.MovementSettings": "移動設定",
-	"MonksTokenbar.AfterCombatSettings": "戦闘終了時設定",
-	"MonksTokenbar.RequestRollSettings": "判定リクエスト設定",
-	
+	"MonksTokenBar.TokenbarSettings": "トークンバー設定",
+	"MonksTokenBar.IconSettings": "アイコン設定",
+	"MonksTokenBar.MovementSettings": "移動設定",
+	"MonksTokenBar.AfterCombatSettings": "戦闘終了時設定",
+	"MonksTokenBar.RequestRollSettings": "判定リクエスト設定",
+
 	"MonksTokenBar.notify-on-change.name": "移動モードの変更を通知する",
 	"MonksTokenBar.notify-on-change.hint": "GMが移動モードの設定を変更したとき、すべてのプレイヤーに通知を送ります。",
 	"MonksTokenBar.show-xp-dialog.name": "XPダイアログを表示する",
@@ -147,7 +147,7 @@
 	"MonksTokenBar.gm-sound.hint": "GMがこっそりダイスを振るときもサウンドが再生されるようになります。",
 	"MonksTokenBar.dblclick-action.name": "ダブルクリック時の動作",
 	"MonksTokenBar.dblclick-action.hint": "コマのアイコンをダブルクリックしたときの動作を指定します",
-    "MonksTokenBar.resolution-size.name": "コマの解像度",
+	"MonksTokenBar.resolution-size.name": "コマの解像度",
 	"MonksTokenBar.resolution-size.hint": "コマの解像度を設定します。数値が大きいほど画像は鮮明になりますが、読み込みに時間がかかります。",
 	"MonksTokenBar.allow-roll.name": "プレイヤーのロールを許可する",
 	"MonksTokenBar.allow-roll.hint": "プレイヤーがロールを要求できるようになります。",
@@ -224,7 +224,7 @@
 	"MonksTokenBar.GMOnlyRoll": "GMのみロール",
 	"MonksTokenBar.Close": "閉じる",
 	"MonksTokenBar.Save": "セーブ",
-	
+
 	"MonksTokenBar.None": "無効",
 	"MonksTokenBar.GMOnly": "GMのみ",
 	"MonksTokenBar.PlayersOnly": "プレイヤーのみ",

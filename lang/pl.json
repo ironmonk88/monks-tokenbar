@@ -67,12 +67,12 @@
 	"MonksTokenBar.UnknownSystem": "Nie używasz systemu wspieranego przez moduł Monk's Tokenbar.",
 	"MonksTokenBar.ActorNotCombatant": "Aktor musi brać udział w walce, aby móc mu rzucić na inicjatywę",
 
-	"MonksTokenbar.TokenbarSettings": "Ustawienia Paska Tokenów",
-	"MonksTokenbar.IconSettings": "Ustawienia Ikon",
-	"MonksTokenbar.MovementSettings": "Ustawienia Ruchu",
-	"MonksTokenbar.AfterCombatSettings": "Ustawienia Zdarzeń Po Walce",
-	"MonksTokenbar.LootableSettings": "Zdobycze",
-	"MonksTokenbar.RequestRollSettings": "Ustawienia Żądań Rzutów",
+	"MonksTokenBar.TokenbarSettings": "Ustawienia Paska Tokenów",
+	"MonksTokenBar.IconSettings": "Ustawienia Ikon",
+	"MonksTokenBar.MovementSettings": "Ustawienia Ruchu",
+	"MonksTokenBar.AfterCombatSettings": "Ustawienia Zdarzeń Po Walce",
+	"MonksTokenBar.LootableSettings": "Zdobycze",
+	"MonksTokenBar.RequestRollSettings": "Ustawienia Żądań Rzutów",
 
 	"MonksTokenBar.notify-on-change.name": "Powiadom przy Zmianie Trybu Ruchu",
 	"MonksTokenBar.notify-on-change.hint": "Wyślij powiadomienie do wszystkich graczy, gdy MG zmieni tryb dopuszczalnego ruchu",

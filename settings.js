@@ -118,6 +118,15 @@ export const registerSettings = function () {
 		type: Boolean,
 		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
 	});
+	game.settings.register(modulename, "include-actor", {
+		name: game.i18n.localize("MonksTokenBar.include-actor.name"),
+		hint: game.i18n.localize("MonksTokenBar.include-actor.hint"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
+	});
 	game.settings.register(modulename, "filter-duplicates", {
 		name: game.i18n.localize("MonksTokenBar.filter-duplicates.name"),
 		hint: game.i18n.localize("MonksTokenBar.filter-duplicates.hint"),
@@ -132,15 +141,6 @@ export const registerSettings = function () {
 		hint: game.i18n.localize("MonksTokenBar.use-party.hint"),
 		scope: "world",
 		config: game.system.id == "pf2e",
-		default: false,
-		type: Boolean,
-		onChange: () => { MonksTokenBar.tokenbar.refresh(); }
-	});
-	game.settings.register(modulename, "include-actor", {
-		name: game.i18n.localize("MonksTokenBar.include-actor.name"),
-		hint: game.i18n.localize("MonksTokenBar.include-actor.hint"),
-		scope: "world",
-		config: true,
 		default: false,
 		type: Boolean,
 		onChange: () => { MonksTokenBar.tokenbar.refresh(); }

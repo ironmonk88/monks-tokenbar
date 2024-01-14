@@ -14,11 +14,14 @@ export class SavingThrowApp extends Application {
             this.entries = entries;
 
         if (this.entries.length == 0) {   //if none have been selected then default to the party
-            this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
+            let tokens = canvas.tokens.placeables.filter(t => {
                 let include = t.document.getFlag('monks-tokenbar', 'include');
                 include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
                 return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
-            }));
+            });
+            // filter by unique actor
+            tokens = tokens.filter((t, i) => tokens.findIndex(t2 => t2.actor.id == t.actor.id) == i);
+            this.entries = MonksTokenBar.getTokenEntries(tokens);
         }
         this.rollmode = (options?.rollmode || options?.rollMode || game.user.getFlag("monks-tokenbar", "lastmodeST") || 'roll');
         if (!["roll", "gmroll", "blindroll", "selfroll"].includes(this.rollmode))
@@ -98,12 +101,14 @@ export class SavingThrowApp extends Application {
         let failed = [];
         tokens = tokens.filter(t => {
             //don't add this token a second time
-            if (this.entries.includes(e => e.token.id == t.id))
-                return false;
             if (t.actor == undefined) {
                 failed.push(t.name);
                 return false;
             }
+            if (this.entries.some((e) => {
+                return e.token.actor.id == t.actor.id;
+            }))
+                return false;
             return true;
         });
 
@@ -125,9 +130,14 @@ export class SavingThrowApp extends Application {
                 }));
                 break;
             case 'player':
-                this.entries = MonksTokenBar.getTokenEntries(canvas.tokens.placeables.filter(t => {
-                    return (t.actor != undefined && (t.actor?.hasPlayerOwner && t.document.disposition == 1));
-                }));
+                let playerTokens = canvas.tokens.placeables.filter(t => {
+                    let include = t.document.getFlag('monks-tokenbar', 'include');
+                    include = (include === true ? 'include' : (include === false ? 'exclude' : include || 'default'));
+                    return (t.actor != undefined && ((t.actor?.hasPlayerOwner && t.document.disposition == 1 && include != 'exclude') || include === 'include'));
+                });
+                // filter by unique actor
+                playerTokens = playerTokens.filter((t, i) => playerTokens.findIndex(t2 => t2.actor.id == t.actor.id) == i);
+                this.entries = MonksTokenBar.getTokenEntries(playerTokens);
                 this.render(true);
                 break;
             case 'last':
@@ -149,11 +159,11 @@ export class SavingThrowApp extends Application {
                 }
                 break;
             case 'actor': //toggle the select actor button
-                let tokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
-                if (tokens.length == 0)
+                let controlledTokens = canvas.tokens.controlled.filter(t => t.actor != undefined);
+                if (controlledTokens.length == 0)
                     ui.notifications.error('No tokens are currently selected');
                 else
-                    this.addToken(tokens);
+                    this.addToken(controlledTokens);
                 break;
             case 'clear':
                 this.entries = [];

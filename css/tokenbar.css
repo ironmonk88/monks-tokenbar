@@ -230,16 +230,23 @@ body #tokenbar-window:first-child{
 }
 
 #tokenbar.vertical #token-action-bar .token-list .token .token-stats {
-    flex: 0 0 80px;
+    flex: 0 0 65px;
     justify-content: flex-start;
 }
 
 #tokenbar .token .token-content {
     flex: 0 0 var(--tokenbar-token-size);
     height: var(--tokenbar-token-size);
-    width: var(--tokenbar-token-size);
+    width: 100%;
+    min-width: var(--tokenbar-token-size);
+    min-height: var(--tokenbar-token-size);
     justify-content: center;
     display: flex;
+}
+
+#tokenbar.vertical .token .token-content {
+    width: var(--tokenbar-token-size);
+    height: 100%;
 }
 
 #tokenbar .token .token-stats.hidden {

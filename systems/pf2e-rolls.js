@@ -47,7 +47,7 @@ export class PF2eRolls extends BaseRolls {
     }
 
     get defaultStats() {
-        return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "attributes.perception.value + 10", icon: "fa-eye" }];
+        return [{ stat: "attributes.ac.value", icon: "fa-shield-alt" }, { stat: "perception.value + 10", icon: "fa-eye" }];
     }
 
     defaultRequest(app) {

@@ -340,7 +340,7 @@ export class MonksTokenBar {
             let ts = findToken(typeof t == 'object' && t.token && t.constructor.name == 'Object' ? t.token : t);
 
             return ts.map(tkn => {
-                if (!tkn) return null;
+                if (!tkn && !t.request) return null;
 
                 tkn = {
                     token: tkn,
@@ -741,9 +741,12 @@ export class MonksTokenBar {
     static async onDeleteCombat(combat) {
         if (game.user.isGM) {
             if (combat.started == true) {
+                let showXP = game.settings.get("monks-tokenbar", "show-xp-dialog") && MonksTokenBar.system.showXP;
+                let showLoot = setting("loot-sheet") != 'none' && game.modules.get(setting("loot-sheet"))?.active;
+
                 let axpa;
-                if (game.settings.get("monks-tokenbar", "show-xp-dialog") && MonksTokenBar.system.showXP) {
-                    axpa = new AssignXPApp(combat);
+                if (showXP) {
+                    axpa = new AssignXPApp(combat, showLoot ? { classes: ["dual"] } : null);
                     await axpa.render(true);
                 }
                 /*
@@ -752,24 +755,12 @@ export class MonksTokenBar {
                     await axpa.render(true);
                 }*/
 
-                if (setting("loot-sheet") != 'none' && game.modules.get(setting("loot-sheet"))?.active) {
-                    let lapp = new LootablesApp(combat);
+                if (showLoot) {
+                    let lapp = new LootablesApp(combat, showXP ? { classes: ["dual"] } : null);
                     if (!lapp.entries.length)
                         lapp.close();
                     else {
                         await lapp.render(true);
-
-                        if (axpa != undefined) {
-                            setTimeout(function () {
-                                $(axpa.element).addClass('dual');
-                                $(lapp.element).addClass('dual');
-                                /*
-                                axpa.position.left += 204;
-                                axpa.render();
-                                lapp.position.left -= 204;
-                                lapp.render();*/
-                            }, 200);
-                        }
                     }
                 }
             }
@@ -953,6 +944,8 @@ export class MonksTokenBar {
             lootsheetoptions['item-piles'] = "Item Piles";
         if (game.modules.get("monks-enhanced-journal")?.active && game.modules.get("monks-enhanced-journal").version > "1.0.39" && lootType !='convert')
             lootsheetoptions['monks-enhanced-journal'] = "Monk's Enhanced Journal";
+        if (game.system.id == "pf2e")
+            lootsheetoptions['pf2e'] = "PF2e Party Stash";
 
         return lootsheetoptions;
     }
@@ -1000,7 +993,8 @@ export class MonksTokenBar {
         }
 
         function getEntries(folderID, contents) {
-            let result = [$('<li>').addClass('journal-item create-item').attr('data-uuid', folderID || "root").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())];
+            let createItem = $('<li>').addClass('journal-item create-item').attr('data-uuid', folderID || "root").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == undefined).html("-- create entry here --")).click(selectItem.bind())
+            let result = collection.preventCreate ? [] : [createItem];
             return result.concat((contents || [])
                 .filter(c => {
                     return (c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot") || (c instanceof Actor)
@@ -1028,8 +1022,8 @@ export class MonksTokenBar {
 
         let list = $('<ul>')
             .addClass('journal-list')
-            .append($('<li>').addClass('journal-item convert-item').attr('data-uuid', 'convert').toggle(collection.documentName == "Actor").html($('<div>').addClass('journal-title').toggleClass('selected', uuid == 'convert').html("-- convert tokens --")).click(selectItem.bind()))
-            .append(getFolders(collection.directory.folders.filter(f => f.folder == null)))
+            .append($('<li>').addClass('journal-item convert-item').attr('data-uuid', 'convert').toggle(collection.documentName == "Actor" && collection.preventCreate !== true).html($('<div>').addClass('journal-title').toggleClass('selected', uuid == 'convert').html("-- convert tokens --")).click(selectItem.bind()))
+            .append(getFolders(collection.directory?.folders?.filter(f => f.folder == null)))
             .append(getEntries(null, collection.contents.filter(j => j.folder == null)));
 
         $(html).click(function () { list.removeClass('open') });
@@ -1222,14 +1216,13 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
     let btn = $('<button>')
         .addClass('file-picker')
         .attr('type', 'button')
-        .attr('data-type', "imagevideo")
-        .attr('data-target', "img")
+        .attr('data-type', "audio")
         .attr('title', "Browse Files")
         .attr('tabindex', "-1")
         .html('<i class="fas fa-file-import fa-fw"></i>')
         .click(function (event) {
             const fp = new FilePicker({
-                type: "audio",
+                type: event.currentTarget.dataset.type,
                 current: $(event.currentTarget).prev().val(),
                 callback: path => {
                     $(event.currentTarget).prev().val(path);
@@ -1239,7 +1232,7 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         });
 
     btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
-    btn.clone(true).insertAfter($('input[name="monks-tokenbar.loot-image"]', html));
+    btn.clone(true).attr("data-type", "imagevideo").insertAfter($('input[name="monks-tokenbar.loot-image"]', html));
 
     $('[name="monks-tokenbar.loot-sheet"]', html).on('change', async () => {
         let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val();
@@ -1248,12 +1241,16 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         $('[name="monks-tokenbar.loot-entity"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="monks-tokenbar.open-loot"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="monks-tokenbar.show-lootable-menu"]', html).closest('.form-group').toggle(hasLootable);
+        $('[name="monks-tokenbar.create-canvas-object"]', html).closest('.form-group').toggle(sheet != "pf2e");
+        $('[name="monks-tokenbar.loot-name"]', html).closest('.form-group').toggle(sheet != "pf2e");
 
         let entityid = setting('loot-entity');
         let ctrl = $('[name="monks-tokenbar.loot-entity"]', html);
         if (ctrl.next().hasClass("journal-select"))
             ctrl.next().remove();
-        let list = await MonksTokenBar.lootEntryListing(ctrl, html, (sheet == "monks-enhanced-journal" ? game.journal : game.actors), entityid);
+
+        let collection = sheet == "pf2e" ? { documentName: "Actor", contents: game.actors.contents.filter(a => a.type == "party"), preventCreate: true } : (sheet == "monks-enhanced-journal" ? game.journal : game.actors);
+        let list = await MonksTokenBar.lootEntryListing(ctrl, html, collection, entityid);
         list.insertAfter(ctrl);
         ctrl.hide();
     }).change();
@@ -1266,12 +1263,12 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
 
     $('[name="monks-tokenbar.loot-name"]', html).val(i18n($('[name="monks-tokenbar.loot-name"]', html).val()));
 
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.LootableSettings")).insertBefore($('[name="monks-tokenbar.show-lootable-menu"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenbar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.allow-roll"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.TokenbarSettings")).insertBefore($('[name="monks-tokenbar.allow-player"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.IconSettings")).insertBefore($('[name="monks-tokenbar.token-size"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.MovementSettings")).insertBefore($('[name="monks-tokenbar.notify-on-change"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.AfterCombatSettings")).insertBefore($('[name="monks-tokenbar.send-levelup-whisper"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.LootableSettings")).insertBefore($('[name="monks-tokenbar.show-lootable-menu"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksTokenBar.RequestRollSettings")).insertBefore($('[name="monks-tokenbar.allow-roll"]').parents('div.form-group:first'));
 });
 
 Hooks.on("renderCombatTracker", (app, html, data) => {
@@ -1426,7 +1423,8 @@ Hooks.on("setupTileActions", (app) => {
             {
                 id: "dc",
                 name: "DC",
-                type: "number"
+                type: "text",
+                "class": "small-field"
             },
             {
                 id: "flavor",
@@ -1492,12 +1490,15 @@ Hooks.on("setupTileActions", (app) => {
 
             entities = entities.map(e => e.object);
 
-            let parts = action.data?.request.split(':');
+            let request = await game.MonksActiveTiles.getValue(action.data?.request, args);
+
+            let parts = request.split(':');
             let type = (parts.length > 1 ? parts[0] : '');
             let key = (parts.length > 1 ? parts[1] : parts[0]);
 
-            let flavor = action.data.flavor;
+            let flavor = await game.MonksActiveTiles.getValue(action.data.flavor, args);
 
+            /*
             if (flavor && flavor.includes("{{")) {
                 let context = {
                     actor: tokens[0]?.actor?.toObject(false),
@@ -1515,8 +1516,11 @@ Hooks.on("setupTileActions", (app) => {
                 const compiled = Handlebars.compile(flavor);
                 flavor = compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true }).trim();
             }
+            */
 
-            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: [{ type, key }], dc: action.data.dc, flavor:flavor });
+            let dc = await game.MonksActiveTiles.getValue(action.data.dc, args);
+
+            let savingthrow = new SavingThrowApp(MonksTokenBar.getTokenEntries(entities), { rollmode: action.data.rollmode, request: [{ type, key }], dc, flavor });
             savingthrow['active-tiles'] = { id: args._id, tile: args.tile.uuid, action: action };
             if (action.data.silent === true) {
                 let msg = await savingthrow.requestRoll();
@@ -1798,7 +1802,9 @@ Hooks.on("setupTileActions", (app) => {
 
             entities = entities.map(e => e.object);
 
-            let assignxp = new AssignXPApp(entities, { xp: action.data.xp, reason: action.data.reason, dividexp: action.data.dividexp});
+            let xp = game.MonksActiveTiles.getValue(action.data.xp, args);
+
+            let assignxp = new AssignXPApp(entities, { xp: xp, reason: action.data.reason, dividexp: action.data.dividexp});
             if (action.data.silent === true) {
                 let msg = await assignxp.assign();
                 if (msg && action.data.fastforward === true)

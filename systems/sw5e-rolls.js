@@ -85,7 +85,7 @@ export class SW5eRolls extends BaseRolls {
         else if (request.type == 'skill') {
             rollfn = actor.rollSkill;
         } else if (request.type == 'tool') {
-            let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request.key || i.id == request.key; });
+            let item = actor.items.find(i => { return i.getFlag("core", "sourceId") == request.key || MonksTokenBar.slugify(i.name) == request.key; });
             if (item != undefined) {
                 context = item;
                 sysRequest = options;

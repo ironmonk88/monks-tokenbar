@@ -9,15 +9,15 @@
             <label>{{localize 'MonksTokenBar.CreateEntityName'}}</label>
             <input type="text" id="entity-name" name="entity-name" placeholder="{{placeholder}}" value="{{entityName}}" />
         </div>
-        <div class="form-group" style="{{#if createEntity}}display: none;{{/if}}">
+        <div class="form-group" style="{{#unless canClearItems}}display: none;{{/unless}}">
             <label>{{localize 'MonksTokenBar.ClearCurrentItems'}}</label>
             <input type="checkbox" id="clear-items" name="clear-items" {{checked clearItems}} />
         </div>
-        <div class="form-group">
+        <div class="form-group" style="{{#unless canCreateObject}}display: none;{{/unless}}">
             <label>{{localize 'MonksTokenBar.create-canvas-object.name'}}</label>
             <input type="checkbox" id="create-canvas-object" name="create-canvas-object" {{checked createCanvasObject}} />
         </div>
-        <div class="form-group" style="{{#if convertEntity}}display: none;{{/if}}">
+        <div class="form-group" style="{{#unless canHideCombatants}}display: none;{{/unless}}">
             <label>{{localize 'MonksTokenBar.hide-combatants.name'}}</label>
             <input type="checkbox" id="hide-combatants" name="hide-combatants" {{checked hideCombatants}} />
         </div>

@@ -66,12 +66,12 @@
 	"MonksTokenBar.UnknownSystem": "Tokenbar mod 并不支持你正在使用的游戏系统。",
 	"MonksTokenBar.ActorNotCombatant": "角色并非战斗中的参与者，无法投掷先攻",
 
-	"MonksTokenbar.TokenbarSettings": "Token栏设置",
-	"MonksTokenbar.IconSettings": "图标设置",
-	"MonksTokenbar.MovementSettings": "移动设置",
-	"MonksTokenbar.AfterCombatSettings": "战后设置",
-	"MonksTokenbar.LootableSettings": "战利品设置",
-	"MonksTokenbar.RequestRollSettings": "请求掷骰设置",
+	"MonksTokenBar.TokenbarSettings": "Token栏设置",
+	"MonksTokenBar.IconSettings": "图标设置",
+	"MonksTokenBar.MovementSettings": "移动设置",
+	"MonksTokenBar.AfterCombatSettings": "战后设置",
+	"MonksTokenBar.LootableSettings": "战利品设置",
+	"MonksTokenBar.RequestRollSettings": "请求掷骰设置",
 
 	"MonksTokenBar.notify-on-change.name": "移动方式改变时发出提醒",
 	"MonksTokenBar.notify-on-change.hint": "GM 改变允许的移动方式时，向所有玩家发出提醒",

@@ -1,3 +1,31 @@
+## Version 11.10
+
+Added the PF2E Party Stash as an option for assigning Loot
+
+Added auto closing to the lootable dialog when loot has been assigned.
+
+Fixed issue with the calculate gold by CR button continually adding to the gold value.
+
+Fixed issue in PF2e assigning items and trying to remove the equipped option.
+
+Added loot image to the loot token created for Item Piles.
+
+Fixed issue when getting the system currency.
+
+Fixed issue with saving throws having duplicate tokens listed
+
+Fixed issue where a blank token in a contested roll request was removing the requested roll value
+
+Fixed issue when after combat the XP and Lootable dialogs weren't showing side by side.
+
+Fixed issue not being able to select a loot image properly
+
+Updated the MATT integration to use handlebar notation
+
+Fixed DnD5e and SW5e rolls to use custom tool rolls properly
+
+Fixed perception warning in PF2e
+
 ## Version 11.09
 
 Fixed issue with xp resetting after setting acustom value.  And added button to automatically recalculate.

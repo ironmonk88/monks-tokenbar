@@ -66,12 +66,12 @@
 	"MonksTokenBar.UnknownSystem": "Você não está usando um sistema compatível com o Monk's Tokenbar.",
 	"MonksTokenBar.ActorNotCombatant": "O ator não faz parte do combate para rolar a iniciativa",
 
-	"MonksTokenbar.TokenbarSettings": "Configurações do Tokenbar",
-	"MonksTokenbar.IconSettings": "Configurações do Ícone",
-	"MonksTokenbar.MovementSettings": "Configurações de Movimento",
-	"MonksTokenbar.AfterCombatSettings": "Configurações Após o Combate",
-	"MonksTokenbar.LootableSettings": "Configurações de Saqueáveis",
-	"MonksTokenbar.RequestRollSettings": "Configurações de Solicitar Rolagem",
+	"MonksTokenBar.TokenbarSettings": "Configurações do Tokenbar",
+	"MonksTokenBar.IconSettings": "Configurações do Ícone",
+	"MonksTokenBar.MovementSettings": "Configurações de Movimento",
+	"MonksTokenBar.AfterCombatSettings": "Configurações Após o Combate",
+	"MonksTokenBar.LootableSettings": "Configurações de Saqueáveis",
+	"MonksTokenBar.RequestRollSettings": "Configurações de Solicitar Rolagem",
 
 	"MonksTokenBar.notify-on-change.name": "Avisar Mudança de Movimento",
 	"MonksTokenBar.notify-on-change.hint": "Envie uma notificação a todos os jogadores quando o GM alterar o movimento permitido",

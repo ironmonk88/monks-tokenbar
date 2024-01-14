@@ -154,6 +154,7 @@ export class LootablesApp extends Application {
             case 'merchantsheetnpc': sheetName = "Merchant Sheet"; break;
             case 'monks-enhanced-journal': sheetName = "Monk's Enhanced Journal"; break;
             case 'item-piles': sheetName = "Item Piles"; break;
+            case 'pf2e': sheetName = "PF2e Party Stash"; break;
         }
 
         let entity;
@@ -161,8 +162,11 @@ export class LootablesApp extends Application {
             entity = await fromUuid(lootentity);
         } catch { }
 
+        let canCreateObject = lootsheet != "pf2e" && lootentity != "convert";
         let convertEntity = lootentity == "convert";
         let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+        let canClearItems = !createEntity && lootsheet != "pf2e"
+        let canHideCombatants = !convertEntity || lootsheet == "pf2e";
 
         if (convertEntity)
             notes = `Convert tokens to lootable using ${sheetName}`;
@@ -186,10 +190,13 @@ export class LootablesApp extends Application {
         }
 
         return {
-            hasLootable: hasLootable,
-            notes: notes,
-            createEntity: createEntity,
-            convertEntity: convertEntity,
+            hasLootable,
+            notes,
+            createEntity,
+            convertEntity,
+            canCreateObject,
+            canClearItems,
+            canHideCombatants,
             placeholder: this.getLootableName(entity),
             currency: this.currency,
             entries: this.entries,
@@ -201,12 +208,12 @@ export class LootablesApp extends Application {
             hideCombatants: this.hideCombatants,
             clearItems: this.clearItems,
             entityName: this.entityName,
-            openLootOptions: openLootOptions
+            openLootOptions
         };
     }
 
     isLootActor(lootsheet) {
-        return ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles'].includes(lootsheet);
+        return ['lootsheetnpc5e', 'merchantsheetnpc', 'item-piles', 'pf2e'].includes(lootsheet);
     }
 
     getCurrency(currency) {
@@ -243,18 +250,23 @@ export class LootablesApp extends Application {
             entity = await fromUuid(this.lootEntity);
         } catch { }
 
+        let canCreateObject = sheet != "pf2e" && this.lootEntity != "convert";
         let convertEntity = this.lootEntity == "convert";
         let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+        let canClearItems = !createEntity && !convertEntity && sheet != "pf2e"
+        let canHideCombatants = !convertEntity || sheet == "pf2e";
 
         let hasLootable = sheet != 'none' && MonksTokenBar.getLootSheetOptions()[sheet] != undefined;
         $('[name="loot-entity"]', html).closest('.form-group').toggle(hasLootable);
         $('[name="open-loot"]', html).closest('.form-group').toggle(hasLootable && !convertEntity);
-        $('[name="clear-items"]', html).closest('.form-group').toggle(hasLootable && !createEntity && !convertEntity);
+        $('[name="clear-items"]', html).closest('.form-group').toggle(hasLootable && canClearItems);
         $('[name="entity-name"]', html).closest('.form-group').toggle(hasLootable && createEntity && !convertEntity);
-        $('[name="create-canvas-object"]', html).closest('.form-group').toggle(hasLootable && !convertEntity);
+        $('[name="create-canvas-object"]', html).closest('.form-group').toggle(hasLootable && canCreateObject);
+        $('[name="hide-combatants"]', html).closest('.form-group').toggle(hasLootable && canHideCombatants);
 
         let ctrl = $('[name="loot-entity"]', html);
-        let list = await MonksTokenBar.lootEntryListing(ctrl, html, (sheet == "monks-enhanced-journal" ? game.journal : game.actors), this.lootEntity);
+        let collection = sheet == "pf2e" ? { documentName: "Actor", contents: game.actors.contents.filter(a => a.type == "party"), preventCreate: true } : (sheet == "monks-enhanced-journal" ? game.journal : game.actors);
+        let list = await MonksTokenBar.lootEntryListing(ctrl, html, collection, this.lootEntity);
         $('[data-uuid="convert"]', list).remove();
         list.insertAfter(ctrl);
         list.toggleClass("disabled", this.lootEntity == "convert");
@@ -266,17 +278,22 @@ export class LootablesApp extends Application {
     async changeEntity(event) {
         this.lootEntity = $(event.currentTarget).val();
 
-        let sheet = setting('loot-sheet');
+        let lootsheet = setting('loot-sheet');
 
         let entity;
         try {
             entity = await fromUuid(this.lootEntity);
         } catch { }
 
-        let convertEntity = this.lootEntity == "convert";
+        let canCreateObject = lootsheet != "pf2e" && lootentity != "convert";
+        let convertEntity = lootentity == "convert";
         let createEntity = (entity == undefined || entity instanceof Folder || entity instanceof JournalEntry);
+        let canClearItems = !createEntity && !convertEntity && lootsheet != "pf2e"
+        let canHideCombatants = !convertEntity || lootsheet == "pf2e";
 
-        $('[name="clear-items"]', this.element).closest('.form-group').toggle(!createEntity && !convertEntity);
+        $('[name="clear-items"]', this.element).closest('.form-group').toggle(canClearItems);
+        $('[name="create-canvas-object"]', this.element).closest('.form-group').toggle(canCreateObject);
+        $('[name="hide-combatants"]', this.element).closest('.form-group').toggle(canHideCombatants);
         $('[name="entity-name"]', this.element).closest('.form-group').toggle(createEntity && !convertEntity);
     }
 
@@ -290,6 +307,7 @@ export class LootablesApp extends Application {
             hideCombatants: this.hideCombatants,
             currency: this.currency
         });
+        this.close();
     }
 
     deleteEntry(event) {
@@ -343,6 +361,7 @@ export class LootablesApp extends Application {
 
     calcGold() {
         let lootingUsers = game.users.contents.filter(user => { return user.role >= 1 && user.role <= 2 });
+        this.currency.gp = 0;
         for (let entry of this.entries) {
             // If the actor has no gold, assign gold by CR: gold = 0.6e(0.15*CR)
             let goldformula = setting('gold-formula');
@@ -620,7 +639,7 @@ export class LootablesApp extends Application {
                     }*/
 
                     /*
-                    for (let curr of MonksTokenbar.getCurrency()) {
+                    for (let curr of MonksTokenBar.system.getCurrency()) {
                         if (entry.currency[curr] != undefined)
                             newActorData[`system.currency.${curr}`] = (entry.actor.system.currency[curr].hasOwnProperty("value") ? { value: entry.currency[curr] } : entry.currency[curr]);
                     }
@@ -684,7 +703,7 @@ export class LootablesApp extends Application {
             if (entity == undefined && lootEntity != "root")
                 warn("Could not find Loot Entity, defaulting to creating one");
 
-            created = (entity == undefined || lootEntity == "root" || entity instanceof Folder || entity instanceof JournalEntry);
+            created = (entity == undefined || lootEntity == "root" || entity instanceof Folder || entity instanceof JournalEntry) && lootSheet != 'pf2e';
             if (created) {
                 //create the entity in the Correct Folder
                 if (name == undefined || name == '')
@@ -760,8 +779,12 @@ export class LootablesApp extends Application {
                             itemQty = 1;
                         setProperty(item, "system.quantity", itemQty * loot.quantity);
 
-                        if (getProperty(item, "system.equipped") != undefined)
-                            setProperty(item, "system.equipped", false);
+                        if (getProperty(item, "system.equipped") != undefined) {
+                            if (game.system.id == "pf2e")
+                                setProperty(item, "system.equipped.handsHeld", 0);
+                            else
+                                setProperty(item, "system.equipped", false);
+                        }
                     }
 
                     items.push(item);
@@ -797,8 +820,8 @@ export class LootablesApp extends Application {
                         if (name == undefined || name == '')
                             name = this.getLootableName(entity);
                         ipOptions.actor = name;
-                        ipOptions.actorOverrides = { name: name };
-                        ipOptions.tokenOverrides = { name: name, actorLink: true };
+                        ipOptions.actorOverrides = { name: name, prototypeToken: { texture: { src: setting("loot-image") } } };
+                        ipOptions.tokenOverrides = { name: name, actorLink: true, texture: { src: setting("loot-image") } };
                         ipOptions.folders = foldernames.length ? foldernames : null;
                         ipOptions.createActor = true;
                         let uuids = await ItemPiles.API.createItemPile(ipOptions);
@@ -812,7 +835,7 @@ export class LootablesApp extends Application {
                 }
 
                 let entityCurr = entity.system.currency || {};
-                for (let curr of MonksTokenbar.getCurrency()) {
+                for (let curr of MonksTokenBar.system.getCurrency()) {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
@@ -831,14 +854,37 @@ export class LootablesApp extends Application {
                     }
                 }
 
-                entity.update({ data: { currency: entityCurr } });
+                if (lootSheet == "pf2e") {
+                    let coinName = { cp: "Copper Pieces", sp: "Silver Pieces", gp: "Gold Pieces", pp: "Platinum Pieces" };
+                    for (let denomination of Object.keys(currency)) {
+                        if (currency[denomination]) {
+                            let coin = entity.items.find(i => { return i.isCoinage && i.system.price.value[denomination] == 1 });
+                            if (coin) {
+                                let quantity = coin.system.quantity;
+                                await coin.update({ "system.quantity": quantity + currency[denomination] });
+                            } else {
+                                // Create a new coinage item
+                                let pack = game.packs.get("pf2e.equipment-srd");
+                                let coinage = pack.index.find(i => i.name == coinName[denomination]);
+                                if (coinage) {
+                                    let item = await pack.getDocument(coinage._id);
+                                    let itemData = item.toObject();
+                                    delete itemData._id;
+                                    setProperty(itemData, "system.quantity", currency[denomination]);
+                                    await entity.createEmbeddedDocuments("Item", [itemData]);
+                                }
+                            }
+                        }
+                    }
+                } else
+                    entity.update({ data: { currency: entityCurr } });
             } else if (lootSheet == 'monks-enhanced-journal') {
                 let entityItems = duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
                 entityItems = entityItems.concat(items);
                 await entity.setFlag('monks-enhanced-journal', 'items', entityItems);
 
                 let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
-                for (let curr of MonksTokenbar.getCurrency()) {
+                for (let curr of MonksTokenBar.system.getCurrency()) {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
@@ -865,7 +911,7 @@ export class LootablesApp extends Application {
                 `Items have been transferred to ${name}`);
 
             let createObject = (setting("create-canvas-object") || createCanvasObject);
-            if (createObject && !(lootSheet == "item-piles" && created) && this.lootEntity != "convert") {
+            if (createObject && !(lootSheet == "item-piles" && created) && this.lootEntity != "convert" && lootSheet != "pf2e") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
                 let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);

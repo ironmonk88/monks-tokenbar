@@ -68,12 +68,12 @@
 	"MonksTokenBar.UnknownSystem": "You're not using a system that Monk's Tokenbar supports.",
 	"MonksTokenBar.ActorNotCombatant": "Actor is not part of combat to roll initiative",
 
-	"MonksTokenbar.TokenbarSettings": "Tokenbar Settings",
-	"MonksTokenbar.IconSettings": "Icon Settings",
-	"MonksTokenbar.MovementSettings": "Movement Settings",
-	"MonksTokenbar.AfterCombatSettings": "After Combat Settings",
-	"MonksTokenbar.LootableSettings": "Lootables",
-	"MonksTokenbar.RequestRollSettings": "Request Roll Settings",
+	"MonksTokenBar.TokenbarSettings": "Tokenbar Settings",
+	"MonksTokenBar.IconSettings": "Icon Settings",
+	"MonksTokenBar.MovementSettings": "Movement Settings",
+	"MonksTokenBar.AfterCombatSettings": "After Combat Settings",
+	"MonksTokenBar.LootableSettings": "Lootables",
+	"MonksTokenBar.RequestRollSettings": "Request Roll Settings",
 
 	"MonksTokenBar.notify-on-change.name": "Notify on Movement Change",
 	"MonksTokenBar.notify-on-change.hint": "Send a notification to all players when the GM changes the allowable movement",
