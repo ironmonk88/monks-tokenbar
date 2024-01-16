@@ -440,7 +440,7 @@ export class MonksTokenBar {
             MonksTokenBar.tokenbar.refresh();
         }
 
-        if (game.user.isGM && setting('loot-sheet') != 'none' && game.modules.get(setting('loot-sheet'))?.active) {
+        if (game.user.isGM && setting('loot-sheet') != 'none' && (game.modules.get(setting('loot-sheet'))?.active || setting("loot-sheet") == "pf2e")) {
             let npcObject = (CONFIG.Actor.sheetClasses.npc || CONFIG.Actor.sheetClasses.minion);
             if (npcObject != undefined) {
                 let npcSheetNames = Object.values(npcObject)
@@ -742,7 +742,7 @@ export class MonksTokenBar {
         if (game.user.isGM) {
             if (combat.started == true) {
                 let showXP = game.settings.get("monks-tokenbar", "show-xp-dialog") && MonksTokenBar.system.showXP;
-                let showLoot = setting("loot-sheet") != 'none' && game.modules.get(setting("loot-sheet"))?.active;
+                let showLoot = setting("loot-sheet") != 'none' && (game.modules.get(setting("loot-sheet"))?.active || setting("loot-sheet") == "pf2e");
 
                 let axpa;
                 if (showXP) {

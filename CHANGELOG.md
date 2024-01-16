@@ -1,3 +1,7 @@
+## Version 11.11
+
+Fixing issue with using the PF2e Party Stash after a combat for loot
+
 ## Version 11.10
 
 Added the PF2E Party Stash as an option for assigning Loot
