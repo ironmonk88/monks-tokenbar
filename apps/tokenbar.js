@@ -299,54 +299,53 @@ export class TokenBar extends Application {
                     }
                 });
 
-  // add actors without tokens that are owned by users, if setting is enabled
-  if (setting("include-actor")) {
-    // iterate through all actors and if they belong to a player, add them to contention, pending other checks
-    for (let actor of game.actors) {
-      let t = actor.prototypeToken;
+            // add actors without tokens that are owned by users, if setting is enabled
+            if (setting("include-actor")) {
+                // iterate through all actors and if they belong to a player, add them to contention, pending other checks
+                for (let actor of game.actors) {
+                let t = actor.prototypeToken;
 
-      if (actor.hasPlayerOwner) {
-        // exclude actors that are explicitly excluded
-        let include = t.getFlag("monks-tokenbar", "include");
-        if (include === "exclude") continue;
+                if (actor.hasPlayerOwner) {
+                    // exclude actors that are explicitly excluded
+                    let include = t.getFlag("monks-tokenbar", "include");
+                    if (include === "exclude") continue;
 
-        // show offline users, if setting is enabled
-        let showOnline =
-          setting("show-offline") ||
-          game.users.find(
-            (u) => u.active && u.character?.id == t.actor?.id
-          );
+                    // show offline users, if setting is enabled
+                    let showOnline =
+                    setting("show-offline") ||
+                    game.users.find(
+                        (u) => u.active && u.character?.id == t.actor?.id
+                    );
 
-        if (!showOnline) continue;
+                    if (!showOnline) continue;
 
-        // exclude actors that don't pass the ownership/ permissions threshold
-        let canView =
-          game.user.isGM ||
-          t.actor?.isOwner ||
-          t.actor?.testUserPermission(
-            game.user,
-            setting("minimum-ownership") || "LIMITED"
-          );
+                    // exclude actors that don't pass the ownership/ permissions threshold
+                    let canView =
+                    game.user.isGM ||
+                    t.actor?.isOwner ||
+                    t.actor?.testUserPermission(
+                        game.user,
+                        setting("minimum-ownership") || "LIMITED"
+                    );
 
-        if (!canView) continue;
+                    if (!canView) continue;
 
-        debug("Adding actor", actor.name);
-        if (!this.entries.find((a) => a.actor?.id === actor.id))
-          this.entries.push({
-            id: actor.id,
-            token: null,
-            actor: actor,
-            img: null,
-            thumb: null,
-            stats: {},
-            resource1: {},
-            resource2: {},
-            cssClass: "only-actor",
-          });
-      }
-    }
-  }
-
+                    debug("Adding actor", actor.name);
+                    if (!this.entries.find((a) => a.actor?.id === actor.id))
+                    this.entries.push({
+                        id: actor.id,
+                        token: null,
+                        actor: actor,
+                        img: null,
+                        thumb: null,
+                        stats: {},
+                        resource1: {},
+                        resource2: {},
+                        cssClass: "only-actor",
+                    });
+                }
+                }
+            }
 
             if (setting("filter-duplicates")) {
                 this.entries = this.entries.filter((t, i, a) => {
@@ -368,7 +367,7 @@ export class TokenBar extends Application {
 
         this.entries = this.entries.sort(function (a, b) {
             let aName = a.token?.name || a.actor?.name || "";
-            let bName = a.token?.name || a.actor?.name || "";
+            let bName = b.token?.name || b.actor?.name || "";
             return aName.localeCompare(bName);
         })
 
