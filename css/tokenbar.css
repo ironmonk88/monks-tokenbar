@@ -829,7 +829,7 @@ body #tokenbar-window:first-child{
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls {
     justify-content: flex-end;
     position: relative;
-    flex-grow: 0;
+    flex: 0 0 87;
 }
 
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls .reroll {
