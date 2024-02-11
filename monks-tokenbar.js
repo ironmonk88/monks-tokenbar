@@ -329,6 +329,8 @@ export class MonksTokenBar {
 
             if (t?.actor?.type == "group") {
                 return Array.from(t.actor.system.members);
+            } else if (t?.actor?.type == "party") {
+                return Array.from(t.actor.members);
             } else
                 return [t];
         }

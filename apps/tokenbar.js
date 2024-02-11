@@ -337,7 +337,7 @@ export class TokenBar extends Application {
 
         this.entries = this.entries.sort(function (a, b) {
             let aName = a.token?.name || a.actor?.name || "";
-            let bName = a.token?.name || a.actor?.name || "";
+            let bName = b.token?.name || b.actor?.name || "";
             return aName.localeCompare(bName);
         })
 
