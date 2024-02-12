@@ -72,8 +72,14 @@ export class SavingThrowApp extends Application {
             }
         }
 
+        let entries = this.entries.map(e => {
+            let img = e.token?.document?.texture?.src || e.token?.img;
+
+            return mergeObject({ img }, e);
+        });
+
         return {
-            entries: this.entries,
+            entries,
             rollmode: this.rollmode,
             flavor: this.flavor,
             dc: this.dc,
@@ -126,7 +132,7 @@ export class SavingThrowApp extends Application {
         switch (type) {
             case 'tokenbar':
                 this.addToken(game.MonksTokenBar.TokenBar().entries.map(e => {
-                    return e.token._object;
+                    return e.token?._object || e.actor;
                 }));
                 break;
             case 'player':
@@ -469,7 +475,7 @@ export class SavingThrowApp extends Application {
         //copy the request to the clipboard
         let tokens = this.entries.map(t => { return { token: t.token.name } });
         let requests = this.request instanceof Array ? this.request : [this.request];
-        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:\"" + this.flavor.replaceAll("\"", "`") + "\"" : ''}, rollMode:'${this.rollmode}'})`;
         await game.clipboard.copyPlainText(macroCmd);
         ui.notifications.info(i18n("MonksTokenBar.MacroCopied"));
     }
@@ -485,7 +491,7 @@ export class SavingThrowApp extends Application {
             folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
         }
 
-        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestRoll(${JSON.stringify(tokens)},{request:${requests ? JSON.stringify(requests) : 'null'}${($.isNumeric(this.dc) ? ', dc:' + this.dc : '')}${(this.showdc ? ', showdc:' + this.showdc : '')}, silent:false, fastForward:false${this.flavor != undefined ? ", flavor:\"" + this.flavor.replaceAll("\"", "`") + "\"" : ''}, rollMode:'${this.rollmode}'})`;
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
     }
@@ -813,6 +819,20 @@ export class SavingThrow {
                 if (update.finish != undefined)
                     promises.push(update.finish);
             }
+        }
+
+        if (game.system.id == 'dnd5e') {
+            let rolls = [];
+            for (let key of Object.keys(getProperty(message, "flags.monks-tokenbar"))) {
+                if (key.startsWith('token')) {
+                    let token = flags[key] || message.flags['monks-tokenbar'][key];
+                    if (token.roll) {
+                        rolls.push(token.roll);
+                    }
+                }
+            }
+            message.rolls = rolls;
+            await message.update({ rolls });
         }
 
         await message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } });

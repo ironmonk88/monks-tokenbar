@@ -216,7 +216,7 @@ export class ContestedRollApp extends Application {
 
     async copyMacro() {
         //copy the request to the clipboard
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:\"" + this.flavor.replaceAll("\"", "`") + "\"" : ''}, rollMode:'${this.rollmode}'})`;
         await game.clipboard.copyPlainText(macroCmd);
         ui.notifications.info(i18n("MonksTokenBar.MacroCopied"));
     }
@@ -229,7 +229,7 @@ export class ContestedRollApp extends Application {
             folder = await Folder.create(new Folder({ "type": "Macro", "folder": null, "name": "Monk's Tokenbar", "color": null, "sorting": "a" }));
         }
 
-        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:'" + this.flavor + "'" : ''}, rollMode:'${this.rollmode}'})`;
+        let macroCmd = `game.MonksTokenBar.requestContestedRoll({token:${this.entries[0].token ? `'${this.entries[0].token?.name}'` : "null"}, request:${this.entries[0].request ? JSON.stringify(this.entries[0].request) : 'null'}},{token:${this.entries[1].token ? `'${this.entries[1].token?.name}'` : "null"}, request:${this.entries[1].request ? JSON.stringify(this.entries[1].request) : 'null'}},{silent:false, fastForward:false${this.flavor != undefined ? ", flavor:\"" + this.flavor.replaceAll("\"", "`") + "\"" : ''}, rollMode:'${this.rollmode}'})`;
 
         const macro = await Macro.create({ name: name, type: "script", scope: "global", command: macroCmd, folder: folder.id });
         macro.sheet.render(true);
@@ -468,6 +468,20 @@ export class ContestedRoll {
                 if (update.finish != undefined)
                     promises.push(update.finish);
             }
+        }
+
+        if (game.system.id == 'dnd5e') {
+            let rolls = [];
+            for (let key of Object.keys(getProperty(message, "flags.monks-tokenbar"))) {
+                if (key.startsWith('token')) {
+                    let token = flags[key] || message.flags['monks-tokenbar'][key];
+                    if (token.roll) {
+                        rolls.push(token.roll);
+                    }
+                }
+            }
+            message.rolls = rolls;
+            await message.update({ rolls });
         }
 
         await message.update({ content: content[0].outerHTML, flags: { 'monks-tokenbar': flags } }).then(() => {

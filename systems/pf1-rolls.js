@@ -61,16 +61,20 @@ export class PF1Rolls extends BaseRolls {
     }
 
     calcXP(actors, monsters) {
+        let partySize = actors.length < 4 ? 3 : actors.length > 5 ? 6 : 4;
         //get the monster xp
         let combatxp = 0;
         for (let monster of monsters) {
             monster.xp = (MonksTokenBar.system.getXP(monster.actor)?.value || 0);
-            combatxp += monster.xp;
+            let monsterXP = monster.xp / partySize;
+            // round up to the nearest 5
+            monsterXP = Math.ceil(monsterXP / 5) * 5;
+            combatxp += monsterXP;
         };
 
-        let partySize = actors.length < 4 ? 3 : actors.length > 5 ? 6 : 4;
+        
 
-        return (combatxp / partySize) * actors.length;
+        return combatxp * actors.length;
     }
 
     roll({ id, actor, request, rollMode, fastForward = false }, callback, e) {

@@ -829,6 +829,7 @@ body #tokenbar-window:first-child{
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls {
     justify-content: flex-end;
     position: relative;
+    flex: 0 0 87;
 }
 
 .monks-tokenbar .sheet.actor .inventory-list .roll-controls .reroll {
@@ -852,6 +853,59 @@ body #tokenbar-window:first-child{
 
 .monks-tokenbar .sheet .items-list li.item .item-name .attribute-name {
     font-size: 10px;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip {
+    flex: auto;
+    order: unset;
+    display: block;
+    overflow: hidden;
+    transition: all 250ms ease;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-roll:not(.expanded) .dice-tooltip {
+    flex: 0 0 0px;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip .dice {
+    display: flex;
+    align-items: center;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip .dice .dice-rolls {
+    flex: 1;
+    margin: 5px 0 5px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    position: unset;
+    float: unset;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip .dice .total {
+    flex-basis: 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip .dice .total .label {
+    font-family: var(--dnd5e-font-roboto-condensed);
+    font-size: var(--font-size-10);
+    color: var(--color-text-dark-5);
+    text-transform: uppercase;
+    text-align: center;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-tooltip .dice .total .value {
+    font-family: var(--font-primary);
+    font-weight: bold;
+    font-size: var(--font-size-20);
+}
+
+body.system-pf2e .monks-tokenbar.chat-card .dice-tooltip[data-visibility=gm]:not(.expanded) {
+    display: none;
 }
 
 .monks-tokenbar li.item .item-roll {
@@ -899,6 +953,7 @@ body #tokenbar-window:first-child{
 .monks-tokenbar li.item .dice-roll,
 .monks-tokenbar li.item .dice-roll .item-row {
     overflow: hidden;
+    max-width: 100%;
 }
 
 .monks-tokenbar li.item .dice-roll .dice-total {

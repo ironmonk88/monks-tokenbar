@@ -1,3 +1,21 @@
+## Version 11.14
+
+Fixing spacing issues
+
+## Version 11.12
+
+Fixed issue with ' being used in the flavour text was breaking saved macros
+
+Attempted to fix issues D&D5e introduced with their latest version and rolling from chat cards.
+
+Added the option to use the party token in PF2e to roll for the party
+
+Fixed sorting of entries on the tokenbar, thank you tonyrobots for pointing that out
+
+Fixed issue with long actor names pushing the roll button off the chat card
+
+Fixed XP calculation issue in PF1e
+
 ## Version 11.11
 
 Fixing issue with using the PF2e Party Stash after a combat for loot
