@@ -1484,7 +1484,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile, tokens, userid, value, method, change } = args;
+            const { action, tile, tokens, userid, value, method, change, event } = args;
             let entities = await game.MonksActiveTiles.getEntities(args);
 
             //if (entities.length == 0)
@@ -1529,7 +1529,7 @@ Hooks.on("setupTileActions", (app) => {
                 if (action.data.fastforward === true) {
                     //need to delay slightly so the original action has time to save a state properly.
                     window.setTimeout(function () {
-                        SavingThrow.onRollAll('all', msg);
+                        SavingThrow.onRollAll('all', msg, event.nativeEvent);
                     }, 100);
                 }
             }
@@ -1537,7 +1537,7 @@ Hooks.on("setupTileActions", (app) => {
                 savingthrow.render(true);
 
             //if we got here then we need to pause before continuing and wait until the request has been fulfilled
-            return { pause: true };
+            return { pause: true, tokens: entities };
         },
         content: async (trigger, action) => {
             let parts = action.data?.request.split(':');
@@ -1632,7 +1632,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile, tokens, userid, value, method, change } = args;
+            const { action, tile, tokens, userid, value, method, change, event } = args;
             let entities1 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity1);
             let entities2 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity2);
 
@@ -1680,7 +1680,7 @@ Hooks.on("setupTileActions", (app) => {
                 if (action.data.fastforward === true) {
                     //need to delay slightly so the original action has time to save a state properly.
                     window.setTimeout(function () {
-                        ContestedRoll.onRollAll('all', msg);
+                        ContestedRoll.onRollAll('all', msg, event);
                     }, 100);
                 }
             }
@@ -1688,7 +1688,7 @@ Hooks.on("setupTileActions", (app) => {
                 contested.render(true);
 
             //if we got here then we need to pause before continuing and wait until the request has been fulfilled
-            return { pause: true };
+            return { pause: true, tokens: [entity1, entity2] };
         },
         content: async (trigger, action) => {
             let parts = action.data?.request1.split(':');

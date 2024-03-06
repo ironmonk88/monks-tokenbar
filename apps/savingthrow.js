@@ -188,7 +188,7 @@ export class SavingThrowApp extends Application {
         window.setTimeout(() => { this.setPosition({ height: 'auto' }); }, 100);
     }
 
-    async requestRoll(roll) {
+    async requestRoll(roll, evt) {
         let msg = null;
         if (this.entries.length > 0) {
             SavingThrow.lastTokens = this.entries.map(e => {
@@ -362,7 +362,7 @@ export class SavingThrowApp extends Application {
                 msg.setFlag('monks-tokenbar', 'active-tiles', this['active-tiles']);
 
             if (roll === true)
-                SavingThrow.onRollAll('all', msg, this.opts);
+                SavingThrow.onRollAll('all', msg, evt);
             else {
                 let ids = this.entries.filter(e => e.fastForward).map(e => e.id);
                 if (ids.length > 0)
@@ -699,6 +699,8 @@ export class SavingThrow {
                     //roll the dice, using standard details from actor
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
+                    if (!e.target)
+                        e.target = evt.target;
                     e.ctrlKey = evt?.ctrlKey;
                     e.altKey = evt?.altKey;
                     e.shiftKey = evt?.shiftKey;
