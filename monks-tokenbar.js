@@ -208,7 +208,7 @@ export class MonksTokenBar {
                 let token = fromUuidSync(msgToken.uuid);
                 let actor = token?.actor ? token.actor : token;
 
-                return !!msgToken.roll && actor.type == "character" && (game.user.isGM || actor.isOwner);
+                return !!msgToken.roll && actor?.type == "character" && (game.user.isGM || actor.isOwner);
             };
 
             return [...menu, ...[
@@ -1052,6 +1052,12 @@ export class MonksTokenBar {
         // Define default inline data
         let [request, ...props] = options.split(' ');
 
+        for (let i = 0; i < props.length; i++) {
+            if (props[i].startsWith('dc:') || props[i].startsWith('rollmode') || props[i].startsWith('silent') || props[i].startsWith('fastForward'))
+                break;
+            request += ` ${props[i]}`;
+        }
+
         let dataset = {
             requesttype: command,
             request: request,
@@ -1529,7 +1535,7 @@ Hooks.on("setupTileActions", (app) => {
                 if (action.data.fastforward === true) {
                     //need to delay slightly so the original action has time to save a state properly.
                     window.setTimeout(function () {
-                        SavingThrow.onRollAll('all', msg, event.nativeEvent);
+                        SavingThrow.onRollAll('all', msg, event?.nativeEvent);
                     }, 100);
                 }
             }
@@ -1862,6 +1868,12 @@ Hooks.on("updateActor", (actor, data, dif, userId) => {
 Hooks.on("canvasInit", () => {
     if (MonksTokenBar.tokenbar) {
         MonksTokenBar.tokenbar.entries = [];
+        MonksTokenBar.tokenbar.refresh();
+    }
+});
+
+Hooks.on("updateUser", (user, data, options, userId) => {
+    if (setting("include-actor") && hasProperty(data, "character") && MonksTokenBar.tokenbar) {
         MonksTokenBar.tokenbar.refresh();
     }
 });

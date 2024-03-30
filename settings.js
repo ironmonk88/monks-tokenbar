@@ -512,6 +512,13 @@ export const registerSettings = function () {
 		type: Boolean
 	});
 
+	game.settings.register(modulename, "tokenbar-collapsed", {
+		scope: "client",
+		config: false,
+		default: false,
+		type: Boolean,
+	});
+
 	//this is just a global setting for movement mode
 	game.settings.register(modulename, "movement", {
 		scope: "world",

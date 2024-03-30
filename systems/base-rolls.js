@@ -62,9 +62,8 @@ export class BaseRolls {
     }
 
     rollSuccess(roll, dc, actorId, request) {
-        let passed = roll.total >= dc;
+        let passed = roll?.total >= dc;
         return { passed };
-;
     }
 
     get showXP() {

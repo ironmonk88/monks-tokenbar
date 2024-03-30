@@ -366,7 +366,7 @@ export class ContestedRoll {
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
                     if (!e.target)
-                        e.target = evt.target;
+                        e.target = evt?.target;
                     e.ctrlKey = evt?.ctrlKey;
                     e.altKey = evt?.altKey;
                     e.shiftKey = evt?.shiftKey;
@@ -440,7 +440,7 @@ export class ContestedRoll {
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
                     let tooltipElem = $(tooltip);
-                    if (!tooltipElem.hasClass("dice-tooltip")) {
+                    if (!tooltipElem.hasClass("dice-tooltip") && !tooltipElem.hasClass("dice-tooltip-collapser")) {
                         tooltipElem = $("<div>").addClass("dice-tooltip").append(tooltipElem);
                     }
 
@@ -535,9 +535,11 @@ export class ContestedRoll {
 
                 if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
                     result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
-                    for (let i = 0; i < result.tokens.length; i++) {
-                        result.tokens[i] = await fromUuid(result.tokens[i].uuid);
-                    }
+                } else {
+                    result.tokens = result.tokenresults;
+                }
+                for (let i = 0; i < result.tokens.length; i++) {
+                    result.tokens[i] = await fromUuid(result.tokens[i].uuid);
                 }
 
                 tile.resumeActions(restart.id, result);

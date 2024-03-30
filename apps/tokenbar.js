@@ -10,7 +10,7 @@ export class TokenBar extends Application {
         this.thumbnails = {};
 
         this._hover = null;
-        this._collapsed = false;
+        this._collapsed = setting("tokenbar-collapsed");
 
         Hooks.on('canvasReady', () => {
             this.refresh();
@@ -874,6 +874,7 @@ export class TokenBar extends Application {
                 else
                     icon.removeClass("fa-caret-left").addClass("fa-caret-right");
                 this._collapsed = true;
+                game.settings.set('monks-tokenbar', 'tokenbar-collapsed', this._collapsed);
                 resolve(true);
             });
         });
@@ -893,6 +894,7 @@ export class TokenBar extends Application {
                 else
                     icon.removeClass("fa-caret-right").addClass("fa-caret-left");
                 this._collapsed = false;
+                game.settings.set('monks-tokenbar', 'tokenbar-collapsed', this._collapsed);
                 resolve(true);
             });
         });

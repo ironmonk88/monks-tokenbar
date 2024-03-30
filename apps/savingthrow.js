@@ -700,7 +700,7 @@ export class SavingThrow {
                     let keys = msgtoken.keys || {};
                     let e = Object.assign({}, evt);
                     if (!e.target)
-                        e.target = evt.target;
+                        e.target = evt?.target;
                     e.ctrlKey = evt?.ctrlKey;
                     e.altKey = evt?.altKey;
                     e.shiftKey = evt?.shiftKey;
@@ -787,7 +787,7 @@ export class SavingThrow {
 
                     $('.item[data-item-id="' + update.id + '"] .dice-roll .dice-tooltip', content).remove();
                     let tooltipElem = $(tooltip);
-                    if (!tooltipElem.hasClass("dice-tooltip")) {
+                    if (!tooltipElem.hasClass("dice-tooltip") && !tooltipElem.hasClass("dice-tooltip-collapser")) {
                         tooltipElem = $("<div>").addClass("dice-tooltip").append(tooltipElem);
                     }
                     tooltipElem.removeClass("expanded").insertAfter($('.item[data-item-id="' + update.id + '"] .item-row', content));
@@ -889,9 +889,11 @@ export class SavingThrow {
 
                 if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
                     result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
-                    for (let i = 0; i < result.tokens.length; i++) {
-                        result.tokens[i] = await fromUuid(result.tokens[i].uuid);
-                    }
+                } else {
+                    result.tokens = result.tokenresults;
+                }
+                for (let i = 0; i < result.tokens.length; i++) {
+                    result.tokens[i] = await fromUuid(result.tokens[i].uuid);
                 }
 
                 result.continue = restart.action.data.continue == 'always' ||
