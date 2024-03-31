@@ -1,3 +1,9 @@
+## Version 11.17
+
+Fixing a silly mistake that made redirecting rolls no longer work
+
+Added the option to use handlebars when redirecting rolls
+
 ## Version 11.16
 
 Fixed issue when trying to call a requested roll or contested roll when there's no event triggering it.

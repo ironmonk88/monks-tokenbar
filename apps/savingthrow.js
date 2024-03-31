@@ -890,7 +890,7 @@ export class SavingThrow {
                 if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
                     result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
                 } else {
-                    result.tokens = result.tokenresults;
+                    result.tokens = duplicate(result.tokenresults);
                 }
                 for (let i = 0; i < result.tokens.length; i++) {
                     result.tokens[i] = await fromUuid(result.tokens[i].uuid);

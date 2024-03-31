@@ -1737,13 +1737,15 @@ Hooks.on("setupTileActions", (app) => {
 
             let goto = [];
             if (action.data.failed) {
-                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
+                var failed = await game.MonksActiveTiles.getValue(action.data.failed, args, null, { prop: "" });
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: failed };
                 if (data.tokens.length)
                     goto.push(data);
             }
 
             if (action.data.passed) {
-                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
+                var passed = await game.MonksActiveTiles.getValue(action.data.passed, args, null, { prop: "" });
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: passed };
                 if (data.tokens.length)
                     goto.push(data);
             }
@@ -1810,7 +1812,7 @@ Hooks.on("setupTileActions", (app) => {
 
             entities = entities.map(e => e.object);
 
-            let xp = game.MonksActiveTiles.getValue(action.data.xp, args);
+            let xp = await game.MonksActiveTiles.getValue(action.data.xp, args);
 
             let assignxp = new AssignXPApp(entities, { xp: xp, reason: action.data.reason, dividexp: action.data.dividexp});
             if (action.data.silent === true) {
