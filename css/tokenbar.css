@@ -1512,3 +1512,11 @@ a.inline-request-roll {
 #assignexperience .creature-count:empty {
     display: none;
 }
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-roll .dice-tooltip-collapser {
+    display: none;
+}
+
+body.system-dnd5e .monks-tokenbar.chat-card .dice-roll.expanded .dice-tooltip-collapser {
+    display: grid;
+}

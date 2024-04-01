@@ -1,3 +1,33 @@
+## Version 11.17
+
+Fixing a silly mistake that made redirecting rolls no longer work
+
+Added the option to use handlebars when redirecting rolls
+
+## Version 11.16
+
+Fixed issue when trying to call a requested roll or contested roll when there's no event triggering it.
+
+Hopefully fixed issues with D&D5e when requesting rolls, or at least until they make another breaking change.
+
+Returning tokens properly to MATT when requesting a roll or contested roll.
+
+Added a setting to restore the tokenbar to the last collapsed or expanded state.
+
+Fixed issue when trying to open a context menu and the token in question no longer has a viable actor.
+
+Fixed issue with inline requested rolls that have a space in the requested roll name
+
+Updated the tokenbar when includng actors and the user updates their preferred actor
+
+Fixed issue with checking to see if a roll is a success if the roll doesn't exist.
+
+## Version 11.15
+
+Fixing MATT integration, setting the current tokens with the tokens that were selected.
+
+Fixing 5e 3.0 issues that were introduced by system changes.
+
 ## Version 11.14
 
 Fixing spacing issues

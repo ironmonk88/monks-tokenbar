@@ -208,7 +208,7 @@ export class MonksTokenBar {
                 let token = fromUuidSync(msgToken.uuid);
                 let actor = token?.actor ? token.actor : token;
 
-                return !!msgToken.roll && actor.type == "character" && (game.user.isGM || actor.isOwner);
+                return !!msgToken.roll && actor?.type == "character" && (game.user.isGM || actor.isOwner);
             };
 
             return [...menu, ...[
@@ -1052,6 +1052,12 @@ export class MonksTokenBar {
         // Define default inline data
         let [request, ...props] = options.split(' ');
 
+        for (let i = 0; i < props.length; i++) {
+            if (props[i].startsWith('dc:') || props[i].startsWith('rollmode') || props[i].startsWith('silent') || props[i].startsWith('fastForward'))
+                break;
+            request += ` ${props[i]}`;
+        }
+
         let dataset = {
             requesttype: command,
             request: request,
@@ -1484,7 +1490,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile, tokens, userid, value, method, change } = args;
+            const { action, tile, tokens, userid, value, method, change, event } = args;
             let entities = await game.MonksActiveTiles.getEntities(args);
 
             //if (entities.length == 0)
@@ -1529,7 +1535,7 @@ Hooks.on("setupTileActions", (app) => {
                 if (action.data.fastforward === true) {
                     //need to delay slightly so the original action has time to save a state properly.
                     window.setTimeout(function () {
-                        SavingThrow.onRollAll('all', msg);
+                        SavingThrow.onRollAll('all', msg, event?.nativeEvent);
                     }, 100);
                 }
             }
@@ -1537,7 +1543,7 @@ Hooks.on("setupTileActions", (app) => {
                 savingthrow.render(true);
 
             //if we got here then we need to pause before continuing and wait until the request has been fulfilled
-            return { pause: true };
+            return { pause: true, tokens: entities };
         },
         content: async (trigger, action) => {
             let parts = action.data?.request.split(':');
@@ -1632,7 +1638,7 @@ Hooks.on("setupTileActions", (app) => {
         },
         group: 'monks-tokenbar',
         fn: async (args = {}) => {
-            const { action, tile, tokens, userid, value, method, change } = args;
+            const { action, tile, tokens, userid, value, method, change, event } = args;
             let entities1 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity1);
             let entities2 = await game.MonksActiveTiles.getEntities(args, "tokens", action.data.entity2);
 
@@ -1680,7 +1686,7 @@ Hooks.on("setupTileActions", (app) => {
                 if (action.data.fastforward === true) {
                     //need to delay slightly so the original action has time to save a state properly.
                     window.setTimeout(function () {
-                        ContestedRoll.onRollAll('all', msg);
+                        ContestedRoll.onRollAll('all', msg, event);
                     }, 100);
                 }
             }
@@ -1688,7 +1694,7 @@ Hooks.on("setupTileActions", (app) => {
                 contested.render(true);
 
             //if we got here then we need to pause before continuing and wait until the request has been fulfilled
-            return { pause: true };
+            return { pause: true, tokens: [entity1, entity2] };
         },
         content: async (trigger, action) => {
             let parts = action.data?.request1.split(':');
@@ -1731,13 +1737,15 @@ Hooks.on("setupTileActions", (app) => {
 
             let goto = [];
             if (action.data.failed) {
-                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.failed };
+                var failed = await game.MonksActiveTiles.getValue(action.data.failed, args, null, { prop: "" });
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => !r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: failed };
                 if (data.tokens.length)
                     goto.push(data);
             }
 
             if (action.data.passed) {
-                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: action.data.passed };
+                var passed = await game.MonksActiveTiles.getValue(action.data.passed, args, null, { prop: "" });
+                let data = { tokens: await Promise.all((value.tokenresults || []).filter(r => r.passed).map(async (t) => { return await fromUuid(t.uuid); })), tag: passed };
                 if (data.tokens.length)
                     goto.push(data);
             }
@@ -1804,7 +1812,7 @@ Hooks.on("setupTileActions", (app) => {
 
             entities = entities.map(e => e.object);
 
-            let xp = game.MonksActiveTiles.getValue(action.data.xp, args);
+            let xp = await game.MonksActiveTiles.getValue(action.data.xp, args);
 
             let assignxp = new AssignXPApp(entities, { xp: xp, reason: action.data.reason, dividexp: action.data.dividexp});
             if (action.data.silent === true) {
@@ -1862,6 +1870,12 @@ Hooks.on("updateActor", (actor, data, dif, userId) => {
 Hooks.on("canvasInit", () => {
     if (MonksTokenBar.tokenbar) {
         MonksTokenBar.tokenbar.entries = [];
+        MonksTokenBar.tokenbar.refresh();
+    }
+});
+
+Hooks.on("updateUser", (user, data, options, userId) => {
+    if (setting("include-actor") && hasProperty(data, "character") && MonksTokenBar.tokenbar) {
         MonksTokenBar.tokenbar.refresh();
     }
 });
