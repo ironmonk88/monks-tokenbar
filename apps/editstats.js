@@ -8,7 +8,7 @@ export class EditStats extends FormApplication {
 
         super(object, options);
         this.stats = (Array.isArray(stats) ? stats : []).map(s => {
-            s.id = s.id || randomID();
+            s.id = s.id || foundry.utils.randomID();
             return s;
         });
         //let's just grab the first player character we can find
@@ -21,7 +21,7 @@ export class EditStats extends FormApplication {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "tokenbar-editstats",
             title: 'Edit Stats',
             template: "./modules/monks-tokenbar/templates/editstats.html",
@@ -60,7 +60,7 @@ export class EditStats extends FormApplication {
     }
 
     addStat(event) {
-        this.stats.push({ id: randomID(), stat: "", icon: "fa-address-book" });
+        this.stats.push({ id: foundry.utils.randomID(), stat: "", icon: "fa-address-book" });
         this.render(true);
     }
 

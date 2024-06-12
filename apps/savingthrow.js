@@ -30,7 +30,7 @@ export class SavingThrowApp extends Application {
 
         this.baseoptions = this.baseoptions.filter(g => g.groups);
         for (let attr of this.baseoptions) {
-            attr.groups = duplicate(attr.groups);
+            attr.groups = foundry.utils.duplicate(attr.groups);
             for (let [k, v] of Object.entries(attr.groups)) {
                 attr.groups[k] = v?.label || v;
             }
@@ -47,7 +47,7 @@ export class SavingThrowApp extends Application {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "requestsavingthrow",
             title: i18n("MonksTokenBar.RequestRoll"),
             template: "./modules/monks-tokenbar/templates/savingthrow.html",
@@ -75,7 +75,7 @@ export class SavingThrowApp extends Application {
         let entries = this.entries.map(e => {
             let img = e.token?.document?.texture?.src || e.token?.img;
 
-            return mergeObject({ img }, e);
+            return foundry.utils.mergeObject({ img }, e);
         });
 
         return {
@@ -160,7 +160,7 @@ export class SavingThrowApp extends Application {
                         }
                         return null;
                     }).filter(e => !!e);
-                    this.request = duplicate(SavingThrow.lastRequest);
+                    this.request = foundry.utils.duplicate(SavingThrow.lastRequest);
                     this.render(true);
                 }
                 break;
@@ -350,7 +350,7 @@ export class SavingThrowApp extends Application {
                 chatData.whisper = whisper;
 
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
-            setProperty(chatData, "flags.monks-tokenbar", requestdata);
+            foundry.utils.setProperty(chatData, "flags.monks-tokenbar", requestdata);
             msg = await ChatMessage.create(chatData, {});
             msg.mtb_callback = this.opts.callback;
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll' && roll !== false)
@@ -515,7 +515,7 @@ export class SavingThrow {
                 // try and extract the roll from a saved value
                 let message = game.messages.get(msgId);
                 if (message) {
-                    let rolls = getProperty(message, "flags.monks-tokenbar.rolls");
+                    let rolls = foundry.utils.getProperty(message, "flags.monks-tokenbar.rolls");
                     realroll = rolls[id];
                     if (realroll)
                         return { id: id, roll: realroll, finish: null, reveal: true };
@@ -761,7 +761,7 @@ export class SavingThrow {
 
         for (let update of updates) {
             if (update != undefined) {
-                let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
+                let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 log('updating actor', msgtoken, update.roll);
 
                 if (update.roll) {
@@ -769,7 +769,7 @@ export class SavingThrow {
                     if (update.roll instanceof Roll) {
                         msgtoken.roll = update.roll.toJSON();
                         if (msgtoken.roll.terms.length)
-                            msgtoken.roll.terms = duplicate(msgtoken.roll.terms);
+                            msgtoken.roll.terms = foundry.utils.duplicate(msgtoken.roll.terms);
                         for (let i = 0; i < msgtoken.roll.terms.length; i++) {
                             if (msgtoken.roll.terms[i] instanceof RollTerm)
                                 msgtoken.roll.terms[i] = msgtoken.roll.terms[i].toJSON();
@@ -825,7 +825,7 @@ export class SavingThrow {
 
         if (game.system.id == 'dnd5e') {
             let rolls = [];
-            for (let key of Object.keys(getProperty(message, "flags.monks-tokenbar"))) {
+            for (let key of Object.keys(foundry.utils.getProperty(message, "flags.monks-tokenbar"))) {
                 if (key.startsWith('token')) {
                     let token = flags[key] || message.flags['monks-tokenbar'][key];
                     if (token.roll) {
@@ -890,7 +890,7 @@ export class SavingThrow {
                 if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
                     result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
                 } else {
-                    result.tokens = duplicate(result.tokenresults);
+                    result.tokens = foundry.utils.duplicate(result.tokenresults);
                 }
                 for (let i = 0; i < result.tokens.length; i++) {
                     result.tokens[i] = await fromUuid(result.tokens[i].uuid);
@@ -931,7 +931,7 @@ export class SavingThrow {
         } else {
             let flags = {};
             for (let update of updates) {
-                let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
+                let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 msgtoken.reveal = true;
                 flags["token" + update.id] = msgtoken;
                 log("Finish Rolling", msgtoken);
@@ -961,7 +961,7 @@ export class SavingThrow {
         if (event?.stopPropagation) event.stopPropagation();
         if (event?.preventDefault) event.preventDefault();
         //let actors = JSON.parse(JSON.stringify(message.getFlag('monks-tokenbar', 'actors')));
-        let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + tokenid)); //actors.find(a => { return a.id == actorid; });
+        let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + tokenid)); //actors.find(a => { return a.id == actorid; });
 
         if (msgtoken.passed === success)
             msgtoken.passed = null;
@@ -988,12 +988,12 @@ export class SavingThrow {
             let msgtoken = message.getFlag('monks-tokenbar', 'token' + tokenId);
 
             if (!msgtoken.assigned) {
-                msgtoken = duplicate(msgtoken);
+                msgtoken = foundry.utils.duplicate(msgtoken);
 
                 let actor = game.actors.get(msgtoken.actorid);
                 let attr = 'system.attributes.death.' + (msgtoken.passed === true || msgtoken.passed === "success" ? 'success' : 'failure');
                 let roll = Roll.fromData(msgtoken.roll);
-                let val = (getProperty(actor, attr) || 0) + (!!MonksTokenBar.system.isCritical(roll) ? 2 : 1);
+                let val = (foundry.utils.getProperty(actor, attr) || 0) + (!!MonksTokenBar.system.isCritical(roll) ? 2 : 1);
                 let update = {};
                 update[attr] = val;
                 await actor.update(update);
@@ -1033,7 +1033,7 @@ export class SavingThrow {
             if (actor instanceof Actor && actor.type == "character") {
                 const heroPointCount = actor.heroPoints.value;
                 if (heroPointCount)
-                    await actor.update({ "system.resources.heroPoints.value": Math.clamped(heroPointCount - 1, 0, 3) });
+                    await actor.update({ "system.resources.heroPoints.value": Math.clamp(heroPointCount - 1, 0, 3) });
                 else {
                     return ui.notifications.warn("Does not have a hero point");
                 }
@@ -1043,7 +1043,7 @@ export class SavingThrow {
         }
 
         const oldRoll = msgToken.roll;
-        const newData = deepClone(oldRoll.data);
+        const newData = foundry.utils.deepClone(oldRoll.data);
         const newOptions = { ...oldRoll.options, isReroll: !0 };
         const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
         const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
@@ -1306,7 +1306,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         //let modename = (rollmode == 'roll' ? 'Public Roll' : (rollmode == 'gmroll' ? 'Private GM Roll' : (rollmode == 'blindroll' ? 'Blind GM Roll' : 'Self Roll')));
         //$('.message-mode', html).html(modename);
 
-        //let content = duplicate(message.content);
+        //let content = foundry.utils.duplicate(message.content);
         //content = content.replace('<span class="message-mode"></span>', '<span class="message-mode">' + modename + '</span>');
         //await message.update({ "content": content });
         $('.grab-message', html).off('click.grabbing').on('click.grabbing', MonksTokenBar.setGrabMessage.bind(MonksTokenBar, message));

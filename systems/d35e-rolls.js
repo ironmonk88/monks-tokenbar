@@ -12,7 +12,7 @@ export class D35eRolls extends BaseRolls {
             { id: "skill", text: i18n("MonksTokenBar.Skill"), groups: this.config.skills }
         ].concat(this._requestoptions);
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat1: "attributes.ac.normal.total",
             stat2: "skills.spt.value"
         });*/

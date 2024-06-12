@@ -25,7 +25,7 @@ export class TokenBar extends Application {
         });
 
         Hooks.on('updateToken', (document, data, options) => {
-            if ((game.user.isGM || setting("allow-player")) && getProperty(data, "flags.monks-tokenbar.include") != undefined) {
+            if ((game.user.isGM || setting("allow-player")) && foundry.utils.getProperty(data, "flags.monks-tokenbar.include") != undefined) {
                 this.refresh();
             } else if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let entry = this.entries.find(t => t.token?.id == document.id);
@@ -71,9 +71,11 @@ export class TokenBar extends Application {
         Hooks.on("createItem", (item) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 if (item.type == 'effect') {
-                    let entry = this.entries.find(t => t.actor?.id == item.actor.id);
-                    if (entry != undefined) {
-                        this.updateEntry(entry)
+                    if (item.actor) {
+                        let entry = this.entries.find(t => t.actor?.id == item.actor.id);
+                        if (entry != undefined) {
+                            this.updateEntry(entry)
+                        }
                     }
                 }
             }
@@ -99,7 +101,7 @@ export class TokenBar extends Application {
 
     /** @override */
 	static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "tokenbar-window",
             template: "./modules/monks-tokenbar/templates/tokenbar.html",
             popOut: false,
@@ -175,13 +177,17 @@ export class TokenBar extends Application {
     }
 
     _canDragStart(selector) {
-        return game.user.isGM;
+        return game.user.isGM || game.user.can("ACTOR_CREATE");
     }
 
     _onDragStart(event) {
         const target = event.currentTarget;
 
-        const dragData = { uuid: `Actor.${target.dataset.actorId}`, type: "Actor" };
+        let actorId = target.dataset.actorId;
+        let actor = game.actors.get(actorId);
+        if (!actor || !actor.isOwner) return false;
+
+        const dragData = { uuid: `Actor.${actorId}`, type: "Actor" };
         event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
     }
 
@@ -212,7 +218,7 @@ export class TokenBar extends Application {
         let result = formula.replace(dataRgx, (match, term) => {
             let value = parseInt(term);
             if (isNaN(value)) {
-                value = getProperty(data, term);
+                value = foundry.utils.getProperty(data, term);
                 return (value == undefined || value == null ? null : String(typeof value == 'object' ? value.value : value).trim());
             } else
                 return value;
@@ -278,7 +284,7 @@ export class TokenBar extends Application {
                     let showOnline = setting("show-offline") || game.users.find(u => u.active && u.character?.id == t.actor?.id);
                     let disp = ((t.actor?.hasPlayerOwner && t.disposition == 1 && include != 'exclude') || include === 'include');
 
-                    let mlt = !!getProperty(t, "flags.multilevel-tokens.stoken");
+                    let mlt = !!foundry.utils.getProperty(t, "flags.multilevel-tokens.stoken");
 
                     let addToken = hasActor && canView && disp && !mlt && showOnline;
                     debug("Checking token", t, "addToken", addToken, "Has Actor", hasActor, "Can View", canView, "Disposition", disp, "Included", include, "Online", showOnline);
@@ -354,7 +360,7 @@ export class TokenBar extends Application {
         if (token.displayBars > 0) {
             let attr = token.getBarAttribute(bar);
             if (attr.attribute == "attributes.hp")
-                attr = mergeObject(attr, (getProperty(token, "actor.system.attributes.hp") || {}));
+                attr = foundry.utils.mergeObject(attr, (foundry.utils.getProperty(token, "actor.system.attributes.hp") || {}));
 
             if (attr != undefined && attr.type == "bar") {
                 let { value, max, temp, tempmax } = attr;
@@ -365,9 +371,9 @@ export class TokenBar extends Application {
                 const effectiveMax = Math.max(0, max + tempmax);
                 let displayMax = max + (tempmax > 0 ? tempmax : 0);
 
-                const tempPct = Math.clamped(temp, 0, displayMax) / displayMax;
-                const valuePct = Math.clamped(value, 0, effectiveMax) / displayMax;
-                const colorPct = Math.clamped(value, 0, effectiveMax) / displayMax;
+                const tempPct = Math.clamp(temp, 0, displayMax) / displayMax;
+                const valuePct = Math.clamp(value, 0, effectiveMax) / displayMax;
+                const colorPct = Math.clamp(value, 0, effectiveMax) / displayMax;
 
                 if (value != undefined) {
                     let color = (bar === "bar1") ? [(1 - (colorPct / 2)), colorPct, 0] : [(0.5 * colorPct), (0.7 * colorPct), 0.5 + (colorPct / 2)];
@@ -408,7 +414,7 @@ export class TokenBar extends Application {
                 diffstats[stat.stat] = entry.stats[stat.stat];
             }
             else {
-                let tokenstat = duplicate(entry.stats[stat.stat]);
+                let tokenstat = foundry.utils.duplicate(entry.stats[stat.stat]);
                 if (tokenstat.value != value) {
                     tokenstat.value = value;
                     tokenstat.hidden = (!setting("show-undefined") && value == undefined);
@@ -439,8 +445,8 @@ export class TokenBar extends Application {
             diff.thumb = (thumb?.thumb || thumb);
         }
 
-        if (entry.token && entry.movement != getProperty(entry.token, "flags.monks-tokenbar.movement")) {
-            diff.movement = getProperty(entry.token, "flags.monks-tokenbar.movement");
+        if (entry.token && entry.movement != foundry.utils.getProperty(entry.token, "flags.monks-tokenbar.movement")) {
+            diff.movement = foundry.utils.getProperty(entry.token, "flags.monks-tokenbar.movement");
         }
 
         if (entry.inspiration != (entry.actor.system?.attributes?.inspiration && setting('show-inspiration')))
@@ -455,7 +461,7 @@ export class TokenBar extends Application {
         }
 
         if (Object.keys(diff).length > 0) {
-            mergeObject(entry, diff);
+            foundry.utils.mergeObject(entry, diff);
             if(refresh)
                 this.render();
         }
@@ -530,8 +536,8 @@ export class TokenBar extends Application {
                         document.onmouseup = null;
                         document.onmousemove = null;
 
-                        let xPos = Math.clamped((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
-                        let yPos = Math.clamped((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
+                        let xPos = Math.clamp((elmnt.offsetLeft - pos1), 0, window.innerWidth - 200);
+                        let yPos = Math.clamp((elmnt.offsetTop - pos2), 0, window.innerHeight - 20);
 
                         let position = { top: null, bottom: null, left: null, right: null };
                         if (yPos > (window.innerHeight / 2))
@@ -686,7 +692,7 @@ export class TokenBar extends Application {
                     let id = li[0].dataset.tokenId || li[0].dataset.actorId;
                     const entry = this.entries.find(t => t.token?.id === id || t.actor?.id === id);
                     if (entry) {
-                        let heroPoints = Math.min((getProperty(entry.actor, 'system.resources.heroPoints.value') ?? 0) + 1, 3);
+                        let heroPoints = Math.min((foundry.utils.getProperty(entry.actor, 'system.resources.heroPoints.value') ?? 0) + 1, 3);
                         Actor.updateDocuments([{ _id: entry.actor.id, 'system.resources.heroPoints.value': heroPoints }]);
                         ChatMessage.create({ content: `${entry.actor.name} gained a Hero Point!` });
                     }

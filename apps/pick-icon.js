@@ -9,7 +9,7 @@ export class PickIcon extends FormApplication {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "tokenbar-pick-icon",
             title: 'Pick Icon',
             template: "./modules/monks-tokenbar/templates/pick-icon.html",

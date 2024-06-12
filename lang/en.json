@@ -189,6 +189,8 @@
 	"MonksTokenBar.bypass-roll-dialog.hint": "Bypass the roll dialog and roll directly from the chatcard",
 	"MonksTokenBar.show-movement.name": "Show Movement",
 	"MonksTokenBar.show-movement.hint": "Show the movement buttons on the tokenbar",
+	"MonksTokenBar.free-vehicle-combat.name": "Vehicle movement",
+	"MonksTokenBar.free-vehicle-combat.hint": "Allow vehicle movement in combat",
 
 	"MonksTokenBar.orientation.vertical": "Vertical",
 	"MonksTokenBar.orientation.horizontal": "Horizontal",

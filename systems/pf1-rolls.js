@@ -12,7 +12,7 @@ export class PF1Rolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat1: "attributes.ac.normal.total",
             stat2: "skills.per.mod"
         });*/

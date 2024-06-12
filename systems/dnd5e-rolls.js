@@ -13,7 +13,7 @@ export class DnD5eRolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat2: "skills.prc.passive"
         });*/
     }
@@ -33,14 +33,14 @@ export class DnD5eRolls extends BaseRolls {
                 if (msgid) {
                     let msg = game.messages.get(msgid);
                     if (msg) {
-                        let rolls = duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
+                        let rolls = foundry.utils.duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
                         let tokenid = message.getFlag('monks-tokenbar', 'tokenid');
                         rolls[tokenid] = message.rolls[0];
                         if (msg.isOwner)
                             msg.setFlag('monks-tokenbar', "rolls", rolls);
                         else
                             MonksTokenBar.emit("setRolls", { msgid, tokenid, roll: rolls[tokenid] });
-                        setProperty(msg, "flags.monks-tokenbar.rolls", rolls);
+                        foundry.utils.setProperty(msg, "flags.monks-tokenbar.rolls", rolls);
                     }
                 }
                 return false;
@@ -91,7 +91,7 @@ export class DnD5eRolls extends BaseRolls {
     defaultRequest(app) {
         //let allPlayers = (app.entries.filter(t => t.token.actor?.hasPlayerOwner).length == app.entries.length);
         //if all the tokens have zero hp, then default to death saving throw
-        let allZeroHP = app.entries.filter(t => getProperty(t.token.actor, "system.attributes.hp.value") == 0).length;
+        let allZeroHP = app.entries.filter(t => foundry.utils.getProperty(t.token.actor, "system.attributes.hp.value") == 0).length;
         if (allZeroHP == app.entries.length && allZeroHP != 0)
             return { type: 'misc', key: 'death' };
 
@@ -234,7 +234,7 @@ export class DnD5eRolls extends BaseRolls {
 
     getValue(actor, type, key) {
         let prop = type == "skill" ? "skills" : type == "save" ? "saves" : "attributes";
-        let value = getProperty(actor, "system." + prop + "." + key + ".total");
+        let value = foundry.utils.getProperty(actor, "system." + prop + "." + key + ".total");
         return value;
     }
 }

@@ -51,7 +51,7 @@ export class AssignXPApp extends Application {
             return self.findIndex((i) => { return i?.actor.id == a.actor.id }) === index;
         });
 
-        this.initialActors = duplicate(this.actors);
+        this.initialActors = foundry.utils.duplicate(this.actors);
 
         this.changeXP(options?.xp);
     }
@@ -61,7 +61,7 @@ export class AssignXPApp extends Application {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "assignexperience",
             title: i18n("MonksTokenBar.AssignXP"),
             template: "./modules/monks-tokenbar/templates/assignxp.html",
@@ -267,13 +267,13 @@ export class AssignXPApp extends Application {
                 this.render(true);
                 break;
             case 'initial':
-                this.actors = duplicate(this.initialActors);
+                this.actors = foundry.utils.duplicate(this.initialActors);
                 this.changeXP();
                 this.render(true);
                 break;
             case 'last':
                 if (AssignXP.lastTokens) {
-                    this.actors = duplicate(AssignXP.lastTokens);
+                    this.actors = foundry.utils.duplicate(AssignXP.lastTokens);
                     this.changeXP();
                     this.render(true);
                 }
@@ -358,7 +358,7 @@ export class AssignXPApp extends Application {
                 content: html
             };
 
-            setProperty(chatData, "flags.monks-tokenbar", requestdata);
+            foundry.utils.setProperty(chatData, "flags.monks-tokenbar", requestdata);
             msg = await ChatMessage.create(chatData, {});
             this.close();
         } else

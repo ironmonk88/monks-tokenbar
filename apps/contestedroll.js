@@ -12,7 +12,7 @@ export class ContestedRollApp extends Application {
 
         this.requestoptions = this.requestoptions.filter(g => g.groups);
         for (let attr of this.requestoptions) {
-            attr.groups = duplicate(attr.groups);
+            attr.groups = foundry.utils.duplicate(attr.groups);
             for (let [k, v] of Object.entries(attr.groups)) {
                 attr.groups[k] = v?.label || v;
             }
@@ -39,7 +39,7 @@ export class ContestedRollApp extends Application {
 
     static get defaultOptions() {
        // let top = ($('#tokenbar').position()?.top || $('#hotbar').position()?.top || 300) - 260;
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "contestedroll",
             title: i18n("MonksTokenBar.ContestedRoll"),
             template: "./modules/monks-tokenbar/templates/contestedroll.html",
@@ -154,7 +154,7 @@ export class ContestedRollApp extends Application {
                 chatData.whisper = requestedPlayers;
 
             //chatData.flags["monks-tokenbar"] = {"testmsg":"testing"};
-            setProperty(chatData, "flags.monks-tokenbar", requestdata);
+            foundry.utils.setProperty(chatData, "flags.monks-tokenbar", requestdata);
             msg = await ChatMessage.create(chatData, {});
             msg.mtb_callback = this.opts.callback;
             if (setting('request-roll-sound-file') != '' && rollmode != 'selfroll' && roll !== false)
@@ -417,7 +417,7 @@ export class ContestedRoll {
 
         for (let update of updates) {
             if (update != undefined) {
-                let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
+                let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 log('updating actor', msgtoken, update.roll);
 
                 if (update.roll) {
@@ -425,7 +425,7 @@ export class ContestedRoll {
                     if (update.roll instanceof Roll) {
                         msgtoken.roll = update.roll.toJSON();
                         if (msgtoken.roll.terms.length)
-                            msgtoken.roll.terms = duplicate(msgtoken.roll.terms);
+                            msgtoken.roll.terms = foundry.utils.duplicate(msgtoken.roll.terms);
                         for (let i = 0; i < msgtoken.roll.terms.length; i++) {
                             if (msgtoken.roll.terms[i] instanceof RollTerm)
                                 msgtoken.roll.terms[i] = msgtoken.roll.terms[i].toJSON();
@@ -474,7 +474,7 @@ export class ContestedRoll {
 
         if (game.system.id == 'dnd5e') {
             let rolls = [];
-            for (let key of Object.keys(getProperty(message, "flags.monks-tokenbar"))) {
+            for (let key of Object.keys(foundry.utils.getProperty(message, "flags.monks-tokenbar"))) {
                 if (key.startsWith('token')) {
                     let token = flags[key] || message.flags['monks-tokenbar'][key];
                     if (token.roll) {
@@ -536,7 +536,7 @@ export class ContestedRoll {
                 if (restart.action.data.usetokens == 'fail' || restart.action.data.usetokens == 'succeed') {
                     result.tokens = result.tokenresults.filter(r => r.passed == (restart.action.data.usetokens == 'succeed'));
                 } else {
-                    result.tokens = duplicate(result.tokenresults);
+                    result.tokens = foundry.utils.duplicate(result.tokenresults);
                 }
                 for (let i = 0; i < result.tokens.length; i++) {
                     result.tokens[i] = await fromUuid(result.tokens[i].uuid);
@@ -571,7 +571,7 @@ export class ContestedRoll {
         } else {
             let flags = {};
             for (let update of updates) {
-                let msgtoken = duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
+                let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 msgtoken.reveal = true;
                 flags["token" + update.id] = msgtoken;
                 log("Finish Rolling", msgtoken);
@@ -598,7 +598,7 @@ export class ContestedRoll {
             let j = (i + 1) % 2;
             let passed = (!allRolled ? 'waiting' : (tokens[i].roll.total > tokens[j].roll.total ? 'won' : (tokens[i].roll.total < tokens[j].roll.total ? 'failed' : 'tied')));
             if (tokens[i].passed != passed) {
-                let msgtoken = duplicate(tokens[i]);
+                let msgtoken = foundry.utils.duplicate(tokens[i]);
                 msgtoken.passed = passed;
                 flags['token' + msgtoken.id] = msgtoken;
             }
@@ -631,7 +631,7 @@ export class ContestedRoll {
         for (let i = 0; i < 2; i++) {
             let passed = (tokens[i].id == tokenid ? 'won' : 'failed');
             if(tokens[i].passed != passed) {
-                let msgtoken = duplicate(tokens[i]);
+                let msgtoken = foundry.utils.duplicate(tokens[i]);
                 msgtoken.passed = passed;
                 flags['token' + msgtoken.id] = msgtoken;
             }
@@ -683,7 +683,7 @@ export class ContestedRoll {
             if (actor instanceof Actor && actor.type == "character") {
                 const heroPointCount = actor.heroPoints.value;
                 if (heroPointCount)
-                    await token.actor.update({ "system.resources.heroPoints.value": Math.clamped(heroPointCount - 1, 0, 3) });
+                    await token.actor.update({ "system.resources.heroPoints.value": Math.clamp(heroPointCount - 1, 0, 3) });
                 else {
                     return ui.notifications.warn("Does not have a hero point");
                 }
@@ -693,7 +693,7 @@ export class ContestedRoll {
         }
 
         const oldRoll = msgToken.roll;
-        const newData = deepClone(oldRoll.data);
+        const newData = foundry.utils.deepClone(oldRoll.data);
         const newOptions = { ...oldRoll.options, isReroll: !0 };
         const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
         const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });

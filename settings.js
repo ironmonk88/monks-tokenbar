@@ -282,6 +282,14 @@ export const registerSettings = function () {
 		default: true,
 		type: Boolean,
 	});
+	game.settings.register(modulename, "free-vehicle-combat", {
+		name: game.i18n.localize("MonksTokenBar.free-vehicle-combat.name"),
+		hint: game.i18n.localize("MonksTokenBar.free-vehicle-combat.hint"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
 	game.settings.register(modulename, "allow-after-movement", {
 		name: game.i18n.localize("MonksTokenBar.allow-after-movement.name"),
 		hint: game.i18n.localize("MonksTokenBar.allow-after-movement.hint"),
@@ -401,6 +409,7 @@ export const registerSettings = function () {
 		config: true,
 		default: "icons/svg/chest.svg",
 		type: String,
+		filePicker: 'imagevideo',
 	});
 
 	game.settings.register(modulename, "loot-sheet", {
@@ -462,6 +471,7 @@ export const registerSettings = function () {
 		config: false,
 		default: true,
 		type: Boolean,
+		filePicker: 'audio',
 	});
 	game.settings.register(modulename, "request-roll-sound-file", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),

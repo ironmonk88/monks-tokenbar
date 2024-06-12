@@ -80,7 +80,7 @@ export class LootablesApp extends Application {
                     return result;
                 }).map(i => {
                     return {
-                        id: this.lootEntity == "convert" ? i._id : getProperty(i, "flags.core.sourceId") || i._id,
+                        id: this.lootEntity == "convert" ? i._id : foundry.utils.getProperty(i, "flags.core.sourceId") || i._id,
                         name: i.name,
                         img: i.img,
                         from: t.name,
@@ -133,7 +133,7 @@ export class LootablesApp extends Application {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "lootables",
             title: i18n("MonksTokenBar.Lootables"),
             template: "./modules/monks-tokenbar/templates/lootables.html",
@@ -220,6 +220,23 @@ export class LootablesApp extends Application {
         if (!currency)
             return 0;
         return (currency.value != undefined ? currency.value : currency) || 0;
+    }
+
+    static getSnappedPosition(x, y, interval = 1) {
+        if (interval === 0) return { x: Math.round(x), y: Math.round(y) };
+        let x0 = x.toNearest(canvas.grid.size);
+        let y0 = y.toNearest(canvas.grid.size);
+        let dx = 0;
+        let dy = 0;
+        if (interval !== 1) {
+            let delta = canvas.grid.size / interval;
+            dx = Math.round((x - x0) / delta) * delta;
+            dy = Math.round((y - y0) / delta) * delta;
+        }
+        return {
+            x: Math.round(x0 + dx),
+            y: Math.round(y0 + dy)
+        };
     }
 
     async activateListeners(html) {
@@ -412,7 +429,7 @@ export class LootablesApp extends Application {
 
             let i = data.data || await fromUuid(data.uuid);
             let item = {
-                id: getProperty(i, "flags.core.sourceId") || i._id,
+                id: foundry.utils.getProperty(i, "flags.core.sourceId") || i._id,
                 name: i.name,
                 img: i.img,
                 sysQty: i.system.quantity,
@@ -470,7 +487,7 @@ export class LootablesApp extends Application {
                     return result;
                 }).map(i => {
                     return {
-                        id: this.lootEntity == "convert" ? i._id : getProperty(i, "flags.core.sourceId") || i._id,
+                        id: this.lootEntity == "convert" ? i._id : foundry.utils.getProperty(i, "flags.core.sourceId") || i._id,
                         name: i.name,
                         img: i.img,
                         from: t.name,
@@ -645,7 +662,7 @@ export class LootablesApp extends Application {
                     }
                     */
 
-                    newActorData = expandObject(newActorData);
+                    newActorData = foundry.utils.expandObject(newActorData);
 
                     entry.actor._sheet = null;
 
@@ -764,26 +781,26 @@ export class LootablesApp extends Application {
                     if (isNaN(loot.quantity))
                         loot.quantity = 1;
 
-                    item._id = randomID();
+                    item._id = foundry.utils.randomID();
                     if (game.modules.get("monks-enhanced-journal")?.active) {
                         let sysPrice = game.MonksEnhancedJournal.getSystemPrice(item);
                         let price = game.MonksEnhancedJournal.getPrice(sysPrice);
-                        setProperty(item, "flags.monks-enhanced-journal.quantity", loot.quantity);
-                        setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
-                        setProperty(item, "flags.monks-enhanced-journal.from", loot.from);
+                        foundry.utils.setProperty(item, "flags.monks-enhanced-journal.quantity", loot.quantity);
+                        foundry.utils.setProperty(item, "flags.monks-enhanced-journal.price", price.value + " " + price.currency);
+                        foundry.utils.setProperty(item, "flags.monks-enhanced-journal.from", loot.from);
                     }
                     if (lootSheet !== 'monks-enhanced-journal') {
                         //+++ Need to set to correct system quantity
-                        let itemQty = getProperty(item, "system.quantity") || 1;
+                        let itemQty = foundry.utils.getProperty(item, "system.quantity") || 1;
                         if (isNaN(itemQty))
                             itemQty = 1;
-                        setProperty(item, "system.quantity", itemQty * loot.quantity);
+                        foundry.utils.setProperty(item, "system.quantity", itemQty * loot.quantity);
 
-                        if (getProperty(item, "system.equipped") != undefined) {
+                        if (foundry.utils.getProperty(item, "system.equipped") != undefined) {
                             if (game.system.id == "pf2e")
-                                setProperty(item, "system.equipped.handsHeld", 0);
+                                foundry.utils.setProperty(item, "system.equipped.handsHeld", 0);
                             else
-                                setProperty(item, "system.equipped", false);
+                                foundry.utils.setProperty(item, "system.equipped", false);
                         }
                     }
 
@@ -870,7 +887,7 @@ export class LootablesApp extends Application {
                                     let item = await pack.getDocument(coinage._id);
                                     let itemData = item.toObject();
                                     delete itemData._id;
-                                    setProperty(itemData, "system.quantity", currency[denomination]);
+                                    foundry.utils.setProperty(itemData, "system.quantity", currency[denomination]);
                                     await entity.createEmbeddedDocuments("Item", [itemData]);
                                 }
                             }
@@ -879,12 +896,13 @@ export class LootablesApp extends Application {
                 } else
                     entity.update({ data: { currency: entityCurr } });
             } else if (lootSheet == 'monks-enhanced-journal') {
-                let entityItems = duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
+                let entityItems = foundry.utils.duplicate(entity.getFlag('monks-enhanced-journal', 'items') || []);
                 entityItems = entityItems.concat(items);
                 await entity.setFlag('monks-enhanced-journal', 'items', entityItems);
 
                 let entityCurr = entity.getFlag("monks-enhanced-journal", "currency") || {};
-                for (let curr of MonksTokenBar.system.getCurrency()) {
+                for (let currObj of MonksTokenBar.system.getCurrency()) {
+                    let curr = currObj.id;
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
@@ -914,14 +932,14 @@ export class LootablesApp extends Application {
             if (createObject && !(lootSheet == "item-piles" && created) && this.lootEntity != "convert" && lootSheet != "pf2e") {
                 let pt = { x: ptAvg.x / ptAvg.count, y: ptAvg.y / ptAvg.count };
                 // Snap to Grid
-                let snap = canvas.grid.getSnappedPosition(pt.x, pt.y, canvas[(this.isLootActor(lootSheet) ? 'tokens' : 'notes')].gridPrecision);
+                let snap = LootablesApp.getSnappedPosition(pt.x, pt.y, 1);
                 pt.x = snap.x;
                 pt.y = snap.y;
 
                 // Validate the final position
                 if (canvas.dimensions.rect.contains(pt.x, pt.y)) {
                     if (this.isLootActor(lootSheet)) {
-                        const td = await entity.getTokenDocument(mergeObject(pt, { texture: { src: setting("loot-image") } }));
+                        const td = await entity.getTokenDocument(foundry.utils.mergeObject(pt, { texture: { src: setting("loot-image") } }));
 
                         const cls = getDocumentClass("Token");
                         await cls.create(td, { parent: canvas.scene });
@@ -931,7 +949,7 @@ export class LootablesApp extends Application {
                             y: parseInt(pt.y + (canvas.scene.dimensions.size / 2)),
                             entryId: entity.parent.id,
                             pageId: entity.id,
-                            icon: setting("loot-image")
+                            texture: { src: setting("loot-image") }
                         };
 
                         const cls = getDocumentClass("Note");
@@ -993,7 +1011,7 @@ export class LootablesApp extends Application {
 
         let newItems = [];
         if (actor.getFlag('monks-tokenbar', 'olditems')?.length) {
-            actorData.items = duplicate(actor.items);
+            actorData.items = foundry.utils.duplicate(actor.items);
             for (let olditem of actor.getFlag('monks-tokenbar', 'olditems')) {
                 if (actorData.items.findIndex(i => { return i._id == olditem._id; }) < 0)
                     actorData.items.push(olditem);

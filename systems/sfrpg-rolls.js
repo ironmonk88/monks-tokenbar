@@ -12,7 +12,7 @@ export class SFRPGRolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat1: "attributes.kac.value",
             stat2: "attributes.eac.value",
             icon1: "fa-shield-alt",
@@ -77,7 +77,7 @@ export class SFRPGRolls extends BaseRolls {
 
         rollfn = new Promise(function (resolve, reject) {
             let _requesttype = (request.type == 'saves' ? 'attributes' : request.type);
-            const value = getProperty(actor.system, `${_requesttype}.${request.key}`);
+            const value = foundry.utils.getProperty(actor.system, `${_requesttype}.${request.key}`);
             const label = CONFIG.SFRPG[requesttype][request.key];
             let title = (request.type == "abilities" ? 'Ability Check' : (request.type == "saves" ? 'Save' : 'Skill Check')) + ` - ${label}`;
 

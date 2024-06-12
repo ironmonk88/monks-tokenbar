@@ -14,7 +14,7 @@ export class SwadeRolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat1: "stats.toughness.value"//,
             //stat2: "skills.per.mod"
         });*/

@@ -1,3 +1,13 @@
+## Version 12.01
+
+v12 compatibility
+
+Fixed issue with items being created that aren't attached to an actor
+
+Fixed issue that was preventing currency from being added to an Enhanced Journal Loot entry
+
+Added the option to allow owned vehicles to be moved during combat.
+
 ## Version 11.17
 
 Fixing a silly mistake that made redirecting rolls no longer work

@@ -7,7 +7,7 @@ export class DnD4eRolls extends BaseRolls {
 
         this._config = CONFIG.DND4EBETA || CONFIG.DND4E;
 
-        let savingThrow = duplicate(this.config.def);
+        let savingThrow = foundry.utils.duplicate(this.config.def);
         delete savingThrow.ac;
 
         this._requestoptions = [
@@ -17,7 +17,7 @@ export class DnD4eRolls extends BaseRolls {
         ].concat(this._requestoptions);
 
         /*
-        this._defaultSetting = mergeObject(this._defaultSetting, {
+        this._defaultSetting = foundry.utils.mergeObject(this._defaultSetting, {
             stat1: "defences.ac.value",
             stat2: "skills.prc.total"
         });*/

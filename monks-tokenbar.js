@@ -38,13 +38,20 @@ export let setting = key => {
 };
 
 export let patchFunc = (prop, func, type = "WRAPPER") => {
-    if (game.modules.get("lib-wrapper")?.active) {
-        libWrapper.register("monks-tokenbar", prop, func, type);
-    } else {
+    let nonLibWrapper = () => {
         const oldFunc = eval(prop);
         eval(`${prop} = function (event) {
-            return func.call(this, oldFunc.bind(this), ...arguments);
+            return func.call(this, ${type != "OVERRIDE" ? "oldFunc.bind(this)," : ""} ...arguments);
         }`);
+    }
+    if (game.modules.get("lib-wrapper")?.active) {
+        try {
+            libWrapper.register("monks-enhanced-journal", prop, func, type);
+        } catch (e) {
+            nonLibWrapper();
+        }
+    } else {
+        nonLibWrapper();
     }
 }
 
@@ -158,19 +165,10 @@ export class MonksTokenBar {
             }
         }*/
 
-        let canDrag = function (wrapped, ...args) {
+        patchFunc("Token.prototype._canDrag", function (wrapped, ...args) {
             let result = wrapped(...args);
             return (MonksTokenBar.allowMovement(this.document, false) ? result : false);
-        }
-
-        if (game.modules.get("lib-wrapper")?.active) {
-            libWrapper.register("monks-tokenbar", "Token.prototype._canDrag", canDrag, "WRAPPER");
-        } else {
-            const oldCanDrag = Token.prototype._canDrag;
-            Token.prototype._canDrag = function (event) {
-                return canDrag.call(this, oldCanDrag.bind(this), ...arguments);
-            }
-        }
+        });
 
         patchFunc("ChatLog.prototype._getEntryContextOptions", function (wrapped, ...args) {
             let menu = wrapped.call(...args);
@@ -268,22 +266,13 @@ export class MonksTokenBar {
         });
 
         /*
-        let sceneView = async function (wrapped, ...args) {
+        patchFunc("Scene.prototype.view", async function (wrapped, ...args) {
             if (MonksTokenBar.tokenbar) {
                 MonksTokenBar.tokenbar.entries = [];
                 MonksTokenBar.tokenbar.refresh();
             }
             return await wrapped.call(this, ...args);
-        }
-
-        if (game.modules.get("lib-wrapper")?.active) {
-            libWrapper.register("monks-tokenbar", "Scene.prototype.view", sceneView, "WRAPPER");
-        } else {
-            const oldSceneView = Scene.prototype.view;
-            Scene.prototype.view = function (event) {
-                return sceneView.call(this, oldSceneView.bind(this), ...arguments);
-            }
-        }
+        });
         */
     }
 
@@ -464,7 +453,7 @@ export class MonksTokenBar {
     }
 
     static playSound(sound, users) {
-        AudioHelper.play({ src: sound }, (users == 'all' ? true : false));
+        foundry.audio.AudioHelper.play({ src: sound }, (users == 'all' ? true : false));
         if (users != 'all' && (users.length > 1 || users[0] != game.user.id))
             MonksTokenBar.emit('playSound', { sound: sound, users: users });
     }
@@ -533,7 +522,7 @@ export class MonksTokenBar {
             case 'playSound': {
                 if (data.users.includes(game.user.id)) {
                     console.log('Playing sound', data.sound);
-                    AudioHelper.play({ src: data.sound }, false);
+                    foundry.audio.AudioHelper.play({ src: data.sound }, false);
                 }
             } break;
             case 'renderLootable': {
@@ -552,7 +541,7 @@ export class MonksTokenBar {
                 if (game.user.isGM) {
                     let msg = game.messages.get(data.msgid);
                     if (msg) {
-                        let rolls = duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
+                        let rolls = foundry.utils.duplicate(msg.getFlag('monks-tokenbar', "rolls") || {});
                         rolls[data.tokenid] = data.roll;
                         await msg.setFlag('monks-tokenbar', "rolls", rolls);
 
@@ -708,6 +697,8 @@ export class MonksTokenBar {
                     allowNpc = ownedUsers.some(u => tokPermission[u] === 3 && !game.users?.get(u)?.isGM)
                         && curCombat.turns.every(t => { return t.tokenId !== token.id; });
                 }
+                if (setting('free-vehicle-combat') && entry.actor?.type == "vehicle" && entry.actor?.isOwner)
+                    allowNpc = true;
 
                 log('Checking movement', entry.name, token.name, entry, token.id, token, allowNpc);
                 return !(entry.tokenId == token.id || allowNpc || (setting("allow-after-movement") && curCombat.previous.tokenId == token.id));
@@ -780,7 +771,7 @@ export class MonksTokenBar {
         list = list.filter(g => g.groups);
         for (let attr of list) {
             attr.label = attr.label ?? attr.text;
-            attr.groups = duplicate(attr.groups);
+            attr.groups = foundry.utils.duplicate(attr.groups);
             for (let [k, v] of Object.entries(attr.groups)) {
                 attr.groups[k] = v?.label || v?.text || v;
             }
@@ -999,7 +990,7 @@ export class MonksTokenBar {
             let result = collection.preventCreate ? [] : [createItem];
             return result.concat((contents || [])
                 .filter(c => {
-                    return (c instanceof JournalEntry && c.pages.size == 1 && getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot") || (c instanceof Actor)
+                    return (c instanceof JournalEntry && c.pages.size == 1 && foundry.utils.getProperty(c.pages.contents[0], "flags.monks-enhanced-journal.type") == "loot") || (c instanceof Actor)
                 })
                 .sort((a, b) => { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; })
                 .map(e => {
@@ -1104,7 +1095,7 @@ export class MonksTokenBar {
         event.preventDefault();
         const a = event.currentTarget;
 
-        let options = duplicate(a.dataset);
+        let options = foundry.utils.duplicate(a.dataset);
         if (options.dc) options.dc = parseInt(options.dc);
         if (options.fastForward) options.fastForward = true;
         if (options.silent) options.silent = true;
@@ -1112,6 +1103,9 @@ export class MonksTokenBar {
         if (options.request.indexOf(":") > -1) {
             let [type, key] = options.request.split(":");
             options.request = { type, key };
+        }
+        if (options.request.endsWith("Saving Throw")) {
+            options.request = { type: "save", key: options.request.replace("Saving Throw", "").trim() };
         }
         if (options.request1 && options.request1.indexOf(":") > -1) {
             let [type, key] = options.request1.split(":");
@@ -1221,27 +1215,6 @@ Hooks.on("getSceneControlButtons", (controls) => {
 });
 
 Hooks.on("renderSettingsConfig", (app, html, data) => {
-    let btn = $('<button>')
-        .addClass('file-picker')
-        .attr('type', 'button')
-        .attr('data-type', "audio")
-        .attr('title', "Browse Files")
-        .attr('tabindex', "-1")
-        .html('<i class="fas fa-file-import fa-fw"></i>')
-        .click(function (event) {
-            const fp = new FilePicker({
-                type: event.currentTarget.dataset.type,
-                current: $(event.currentTarget).prev().val(),
-                callback: path => {
-                    $(event.currentTarget).prev().val(path);
-                }
-            });
-            return fp.browse();
-        });
-
-    btn.clone(true).insertAfter($('input[name="monks-tokenbar.request-roll-sound-file"]', html));
-    btn.clone(true).attr("data-type", "imagevideo").insertAfter($('input[name="monks-tokenbar.loot-image"]', html));
-
     $('[name="monks-tokenbar.loot-sheet"]', html).on('change', async () => {
         let sheet = $('[name="monks-tokenbar.loot-sheet"]', html).val();
 
@@ -1335,7 +1308,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
             if ($('.add-level', html).hasClass("disabled"))
                 return;
 
-            const currLevel = parseInt(getProperty(actor, "system.details.level.value"));
+            const currLevel = parseInt(foundry.utils.getProperty(actor, "system.details.level.value"));
             if (currLevel < level) {
                 actor.update({ "system.details.level.value": level, "system.details.xp.value": actor.system.details.xp.value - actor.system.details.xp.max });
             }
@@ -1653,9 +1626,9 @@ Hooks.on("setupTileActions", (app) => {
             if (entity1.id == entity2.id)
                 return;
 
-            let request1 = mergeObject((MonksTokenBar.getTokenEntries([entity1])[0] || {}), { request: action.data.request1 });
+            let request1 = foundry.utils.mergeObject((MonksTokenBar.getTokenEntries([entity1])[0] || {}), { request: action.data.request1 });
             let idx2 = entity1.id == entity2.id ? 1 : 0;
-            let request2 = mergeObject((MonksTokenBar.getTokenEntries([entity2])[idx2] || {}), { request: action.data.request2 });
+            let request2 = foundry.utils.mergeObject((MonksTokenBar.getTokenEntries([entity2])[idx2] || {}), { request: action.data.request2 });
 
             let flavor = action.data.flavor;
 
@@ -1845,11 +1818,11 @@ Hooks.on("preUpdateChatMessage", (message, data, dif, userId) => {
     if (game.user.isGM && data.whisper != undefined) {
         let rollmode = message.getFlag('monks-tokenbar', 'rollmode');
         if (data.whisper.length == 0 && rollmode != "roll") {
-            setProperty(data, "flags.monks-tokenbar.oldroll", rollmode);
-            setProperty(data, "flags.monks-tokenbar.rollmode", "roll");
+            foundry.utils.setProperty(data, "flags.monks-tokenbar.oldroll", rollmode);
+            foundry.utils.setProperty(data, "flags.monks-tokenbar.rollmode", "roll");
         } else if (data.whisper.length && rollmode == "roll") {
             let oldroll = message.getFlag('monks-tokenbar', 'oldrollmode') || "gmroll";
-            setProperty(data, "flags.monks-tokenbar.rollmode", oldroll);
+            foundry.utils.setProperty(data, "flags.monks-tokenbar.rollmode", oldroll);
         }
     }
 });
@@ -1862,7 +1835,7 @@ Hooks.on("updateChatMessage", (message, data, dif, userId) => {
 });
 
 Hooks.on("updateActor", (actor, data, dif, userId) => {
-    if (getProperty(data, "system.details.xp") != undefined && game.user.isTheGM) {
+    if (foundry.utils.getProperty(data, "system.details.xp") != undefined && game.user.isTheGM) {
         MonksTokenBar.system.checkXP(actor);
     }
 });
@@ -1875,7 +1848,7 @@ Hooks.on("canvasInit", () => {
 });
 
 Hooks.on("updateUser", (user, data, options, userId) => {
-    if (setting("include-actor") && hasProperty(data, "character") && MonksTokenBar.tokenbar) {
+    if (setting("include-actor") && foundry.utils.hasProperty(data, "character") && MonksTokenBar.tokenbar) {
         MonksTokenBar.tokenbar.refresh();
     }
 });
