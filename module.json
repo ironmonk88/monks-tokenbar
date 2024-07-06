@@ -85,7 +85,6 @@
   "download": "https://github.com/ironmonk88/monks-tokenbar/archive/12.01.zip",
   "manifest": "https://github.com/ironmonk88/monks-tokenbar/releases/latest/download/module.json",
   "bugs": "https://github.com/ironmonk88/monks-tokenbar/issues",
-  "allowBugReporter": true,
   "id": "monks-tokenbar",
   "compatibility": {
     "minimum": "12",
