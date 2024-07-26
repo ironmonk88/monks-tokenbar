@@ -1,3 +1,21 @@
+## Version 12.02
+
+Fixed issues when using Dice So Nice and figuring out when to reveal the dice
+
+Fixed double rolling of Dice So Nice in D&D 5e
+
+Fixed some more v12 deprecation issues
+
+Removing natural attacks and effects from the after combat Loot
+
+Fixed how information for lootables is collected
+
+Fixed initial Tokenbar positioning
+
+Fixed issue when deleting a token when no panning is disabled
+
+Fixed issue that the latest version of PF2e introduced when getting skills.
+
 ## Version 12.01
 
 v12 compatibility

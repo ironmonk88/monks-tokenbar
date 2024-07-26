@@ -5,7 +5,11 @@ export class PF2eRolls extends BaseRolls {
     constructor() {
         super();
 
-        const { lore, ...skills } = this.config.skillList
+        const configSkills = this.config.skills;
+        const skills = Object.keys(this.config.skills).reduce(function (result, key) {
+            result[key] = configSkills[key].label
+            return result
+        }, {}) 
 
         this._requestoptions = [
             { id: "attribute", text: i18n("MonksTokenBar.Attribute"), groups: { perception: i18n("PF2E.PerceptionLabel") } },

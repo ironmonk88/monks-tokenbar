@@ -144,7 +144,7 @@ export class TokenBar extends Application {
         if (this.pos == undefined) {
             let hbpos = $('#ui-bottom').offset();
             let width = $('#hotbar').width();
-            this.pos = { left: hbpos.left + width + 4, right: '', top: '', bottom: 10 };
+            this.pos = { left: hbpos.left + width + 36, right: '', top: '', bottom: 10 };
             game.user.setFlag("monks-tokenbar", "position", this.pos);
         }
 
@@ -453,8 +453,8 @@ export class TokenBar extends Application {
             diff.inspiration = (entry.actor.system?.attributes?.inspiration && setting('show-inspiration'));
 
         if (setting("show-disable-panning-option")) {
-            if (entry.nopanning != entry.token.flags['monks-tokenbar']?.nopanning) {
-                diff.nopanning = entry.token.flags['monks-tokenbar']?.nopanning;
+            if (entry.nopanning != entry.token?.flags['monks-tokenbar']?.nopanning) {
+                diff.nopanning = entry.token?.flags['monks-tokenbar']?.nopanning;
             }
         } else {
             diff.nopanning = false;

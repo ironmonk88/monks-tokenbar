@@ -66,16 +66,16 @@ export class LootablesApp extends Application {
                         return false;
 
                     if (item.type == 'weapon') {
-                        result = item.system.weaponType != 'natural';
+                        result = getProperty(item, "system.weaponType") != 'natural' && getProperty(item, "system.type.value") != 'natural';
                     }
                     // Equipment's fine, unless it's natural armor
                     else if (item.type == 'equipment') {
                         if (!item.system.armor)
                             result = true;
                         else
-                            result = item.system.armor.type != 'natural';
+                            result = getProperty(item, "system.armor.type") != 'natural' && getProperty(item, "system.armor.type.value") != 'natural';
                     } else
-                        result = !(['class', 'spell', 'feat', 'action', 'lore', 'melee', 'condition', 'spellcastingEntry'].includes(item.type));
+                        result = !(['class', 'spell', 'feat', 'action', 'lore', 'melee', 'condition', 'spellcastingEntry', 'effect'].includes(item.type));
 
                     return result;
                 }).map(i => {
@@ -473,14 +473,14 @@ export class LootablesApp extends Application {
                     // Weapons are fine, unless they're natural
                     let result = false;
                     if (item.type == 'weapon') {
-                        result = item.system.weaponType != 'natural';
+                        result = getProperty(item, "system.weaponType")" != 'natural' && getProperty(item, "system.type.value") != 'natural';
                     }
                     // Equipment's fine, unless it's natural armor
                     else if (item.type == 'equipment') {
                         if (!item.system.armor)
                             result = true;
                         else
-                            result = item.system.armor.type != 'natural';
+                            result = getProperty(item, "system.armor.type")" != 'natural' && getProperty(item, "system.type.value") != 'natural';
                     } else
                         result = !(['class', 'spell', 'feat', 'action', 'lore'].includes(item.type));
 
@@ -577,9 +577,52 @@ export class LootablesApp extends Application {
         let msg = "";
         let created = false;
 
+        for (let e of this.entries) {
+            for (let loot of e.items) {
+                if (typeof loot.quantity == "string" && loot.quantity.indexOf("d") != -1) {
+                    let r = new Roll(loot.quantity);
+                    await r.evaluate({ async: true });
+                    loot.quantity = r.total;
+                } else
+                    loot.quantity = parseInt(loot.quantity);
+
+                if (isNaN(loot.quantity))
+                    loot.quantity = 1;
+            }
+
+            e.items = e.items.filter(i => i && i.quantity > 0);
+        }
+
         if (lootEntity == 'convert') {
             if (lootSheet == "item-piles") {
-                let tokens = this.entries.flatMap(e => e.tokens).filter(t => !!t);
+                let tokens = this.entries.flatMap(e => {
+                    return e.tokens.map(t => {
+                        if (!t.actor)
+                            return;
+                        let actor = t.actor;
+                        // remove any items that have been removed from the actor
+                        for (let item of actor.items) {
+                            let loot = e.items.find(i => i.id == item.id);
+                            if (!loot || loot.quantity == 0) {
+                                item.delete();
+                            } else {
+                                // update the quantity of the item
+                                //let itemQty = foundry.utils.getProperty(item, "system.quantity") || 1;
+                                //if (isNaN(itemQty))
+                                //    itemQty = 1;
+                                foundry.utils.setProperty(item, "system.quantity", loot.quantity);
+
+                                if (foundry.utils.getProperty(item, "system.equipped") != undefined) {
+                                    if (game.system.id == "pf2e")
+                                        foundry.utils.setProperty(item, "system.equipped.handsHeld", 0);
+                                    else
+                                        foundry.utils.setProperty(item, "system.equipped", false);
+                                }
+                            }
+                        }
+                        return t;
+                    })
+                }).filter(t => !!t);
                 ItemPiles.API.turnTokensIntoItemPiles(tokens);
             } else {
                 for (let entry of this.entries) {
@@ -770,16 +813,6 @@ export class LootablesApp extends Application {
                 let loots = entry.items.filter(i => i.quantity != "0");
                 for (let loot of loots) {
                     let item = loot.data;
-
-                    if (typeof loot.quantity == "string" && loot.quantity.indexOf("d") != -1) {
-                        let r = new Roll(loot.quantity);
-                        await r.evaluate({ async: true });
-                        loot.quantity = r.total;
-                    } else
-                        loot.quantity = parseInt(loot.quantity);
-
-                    if (isNaN(loot.quantity))
-                        loot.quantity = 1;
 
                     item._id = foundry.utils.randomID();
                     if (game.modules.get("monks-enhanced-journal")?.active) {

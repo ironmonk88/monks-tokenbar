@@ -241,7 +241,7 @@ export class ContestedRoll {
      *         if (!game.user.isGM) {
             MonksTokenBar.emit('rollability', { type: 'contestedroll', senderId: game.user.id, response: [{ actorid: actorid, roll: roll }], msgid: message.id });
         } else {
-            const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+            const revealDice = MonksTokenBar.revealDice();
             await ContestedRoll.updateContestedRoll([{ actorid: actorid, roll: roll }], message, revealDice && !fastForward);
         }*/
     static async rollDice(dice) {
@@ -268,7 +268,7 @@ export class ContestedRoll {
             } else if (rollmode == 'blindroll')
                 cantSee = owners;
 
-            if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
+            if (game.dice3d != undefined && roll instanceof Roll && roll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas") && game.system.id != "dnd5e") {
                 let promises = [game.dice3d.showForRoll(roll, game.user, true, canSee, cantSee.includes(game.user.id), (rollmode == 'selfroll' ? msgId : null))];
                 if (cantSee.length) {
                     roll.ghost = true;
@@ -400,7 +400,7 @@ export class ContestedRoll {
                     });
                 }
             } else {
-                const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                const revealDice = MonksTokenBar.revealDice();
                 return await ContestedRoll.updateMessage(response, message, revealDice);
             }
         });
@@ -427,7 +427,7 @@ export class ContestedRoll {
                         if (msgtoken.roll.terms.length)
                             msgtoken.roll.terms = foundry.utils.duplicate(msgtoken.roll.terms);
                         for (let i = 0; i < msgtoken.roll.terms.length; i++) {
-                            if (msgtoken.roll.terms[i] instanceof RollTerm)
+                            if (msgtoken.roll.terms[i] instanceof foundry.dice.terms.RollTerm)
                                 msgtoken.roll.terms[i] = msgtoken.roll.terms[i].toJSON();
                         }
                         msgtoken.total = update.roll.total;
@@ -699,7 +699,7 @@ export class ContestedRoll {
         const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
         const rollmode = message.getFlag("monks-tokenbar", "rollmode");
 
-        if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas")) {
+        if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas") && game.system.id != "dnd5e") {
             let canSee = (rollmode == 'roll' ? null : ChatMessage.getWhisperRecipients("GM").map(w => { return w.id }));
             let cantSee = [];
             let owners = actor.ownership.default == CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ?

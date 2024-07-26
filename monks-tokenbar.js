@@ -417,6 +417,10 @@ export class MonksTokenBar {
         r.style.setProperty('--tokenbar-token-size', size + "px");
     }
 
+    static revealDice() {
+        return game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") || !game.dice3d.isEnabled() : true;
+    }
+
     static ready() {
         game.socket.on(MonksTokenBar.SOCKET, MonksTokenBar.onMessage);
 
@@ -469,7 +473,7 @@ export class MonksTokenBar {
             case 'rollability': {
                 if (game.user.isGM) {
                     let message = game.messages.get(data.msgid);
-                    const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                    const revealDice = MonksTokenBar.revealDice();
                     for (let response of data.response) {
                         if (response.roll) {
                             let r = Roll.fromData(response.roll);
@@ -547,7 +551,7 @@ export class MonksTokenBar {
 
                         let response = { id: data.tokenid, roll: Roll.fromData(data.roll), finish: null, reveal: true }
 
-                        const revealDice = game.dice3d ? game.settings.get("dice-so-nice", "immediatelyDisplayChatMessages") : true;
+                        const revealDice = MonksTokenBar.revealDice();
                         await SavingThrow.updateMessage([response], msg, revealDice);
                     }
                 }
