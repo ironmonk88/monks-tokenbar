@@ -66,7 +66,7 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     get showXP() {
-        return !game.settings.get('dnd5e', 'disableExperienceTracking');
+        return ! (game.settings.get('dnd5e', 'levelingMode') == 'noxp' );
     }
 
     getXP(actor) {
