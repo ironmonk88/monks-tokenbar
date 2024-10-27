@@ -275,11 +275,11 @@ export class ContestedRoll {
                     promises.push(game.dice3d.showForRoll(roll, game.user, true, cantSee, canSee.includes(game.user.id), null));
                 }
                 finishroll = Promise.all(promises).then(() => {
-                    return { id: id, reveal: true, userid: game.userId };
+                    return { id: id, roll: roll, reveal: true, userid: game.userId };
                 });
             } else {
                 finishroll = new Promise((resolve) => {
-                    resolve({ id: id, reveal: true, userid: game.userId })
+                    resolve({ id: id, roll: roll, reveal: true, userid: game.userId })
                 });
             }
             const sound = MonksTokenBar.getDiceSound();
@@ -573,6 +573,11 @@ export class ContestedRoll {
             for (let update of updates) {
                 let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 msgtoken.reveal = true;
+                msgtoken.tempreveal = true;
+                if (!msgtoken.roll && update.roll) {
+                    //if the roll was not set, then set it
+                    msgtoken.roll = Roll.fromData(update.roll);
+                }
                 flags["token" + update.id] = msgtoken;
                 log("Finish Rolling", msgtoken);
             }
@@ -696,7 +701,7 @@ export class ContestedRoll {
         const newData = foundry.utils.deepClone(oldRoll.data);
         const newOptions = { ...oldRoll.options, isReroll: !0 };
         const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
-        const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
+        const newRoll = await new Roll(formula, newData, newOptions).evaluate();
         const rollmode = message.getFlag("monks-tokenbar", "rollmode");
 
         if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas") && game.system.id != "dnd5e") {

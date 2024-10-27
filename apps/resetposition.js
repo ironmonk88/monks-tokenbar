@@ -20,7 +20,7 @@ export class ResetPosition extends FormApplication {
     static async resetPosition(app) {
         await game.user.unsetFlag("monks-tokenbar", "position");
         if (MonksTokenBar.tokenbar != undefined)
-            MonksTokenBar.tokenbar.render(true); //MonksTokenBar.tokenbar.setPos();
+            MonksTokenBar.tokenbar.render(true);
         app.close({ force: true });
     }
 }

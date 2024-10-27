@@ -503,7 +503,7 @@ export class SavingThrow {
 
     static async rollDice(dice) {
         let r = new Roll(dice);
-        return r.evaluate({ async: true });
+        return r.evaluate();
     }
 
     static async returnRoll (id, roll, actor, rollmode, msgId) {
@@ -598,11 +598,11 @@ export class SavingThrow {
                         promises.push(game.dice3d.showForRoll(roll, game.user, true, cantSee, canSee.includes(game.user.id), null));
                     }
                     finishroll = Promise.all(promises).then(() => {
-                        return { id: id, reveal: true, userid: game.userId };
+                        return { id: id, roll: roll, reveal: true, userid: game.userId };
                     });
                 } else {
                     finishroll = new Promise((resolve) => {
-                        resolve({ id: id, reveal: true, userid: game.userId })
+                        resolve({ id: id, roll: roll, reveal: true, userid: game.userId })
                     });
                 }
                 const sound = MonksTokenBar.getDiceSound();
@@ -759,10 +759,12 @@ export class SavingThrow {
 
         let promises = [];
 
+        log("Updating message with results", updates, message.toObject(), reveal)
+
         for (let update of updates) {
             if (update != undefined) {
                 let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
-                log('updating actor', msgtoken, update.roll);
+                log('Updating message token', msgtoken, update.roll);
 
                 if (update.roll) {
                     let tooltip = '';
@@ -930,11 +932,17 @@ export class SavingThrow {
             }
         } else {
             let flags = {};
+            log("Finish Rolling", updates, message.toObject())
             for (let update of updates) {
                 let msgtoken = foundry.utils.duplicate(message.getFlag('monks-tokenbar', 'token' + update.id));
                 msgtoken.reveal = true;
+                msgtoken.tempreveal = true;
+                if (!msgtoken.roll && update.roll) {
+                    //if the roll was not set, then set it
+                    msgtoken.roll = Roll.fromData(update.roll);
+                }
                 flags["token" + update.id] = msgtoken;
-                log("Finish Rolling", msgtoken);
+                log("Finish Rolling message token", foundry.utils.duplicate(msgtoken));
             }
             message.update({ flags: { 'monks-tokenbar': flags } });
         }
@@ -1046,7 +1054,7 @@ export class SavingThrow {
         const newData = foundry.utils.deepClone(oldRoll.data);
         const newOptions = { ...oldRoll.options, isReroll: !0 };
         const formula = oldRoll.formula.replace("2d20kh", "1d20").replace("2d20kl", "1d20");
-        const newRoll = await new Roll(formula, newData, newOptions).evaluate({ async: !0 });
+        const newRoll = await new Roll(formula, newData, newOptions).evaluate();
         const rollmode = message.getFlag("monks-tokenbar", "rollmode");
 
         if (game.dice3d != undefined && newRoll instanceof Roll && newRoll.ignoreDice !== true && MonksTokenBar.system.showRoll && !game.settings.get("core", "noCanvas") && game.system.id != "dnd5e") {
@@ -1129,14 +1137,6 @@ export class SavingThrow {
         await message.update({ content: content[0].outerHTML, flags: flags });
     }
 }
-
-/*
-Hooks.on("diceSoNiceRollComplete", (messageid) => {
-    let message = ui.messages.find(m => m.id == messageid);
-    if (message != undefined) {
-        if()
-    }
-})*/
 
 Hooks.on("renderSavingThrowApp", (app, html) => {
     if (app.request == undefined) {

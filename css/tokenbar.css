@@ -280,6 +280,9 @@ body #tokenbar-window:first-child{
     object-position: 50% 50%;
     border: none;
     box-shadow: 0 0 5px #444 inset;
+    transform: scale(var(--scaleX), var(--scaleY));
+    -webkit-mask-image: var(--mask);
+    mask-image: var(--mask);
 }
 
 #tokenbar .token:hover .token-icon {
@@ -798,6 +801,10 @@ body #tokenbar-window:first-child{
 .monks-tokenbar.chat-card .token-roll-container .dice-roll {
     width: 100%;
     flex-direction: column;
+}
+
+.monks-tokenbar.chat-card .token-roll-container .dice-roll.dsn-hide {
+    display: flex !important;
 }
 
 .monks-tokenbar.chat-card .token-properties {

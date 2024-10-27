@@ -581,7 +581,7 @@ export class LootablesApp extends Application {
             for (let loot of e.items) {
                 if (typeof loot.quantity == "string" && loot.quantity.indexOf("d") != -1) {
                     let r = new Roll(loot.quantity);
-                    await r.evaluate({ async: true });
+                    await r.evaluate();
                     loot.quantity = r.total;
                 } else
                     loot.quantity = parseInt(loot.quantity);
@@ -889,7 +889,7 @@ export class LootablesApp extends Application {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
-                            await r.evaluate({ async: true });
+                            await r.evaluate();
                             currency[curr] = r.total;
                         } else {
                             currency[curr] = parseInt(currency[curr]);
@@ -939,7 +939,7 @@ export class LootablesApp extends Application {
                     if (currency[curr] != undefined) {
                         if (typeof currency[curr] == "string" && currency[curr].indexOf("d") != -1) {
                             let r = new Roll(currency[curr]);
-                            await r.evaluate({ async: true });
+                            await r.evaluate();
                             currency[curr] = r.total;
                         } else {
                             currency[curr] = parseInt(currency[curr]);

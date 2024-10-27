@@ -22,6 +22,7 @@ import { SW5eRolls } from "./systems/sw5e-rolls.js";
 import { CoC7Rolls } from "./systems/coc7-rolls.js";
 import { T2K4ERolls } from "./systems/t2k4e-rolls.js";
 
+
 export let debug = (...args) => {
     if (MonksTokenBar.debugEnabled > 1) console.log("DEBUG: monks-tokenbar | ", ...args);
 };
@@ -301,7 +302,12 @@ export class MonksTokenBar {
                 html += `</optgroup>`;
             }
         } else {
-            Object.entries(group.groups).forEach(e => option(...e));
+            if (game.system.id == "burningwheel") {
+				const a = RegExp.escape(Handlebars.escapeExpression(choices))
+					, s = new RegExp(` value=["']${a}["']`);
+				return options.fn(this).replace(s, "$& selected")
+			} else
+				Object.entries(choices).forEach(e => option(...e));
         }
         return new Handlebars.SafeString(html);
     }
@@ -1856,3 +1862,22 @@ Hooks.on("updateUser", (user, data, options, userId) => {
         MonksTokenBar.tokenbar.refresh();
     }
 });
+
+Hooks.on("diceSoNiceRollComplete", (messageid) => {
+    if (game.user.isGM) {
+        let message = game.messages.find(m => m.id == messageid);
+        if (message != undefined && message.hasFlag("monks-tokenbar")) {
+            let flags = {};
+            for (let key of Object.keys(foundry.utils.getProperty(message, "flags.monks-tokenbar") || {})) {
+                if (key.startsWith('token')) {
+                    let token = message.flags['monks-tokenbar'][key];
+                    if (token.tempreveal && !token.reveal)
+                        flags["token" + token.id] = { reveal: true };
+                }
+            }
+
+            if (Object.keys(flags).length > 0)
+                message.update({ flags: { 'monks-tokenbar': flags } });
+        }
+    }
+})

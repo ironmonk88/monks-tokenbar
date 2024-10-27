@@ -187,6 +187,15 @@ export const registerSettings = function () {
 		requiresReload: true
 	});
 
+	game.settings.register(modulename, "use-token-scaling", {
+		name: game.i18n.localize("MonksTokenBar.use-token-scaling.name"),
+		hint: game.i18n.localize("MonksTokenBar.use-token-scaling.hint"),
+		scope: "client",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+
 	//------------------------------------Icon settings--------------------------------------------
 
 	game.settings.register(modulename, "token-size", {
@@ -464,15 +473,6 @@ export const registerSettings = function () {
 		default: false,
 		type: Boolean,
 	});
-	game.settings.register(modulename, "request-roll-sound", {
-		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
-		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
-		scope: "world",
-		config: false,
-		default: true,
-		type: Boolean,
-		filePicker: 'audio',
-	});
 	game.settings.register(modulename, "request-roll-sound-file", {
 		name: game.i18n.localize("MonksTokenBar.request-roll-sound.name"),
 		hint: game.i18n.localize("MonksTokenBar.request-roll-sound.hint"),
@@ -480,6 +480,7 @@ export const registerSettings = function () {
 		config: true,
 		default: "modules/monks-tokenbar/sounds/RollRequestAlert.ogg",
 		type: String,
+		filePicker: 'audio',
 	});
 	game.settings.register(modulename, "gm-sound", {
 		name: game.i18n.localize("MonksTokenBar.gm-sound.name"),

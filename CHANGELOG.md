@@ -1,3 +1,25 @@
+## Version 12.03
+
+Tried to fix the issue with Dice So Nice not revealing roll.
+
+Fixed evaluate async warning
+
+Fixed updating the token bar when an item is equipped that might change the displayed Tokens
+
+Fixed issue where Tokenbar could be dragged off the screen
+
+Added token image scaling
+
+Fixed issue with Dice So Nice hiding tokenbar rolls when the dice are rolling
+
+Fixed issues with Burning Wheel system and an override to how handlebar grouping is added
+
+Added the roll request alert sound to use a filepicker button
+
+Fixed a warning when using the Die class directly
+
+Fixed an issue that the D&D5e system introduced by changing a setting without providing any backward compatibility.
+
 ## Version 12.02
 
 Fixed issues when using Dice So Nice and figuring out when to reveal the dice

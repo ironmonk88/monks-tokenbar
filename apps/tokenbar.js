@@ -3,8 +3,8 @@ import { SavingThrowApp } from "./savingthrow.js";
 import { EditStats } from "./editstats.js";
 
 export class TokenBar extends Application {
-	constructor(options) {
-	    super(options);
+    constructor(options) {
+        super(options);
 
         this.entries = [];
         this.thumbnails = {};
@@ -34,11 +34,21 @@ export class TokenBar extends Application {
             }
         });
 
+        Hooks.on('updateItem', (item, data, options) => {
+            if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
+                let entry = this.entries.find(t => t.actor?.id == item.actor.id);
+                if (entry != undefined) {
+                    this.updateEntry(entry);
+                }
+            }
+        });
+
         Hooks.on('updateOwnedItem', (actor, item, data) => {
             if (((game.user.isGM || setting("allow-player")) && !setting("disable-tokenbar"))) {
                 let entry = this.entries.find(t => t.actor?.id == actor.id);
                 if (entry != undefined) {
-                    setTimeout(function () { this.updateEntry(entry); }, 100); //delay slightly so the PF2E condition can be rendered properly.
+                    let that = this;
+                    setTimeout(function () { that.updateEntry(entry); }, 100); //delay slightly so the PF2E condition can be rendered properly.
                 }
             }
         });
@@ -100,7 +110,7 @@ export class TokenBar extends Application {
     /* -------------------------------------------- */
 
     /** @override */
-	static get defaultOptions() {
+    static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "tokenbar-window",
             template: "./modules/monks-tokenbar/templates/tokenbar.html",
@@ -109,7 +119,7 @@ export class TokenBar extends Application {
         });
     }
 
-	/* -------------------------------------------- */
+    /* -------------------------------------------- */
 
     /** @override */
     getData(options) {
@@ -145,6 +155,16 @@ export class TokenBar extends Application {
             let hbpos = $('#ui-bottom').offset();
             let width = $('#hotbar').width();
             this.pos = { left: hbpos.left + width + 36, right: '', top: '', bottom: 10 };
+
+            game.user.setFlag("monks-tokenbar", "position", this.pos);
+        }
+
+        let checkLeft = Math.clamp(this.pos.left, 0, window.innerWidth - 200);
+        let checkTop = Math.clamp(this.pos.top, 0, window.innerHeight - 20);
+
+        if (checkLeft != this.pos.left || checkTop != this.pos.top) {
+            this.pos.left = checkLeft;
+            this.pos.top = checkTop;
             game.user.setFlag("monks-tokenbar", "position", this.pos);
         }
 
@@ -443,6 +463,9 @@ export class TokenBar extends Application {
             }
 
             diff.thumb = (thumb?.thumb || thumb);
+            if (setting("use-token-scaling")) {
+                diff.texture = entry.token?.texture;
+            }
         }
 
         if (entry.token && entry.movement != foundry.utils.getProperty(entry.token, "flags.monks-tokenbar.movement")) {
@@ -549,6 +572,10 @@ export class TokenBar extends Application {
                         //    position.right = (window.innerWidth - xPos);
                         //else
                         position.left = xPos;// + 1;
+
+                        position.left = Math.clamp(position.left, 0, window.innerWidth - 200);
+                        position.top = Math.clamp(position.top, 0, window.innerHeight - 20);
+
 
                         elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
                         elmnt.style.right = (position.right ? position.right + "px" : null);

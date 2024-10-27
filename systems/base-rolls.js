@@ -24,7 +24,7 @@ export class BaseRolls {
     }
 
     isCritical(roll) {
-        if (!(roll.terms[0] instanceof Die) && (roll.terms[0].faces === 20) || !roll._evaluated) return undefined;
+        if (!(roll.terms[0] instanceof foundry.dice.terms.Die) && (roll.terms[0].faces === 20) || !roll._evaluated) return undefined;
         if (Number.isNumeric(roll.options.critical) && roll.dice[0].total >= roll.options.critical) return 'critical';
         if (Number.isNumeric(roll.options.fumble) && roll.dice[0].total <= roll.options.fumble) return 'fumble';
         return false;
