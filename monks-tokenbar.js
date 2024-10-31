@@ -303,11 +303,11 @@ export class MonksTokenBar {
             }
         } else {
             if (game.system.id == "burningwheel") {
-				const a = RegExp.escape(Handlebars.escapeExpression(choices))
-					, s = new RegExp(` value=["']${a}["']`);
-				return options.fn(this).replace(s, "$& selected")
-			} else
-				Object.entries(choices).forEach(e => option(...e));
+                const a = RegExp.escape(Handlebars.escapeExpression(choices))
+                    , s = new RegExp(` value=["']${a}["']`);
+                return options.fn(this).replace(s, "$& selected")
+            } else
+                Object.entries(choices).forEach(e => option(...e));
         }
         return new Handlebars.SafeString(html);
     }
@@ -1866,7 +1866,7 @@ Hooks.on("updateUser", (user, data, options, userId) => {
 Hooks.on("diceSoNiceRollComplete", (messageid) => {
     if (game.user.isGM) {
         let message = game.messages.find(m => m.id == messageid);
-        if (message != undefined && message.hasFlag("monks-tokenbar")) {
+        if (message != undefined) {
             let flags = {};
             for (let key of Object.keys(foundry.utils.getProperty(message, "flags.monks-tokenbar") || {})) {
                 if (key.startsWith('token')) {

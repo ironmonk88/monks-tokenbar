@@ -1,3 +1,11 @@
+## Version 12.04
+
+Fix issue with code to fix a DSD issue.
+
+Fixed issue with strange repositioning bug.
+
+Attempting to cut down on the number of people having issues while using an older version of D&D.
+
 ## Version 12.03
 
 Tried to fix the issue with Dice So Nice not revealing roll.

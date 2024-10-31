@@ -66,6 +66,8 @@ export class DnD5eRolls extends BaseRolls {
     }
 
     get showXP() {
+        if (!foundry.utils.isNewerVersion(game.system.version, "4.0"))
+            return !game.settings.get('dnd5e', 'disableExperienceTracking');
         return game.settings.get('dnd5e', 'levelingMode') != "noxp";
     }
 

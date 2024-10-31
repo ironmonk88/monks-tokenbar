@@ -159,15 +159,6 @@ export class TokenBar extends Application {
             game.user.setFlag("monks-tokenbar", "position", this.pos);
         }
 
-        let checkLeft = Math.clamp(this.pos.left, 0, window.innerWidth - 200);
-        let checkTop = Math.clamp(this.pos.top, 0, window.innerHeight - 20);
-
-        if (checkLeft != this.pos.left || checkTop != this.pos.top) {
-            this.pos.left = checkLeft;
-            this.pos.top = checkTop;
-            game.user.setFlag("monks-tokenbar", "position", this.pos);
-        }
-
         let result = '';
         if (this.pos != undefined) {
             result = Object.entries(this.pos).filter(k => {
@@ -494,7 +485,7 @@ export class TokenBar extends Application {
         super.activateListeners(html);
 
         if (game.user.isGM) {
-            for (let group of this.buttons) {
+            for (let group of (this.buttons || [])) {
                 for (let button of group) {
                     if (button.click)
                         $('#' + button.id).on('click', $.proxy(button.click, this));
@@ -572,9 +563,6 @@ export class TokenBar extends Application {
                         //    position.right = (window.innerWidth - xPos);
                         //else
                         position.left = xPos;// + 1;
-
-                        position.left = Math.clamp(position.left, 0, window.innerWidth - 200);
-                        position.top = Math.clamp(position.top, 0, window.innerHeight - 20);
 
 
                         elmnt.style.bottom = (position.bottom ? position.bottom + "px" : null);
